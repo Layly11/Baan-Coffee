@@ -1,0 +1,18 @@
+{
+  "name": "@coffee/models",
+  "version": "1.0.0",
+  "main": "src/index.ts",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "sequelize": "^6.37.7"
+  },
+  "devDependencies": {
+    "@types/sequelize": "^4.28.20"
+  }
+}

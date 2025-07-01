@@ -1,9 +1,13 @@
 {
-  "name": "@repo/typescript-config",
+  "name": "@coffee/tsconfig",
   "version": "0.0.0",
   "private": true,
-  "license": "MIT",
-  "publishConfig": {
-    "access": "public"
+  "files": [
+    "base.json"
+  ],
+  "devDependencies": {
+    "@swc/core": "1.6.1",
+    "@swc/helpers": "^0.5.11",
+    "regenerator-runtime": "^0.14.1"
   }
 }

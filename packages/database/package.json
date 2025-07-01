@@ -1,0 +1,30 @@
+{
+  "name": "database",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "npx tsc --project tsconfig.json",
+    "db:migrate": "npm run build && npx sequelize-cli db:migrate --migrations-path dist/migrations",
+    "db:migrate:undo": "npm run build && npx sequelize-cli db:migrate:undo --migrations-path dist/migrations",
+    "db:create": "npm run build && npx sequelize-cli db:create",
+    "db:drop": "npm run build && npx sequelize-cli db:drop",
+    "migration:create": "npx sequelize-cli migration:create --migrations-path src/migrations"
+
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "sequelize-cli": "^6.6.3",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "dotenv": "^16.5.0",
+    "dotenv-cli": "^8.0.0",
+    "mysql2": "^3.14.1",
+    "sequelize": "^6.37.7"
+  }
+}
