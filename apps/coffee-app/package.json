@@ -15,7 +15,8 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-redux": "^9.1.2",
-    "styled-components": "^6.1.12"
+    "styled-components": "^6.1.12",
+    "sweetalert2": "^11.22.2"
   },
   "devDependencies": {
     "@types/node": "^20",
