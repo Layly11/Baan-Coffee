@@ -15,9 +15,17 @@
             "th": "ข้อมูลUserมีอยู่แล้ว"
         }
     },
-    "ERR_USER_LOGIN_REQUIRED": {
+     "ERR_REGISTER_USER_EMAIL_INVALID": {
         "statusCode": 400,
         "resCode": "0403",
+        "resDesc": {
+            "en": "Email is invalid Foramt",
+            "th": "กรอกอีเมลที่ถูกต้อง"
+        }
+    },
+    "ERR_USER_LOGIN_REQUIRED": {
+        "statusCode": 400,
+        "resCode": "0404",
          "resDesc": {
             "en": "User Login is required.",
             "th": "จำเป็นต้องเข้าสู่ระบบ กรอกข้อมูลให้ครบถ้วน"
@@ -25,7 +33,7 @@
     },
     "ERR_LOGIN_USER_INVALID": {
         "statusCode": 401,
-        "resCode": "0404",
+        "resCode": "0405",
         "resDesc": {
             "en": "Email or Password Invalid",
             "th": "กรอกข้อมูล email password ผิดพลาด"

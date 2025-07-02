@@ -18,8 +18,8 @@ export class UserModel extends Model<InferAttributes<UserModel>, InferCreationAt
     declare username: string
     declare email: string
     declare password: string
-    declare recent_login: Date
-    declare last_login: Date
+    declare recent_login: CreationOptional<Date>
+    declare last_login: CreationOptional<Date>
     declare createdAt: CreationOptional<Date>
     declare updatedAt: CreationOptional<Date>
 
@@ -76,13 +76,13 @@ UserModel.init({
         allowNull: true
     },
     createdAt: {
-        field: 'createdAt',
+        field: 'created_at',
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,
     },
     updatedAt: {
-        field: 'updatedAt',
+        field: 'updated_at',
         type: DataTypes.DATE,
         allowNull: false,
         defaultValue: DataTypes.NOW,
@@ -93,9 +93,9 @@ UserModel.init({
     timestamps: true,
 })
 
-UserModel.beforeSave(async (user: UserModel) => {
-    if (user.password) {
-        const salt = await bcrypt.genSalt(10);
-        user.password = await bcrypt.hash(user.password, salt);
-    }
+UserModel.beforeSave(async (user, options) => {
+  if (user.changed('password')) {
+    const saltRounds = 10;
+    user.password = await bcrypt.hash(user.password, saltRounds);
+  }
 })
