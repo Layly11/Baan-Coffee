@@ -1,0 +1,116 @@
+.swal2-container .swal2-popup {
+  border-radius: 16px;
+  width: 28em;
+  padding-top: 1.2em;
+  background: linear-gradient(#fefcf8, #f5efe3);
+  box-shadow: 0 8px 16px rgba(102, 51, 0, 0.2);
+}
+
+.swal2-title {
+  color: #4e342e;
+  font-weight: bold;
+  font-family: 'Georgia', serif;
+  font-size: 28px;
+}
+
+.swal2-html-container {
+  color: #5d4037;
+  font-size: 16px;
+  font-family: 'Arial', sans-serif;
+}
+
+.swal2-icon {
+  font-size: 1.3rem;
+}
+
+.swal2-icon.swal2-success [class^=swal2-success-line],
+.swal2-success-ring {
+  background-color: #6d4c41 !important;
+  border-color: #a1887f !important;
+  opacity: 1 !important;
+}
+
+.swal2-icon.swal2-error {
+  border-color: #d32f2f !important;
+  border-width: 6px;
+}
+.swal2-icon.swal2-error [class^=swal2-x-mark-line] {
+  background-color: #b71c1c !important;
+}
+
+.swal2-container button {
+  margin: 0 8px;
+  padding: 0px 60px;
+  height: 42px;
+  border-radius: 8px;
+  font-family: 'Arial', sans-serif;
+  font-size: 14px;
+}
+
+.swal2-confirm {
+  background: #8d6e63;
+  color: #fff;
+  border: 1px solid #5d4037 !important;
+}
+
+.swal2-cancel {
+  background: #fff8f1;
+  color: #5d4037 !important;
+  border: 1px solid #c7a17a !important;
+}
+
+.swal2-container button:hover {
+  opacity: 0.9;
+  transform: translateY(1px);
+  transition: all 0.2s;
+}
+
+.swal2-footer {
+  color: #a1887f;
+  font-style: italic;
+}
+
+.myclosebutton {
+  position: absolute;
+  top: 10px;
+  right: 0;
+  padding: 10px;
+  color: white;
+  background-color: #6d4c41;
+  border: none;
+  border-radius: 0 16px 0 0;
+  cursor: pointer;
+}
+
+.swal2-input-label {
+  color: #6d4c41;
+  display: flex;
+  flex-direction: column;
+  margin: 1em 2em 5px;
+}
+
+.disabled-button {
+  background-color: #ccc !important;
+  color: #999 !important;
+  pointer-events: none !important;
+}
+
+.swal2-container .swal2-actions .swal2-loader {
+  border-color: #6d4c41 transparent #a1887f transparent;
+}
+
+.swal2-close {
+  color: #aaa !important;
+  top: 12px;
+  right: -25px;
+}
+
+.sweetalert-content-adjustment {
+  border-radius: 16px;
+  padding: 20px;
+  background: linear-gradient(#fffaf3, #f3e8dc) padding-box,
+              linear-gradient(to right, #c7a17a, #8d6e63) border-box;
+  border: 2px solid transparent;
+  box-shadow: 0 5px 12px rgba(102, 51, 0, 0.2);
+  width: 60%;
+}
