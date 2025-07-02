@@ -45,6 +45,7 @@ UserRoleModel.init(
   },
   {
     sequelize,
+    tableName: 'user_role',
     modelName: 'user_role',
     underscored: true
   }

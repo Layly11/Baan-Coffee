@@ -1,7 +1,7 @@
 import { Strategy as JwtStrategy, ExtractJwt, StrategyOptions, VerifiedCallback } from 'passport-jwt';
 import { JwtPayload as NodeJwtPayload } from 'jsonwebtoken';
 import passport from 'passport';
-import { UserModel } from '@coffee/models'
+import { UserModel, UserRoleModel } from '@coffee/models'
 import { Request } from 'express';
 import { Cookie } from 'express-session';
 
@@ -11,9 +11,9 @@ interface CustomJwtPayload extends NodeJwtPayload {
     email: string
 }
 
-const  cookieExtractor = (req: Request) => {
-    let token = null 
-    if(req && req.cookies){
+const cookieExtractor = (req: Request) => {
+    let token = null
+    if (req && req.cookies) {
         token = req.cookies['authToken']
     }
     return token
@@ -28,8 +28,15 @@ const opts: StrategyOptions = {
 passport.use(
     new JwtStrategy(opts, async (jwt_payload: CustomJwtPayload, done) => {
         try {
-            const user = await UserModel.findByPk(jwt_payload.id,{
-                attributes: ['id','username','email']
+            const user = await UserModel.findByPk(jwt_payload.id, {
+                attributes: ['id', 'username', 'email', 'role_id'],
+                include: [
+                    {
+                        model: UserRoleModel,
+                        as: 'role',
+                        attributes: ['name'] 
+                    }
+                ]
             })
 
             if (user) {
@@ -49,9 +56,16 @@ passport.serializeUser((user: any, done) => {
 
 passport.deserializeUser(async (id: string, done) => {
     try {
-         const user = await UserModel.findByPk(id,{
-                attributes: ['id','username','email']
-            })
+        const user = await UserModel.findByPk(id, {
+            attributes: ['id', 'username', 'email', 'role_id'],
+            include: [
+                {
+                    model: UserRoleModel,
+                    as: 'role',
+                    attributes: ['name'] 
+                }
+            ]
+        })
         if (user) {
             done(null, user)
         } else {
