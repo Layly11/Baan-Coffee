@@ -6,6 +6,7 @@ import store from '../store'
 import title from '../constants/title.json'
 
 import '../styles/sweetalert.css'
+import '../styles/globals.css'
 
 const WrappedApp = ({
   Component,

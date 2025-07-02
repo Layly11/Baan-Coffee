@@ -71,7 +71,7 @@ const LoginPage = (): JSX.Element => {
               <Row style={{ margin: '10px -10px' }}>
                 <Col xs={2}>
                   <Logo
-                    src='/logo.svg'
+                    src='/logo.png'
                     draggable={false}
                     loading='eager'
                     onContextMenu={(e) => { e.preventDefault() }}
@@ -106,7 +106,7 @@ const LoginPage = (): JSX.Element => {
               }}
             >
               <Image
-                src='/sign_in.svg'
+                src='/sign_in.png'
                 width={550}
                 height={550}
                 style={{ width: '70%', height: '70%' }}
