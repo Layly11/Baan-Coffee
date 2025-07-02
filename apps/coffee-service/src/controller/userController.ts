@@ -45,7 +45,7 @@ export const findUserPermission = () => async (req: Request, res: Response, next
             username: user.username,
             email: user.email,
             last_login: user.last_login,
-            permissions: res.locals.permission
+            permissions: res.locals.permissions
         }
 
         res.locals.user = formatUser

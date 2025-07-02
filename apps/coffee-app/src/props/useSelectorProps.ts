@@ -9,7 +9,7 @@ user: {
     id: string,
     username: string,
     email: string,
-    permission: Permission[],
+    permissions: Permission[],
     role: string
 
 }

@@ -5,6 +5,8 @@ import { Provider } from 'react-redux'
 import store from '../store'
 import title from '../constants/title.json'
 
+import '../styles/sweetalert.css'
+
 const WrappedApp = ({
   Component,
   pageProps

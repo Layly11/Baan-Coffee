@@ -2,9 +2,10 @@ import { useSelector } from 'react-redux'
 import { styled, keyframes } from 'styled-components'
 import { type UseSelectorProps } from '../props/useSelectorProps'
 import { useRouter } from 'next/router'
-import { useEffect, useState } from 'react'
+import { JSX, useEffect, useState } from 'react'
 import { redirectToDefaultPage } from '@/utils/redirectUtils'
 import MainLayout from '@/components/layouts/mainLayout'
+import withAuthenticated from '@/hocs/withAuthenticated'
 
 const AnimatedLogoContainer = styled.div`
   position: fixed;
@@ -33,17 +34,17 @@ const AnimatedLogo = styled.img`
   animation: ${AnimatedLogoKeyframe} ease-in-out 2s infinite;
 `
 
-export default function Home() {
+const HomePage = (): JSX.Element => {
   const user = useSelector((state: UseSelectorProps) => state.user)
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
 
-  // useEffect(() => {
-  //   if (user !== null) {
-  //     setIsLoading(false)
-  //     redirectToDefaultPage(user.permissions, router)
-  //   }
-  // }, [user, router])
+  useEffect(() => {
+    if (user !== null) {
+      setIsLoading(false)
+      redirectToDefaultPage(user.permissions, router)
+    }
+  }, [user, router])
 
   if (isLoading) {
     return (
@@ -58,3 +59,5 @@ export default function Home() {
   }
   return <MainLayout />
 }
+
+export default withAuthenticated(HomePage)
