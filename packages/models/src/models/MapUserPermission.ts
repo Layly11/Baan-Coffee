@@ -91,6 +91,7 @@ MapUserPermissionModel.init(
     },
     {
         sequelize,
+        tableName: 'map_user_permission',
         modelName: 'map_user_permission',
         underscored: true
     }

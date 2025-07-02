@@ -1,6 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
 import passport, { session } from 'passport';
 import { register, login } from '../controller/authenController'
+import { findUserPermission } from '../controller/userController'
 
 
 const router = express.Router()
@@ -44,8 +45,15 @@ router.post(
 router.get(
     '/profile',
     passport.authenticate('jwt', { failureMessage: true }),
+    findUserPermission(),
     (req: Request, res: Response, next: NextFunction) => {
-        res.json({ user: req.user });
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            user: res.locals.user
+        }
+        res.json(res.locals.response)
+        next()
     }
 )
 

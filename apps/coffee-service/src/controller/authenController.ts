@@ -57,7 +57,8 @@ export const login = () => async (req: Request, res: Response, next: NextFunctio
     const token = await new jose.SignJWT({
       id: user.id,
       username: user.username,
-      email: user.email
+      email: user.email,
+      role_id: user.role_id
     })
       .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
       .setIssuedAt()

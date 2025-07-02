@@ -46,6 +46,7 @@ MenuPermissionModel.init(
     },
     {
         sequelize,
+        tableName: 'menu_permission',
         modelName: 'menu_permission',
         underscored: true
     }
