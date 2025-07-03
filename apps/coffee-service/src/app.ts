@@ -1,8 +1,5 @@
 import express, { NextFunction, Request, Response } from "express";
 import { urlencoded } from 'body-parser'
-import session from "express-session";
-import RedisStore from 'connect-redis';
-import {getRedisClient} from './helpers/redis'
 import passport from "./helpers/passport";
 import routers from './routers'
 import { createRequestLog, createResponseLog, createErrorLog } from './controller/logController'
@@ -28,27 +25,7 @@ app.use(urlencoded({ extended: true }))
 
 app.use(cookieParser(process.env.COOKIE_SECRET))
 
-const redisClient = getRedisClient();
-
-const redisStore = new RedisStore({
-    client: redisClient,
-    prefix: 'mycoffee:',
-    ttl: 60 * 60 * 1000
-});
-app.use(session({
-    secret: process.env.COOKIE_SECRET!,
-    store: redisStore,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        secure: process.env.NODE_ENV === 'production',
-        httpOnly: true,
-        maxAge: 60 * 60 * 1000
-    }
-}));
 app.use(passport.initialize());
-app.use(passport.session())
-
 
 app.use(createRequestLog())
 
