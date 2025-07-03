@@ -22,6 +22,35 @@ export = {
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
     })
+     const now = new Date();
+    await queryInterface.bulkInsert('user_role', [
+      {
+        id: 1,
+        name: 'SUPER_ADMIN',
+        created_at: now,
+        updated_at: now
+      },
+      {
+        id: 2,
+        name: 'MANAGER',
+        created_at: now,
+        updated_at: now
+      },
+      {
+        id: 3,
+        name: 'BARISTA',
+        created_at: now,
+        updated_at: now
+      },
+      {
+        id: 4,
+        name: 'CASHIER',
+        created_at: now,
+        updated_at: now
+      }
+    ]);
+
+    
   },
   down: async (queryInterface, Sequelize) => {
     await queryInterface.dropTable('user_role')

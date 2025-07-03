@@ -1,5 +1,6 @@
 import { Migration } from 'sequelize-cli'
 import { DataTypes } from 'sequelize'
+import bcrypt from 'bcryptjs' 
 
 export = {
   up: async (queryInterface, Sequelize) => {
@@ -47,6 +48,20 @@ export = {
         defaultValue: Sequelize.literal('CURRENT_TIMESTAMP'),
       },
     });
+
+      const now = new Date();
+      const hashedPassword = await bcrypt.hash('140974saiaye', 10);
+       await queryInterface.bulkInsert('users', [{
+      role_id: 1,
+      username: 'admin',
+      email: 'admin@gmail.com',
+      password: hashedPassword,
+      recent_login: now,
+      last_login: now,
+      created_at: now,
+      updated_at: now
+    }]);
+    
   },
 
   down: async (queryInterface, Sequelize) => {
