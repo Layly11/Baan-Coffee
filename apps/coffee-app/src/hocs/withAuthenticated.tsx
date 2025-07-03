@@ -1,7 +1,7 @@
 import React, { JSX, useEffect } from 'react'
 
 
-import { useRouter } from 'next/navigation'
+import { useRouter } from 'next/router'
 import { useDispatch, useSelector } from 'react-redux'
 import {UseSelectorProps} from '../props/useSelectorProps'
 import axios from 'axios'
@@ -20,12 +20,21 @@ const withAuthenticated = (Component: React.FC): React.FC => {
                 dispatch({type: 'SET_USER', payload: user})
             } catch (err) {
                 if (typeof err === 'object' && err !== null && 'status' in err && (err as any).status === 401) {
+                    if(router.pathname == '/'){
+                        router.push('/login')
+                    } else{
+                         swalInstance.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Unauthorized'
+                    })
                     router.push('/login')
+                    }
                 } else {
                     swalInstance.fire({
                         icon: 'error',
                         title: 'Error',
-                        text: 'Unauthorized'
+                        text: 'Forbidden'
                     })
                 }
             }
