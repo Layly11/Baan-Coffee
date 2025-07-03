@@ -10,20 +10,15 @@ import title from '../constants/title.json'
 import axios from 'axios'
 import { redirectToDefaultPage } from '../utils/redirectUtils'
 
-const Logo = styled.img`
-  display: block;
-  height: 100%;
-  box-sizing: border-box;
-`
 
 const Title = styled.div`
   font-size: 3em;
   font-weight: bold;
-  color: #0C2F5F;
+  color: #4e342e;
 `
 
 const Subtitle = styled.div`
-  color: '#3B5475';
+  color: #4e342e;
   font-weight: 400;
 `
 const ContainerStyled = styled(Container)`
@@ -68,16 +63,6 @@ const LoginPage = (): JSX.Element => {
             }}
           >
             <ContainerStyled fluid>
-              <Row style={{ margin: '10px -10px' }}>
-                <Col xs={2}>
-                  <Logo
-                    src='/logo.png'
-                    draggable={false}
-                    loading='eager'
-                    onContextMenu={(e) => { e.preventDefault() }}
-                  />
-                </Col>
-              </Row>
               <Row style={{ margin: '0px -10px 30px -10px' }}>
                 <Col xs={12}>
                   <Title>Sign In</Title>
@@ -109,7 +94,7 @@ const LoginPage = (): JSX.Element => {
                 src='/sign_in.png'
                 width={550}
                 height={550}
-                style={{ width: '70%', height: '70%' }}
+                style={{ width: '80%', height: '70%' }}
                 alt='sign in logo'
                 loading='eager'
                 onContextMenu={(e) => { e.preventDefault() }}
