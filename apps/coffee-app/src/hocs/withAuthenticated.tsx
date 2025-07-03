@@ -19,7 +19,7 @@ const withAuthenticated = (Component: React.FC): React.FC => {
                 const user = res.data.user
                 dispatch({type: 'SET_USER', payload: user})
             } catch (err) {
-                if (typeof err === 'object' && err !== null && 'status' in err && (err as any).status === 403) {
+                if (typeof err === 'object' && err !== null && 'status' in err && (err as any).status === 401) {
                     router.push('/login')
                 } else {
                     swalInstance.fire({

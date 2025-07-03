@@ -44,7 +44,7 @@ router.post(
 
 router.get(
     '/profile',
-    passport.authenticate('jwt', { failureMessage: true }),
+    passport.authenticate('jwt', { session: false }),
     findUserPermission(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {

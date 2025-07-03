@@ -20,7 +20,7 @@ const cookieExtractor = (req: Request) => {
 }
 
 const opts: StrategyOptions = {
-    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+    jwtFromRequest:  cookieExtractor,
     secretOrKey: process.env.JWT_SECRET!
 }
 
