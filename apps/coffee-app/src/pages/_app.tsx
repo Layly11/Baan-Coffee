@@ -1,12 +1,23 @@
-import React, { JSX } from 'react'
+import React, { JSX, useEffect } from 'react'
 
 import Head from 'next/head'
-import { Provider } from 'react-redux'
+import { Provider, useDispatch } from 'react-redux'
 import store from '../store'
 import title from '../constants/title.json'
 
 import '../styles/sweetalert.css'
 import '../styles/globals.css'
+import { setStoreDispatch } from '@/helpers/axios'
+
+const SetupAxiosDispatch = () => {
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    setStoreDispatch(dispatch)
+  }, [dispatch])
+
+  return null
+}
 
 const WrappedApp = ({
   Component,
@@ -19,8 +30,8 @@ const WrappedApp = ({
     <Head>
       <title>{title.TITLE}</title>
     </Head>
-
     <Provider store={store}>
+          <SetupAxiosDispatch />
         <Component {...pageProps} />
     </Provider>
   </>

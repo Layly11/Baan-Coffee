@@ -1,10 +1,4 @@
 export interface UseSelectorProps {
-//   user: {
-//     id: string
-//     email: string
-//     username: string
-//   }
-
 user: {
     id: string,
     username: string,
@@ -12,6 +6,9 @@ user: {
     permissions: Permission[],
     role: string
 
+}
+token: {
+  accessToken: string
 }
 }
 
