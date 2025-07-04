@@ -4,7 +4,6 @@ import app from './app'
 import { initializeRedisClient } from './helpers/redis'
 import winston from './helpers/winston'
 import databaseConnect from './helpers/sequelize.helper'
-
 const PORT = Number(process.env.PORT)
 const MAX_RETRY_START = 3
 const RETRY_DELAY = 30000

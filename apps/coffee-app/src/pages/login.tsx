@@ -7,9 +7,11 @@ import { useRouter } from 'next/router'
 
 
 import title from '../constants/title.json'
-import axios from 'axios'
+import axios from '@/helpers/axios'
 import { redirectToDefaultPage } from '../utils/redirectUtils'
 import swalInstance, { Alert } from '../helpers/sweetalert'
+import { setAccessToken } from '@/helpers/axios'
+import { useDispatch } from 'react-redux'
 
 const Title = styled.div`
   font-size: 3em;
@@ -83,6 +85,7 @@ const LoginPage = (): JSX.Element => {
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false); 
+  const dispatch = useDispatch()
 
   useEffect(() => {
     axios.get('/api/authen/profile')
@@ -109,7 +112,10 @@ const LoginPage = (): JSX.Element => {
       const res = await axios.post('/api/authen/login/',{ email, password})
       
       if(res.data?.res_code === '0000') {
-         console.log('Login successful:', res.data);
+         console.log('Login successful');
+         const token = res.data.data.accessToken
+         setAccessToken(token)
+         dispatch({ type: 'SET_USER_TOKEN', payload: token })
          const profileRes = await axios.get('/api/authen/profile');
          if(profileRes.data.user){
           redirectToDefaultPage(profileRes.data?.user?.permissions as Array<{ name: string, view: boolean }> | undefined, router)

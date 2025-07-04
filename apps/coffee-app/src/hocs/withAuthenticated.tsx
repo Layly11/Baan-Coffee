@@ -4,7 +4,7 @@ import React, { JSX, useEffect } from 'react'
 import { useRouter } from 'next/router'
 import { useDispatch, useSelector } from 'react-redux'
 import {UseSelectorProps} from '../props/useSelectorProps'
-import axios from 'axios'
+import axios from '@/helpers/axios'
 import swalInstance from '../helpers/sweetalert'
 
 const withAuthenticated = (Component: React.FC): React.FC => {
@@ -36,6 +36,7 @@ const withAuthenticated = (Component: React.FC): React.FC => {
                         title: 'Error',
                         text: 'Forbidden'
                     })
+                    router.push('/login')
                 }
             }
         }
