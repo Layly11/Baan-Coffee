@@ -111,7 +111,7 @@ export const refreshToken = () => async (req: Request, res: Response, next: Next
       return next(new ServiceError(AuthenMasterError.ERR_REFRESH_TOKEN_NOT_FOUND))
     }
 
-    // await redis.sRem(`refreshTokens:${userId}`, refreshToken);
+    await redis.sRem(`refreshTokens:${userId}`, refreshToken);
 
     const user = await UserModel.findOne({ where: { id: userId } })
 
