@@ -35,6 +35,11 @@ app.use(routers)
 app.use(createResponseLog())
 app.use(createErrorLog())
 
+app.use((req, res, next) => {
+  console.log('Authorization header:', req.headers['Authorization'])
+  next()
+})
+
 return app
 
 }

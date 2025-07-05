@@ -7,7 +7,7 @@ import title from '../constants/title.json'
 
 import '../styles/sweetalert.css'
 import '../styles/globals.css'
-import { setStoreDispatch } from '@/helpers/axios'
+import { setAccessToken, setStoreDispatch } from '@/helpers/axios'
 
 const SetupAxiosDispatch = () => {
   const dispatch = useDispatch()

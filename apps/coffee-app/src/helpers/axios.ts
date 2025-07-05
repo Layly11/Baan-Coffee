@@ -2,26 +2,32 @@ import axios from "axios";
 
 
 
-const instance = axios.create()
+const instance = axios.create({
+        withCredentials: true,
+})
 let isRefreshing = false
 let failedQueue: Array<(token?: string) => void> = []
 let storeDispatch: any = null
+let accessToken: string | null = null
 
 export const setStoreDispatch = (dispatch: any) => {
     storeDispatch = dispatch
 }
 
 export const setAccessToken = (token: string) => {
+     accessToken = token
     instance.defaults.headers.common['Authorization'] = `Bearer ${token}`
 }
 
-function hasCookie(name: string): boolean {
-    return document.cookie.split(';').some(c => c.trim().startsWith(`${name}=`))
-}
-
-instance.interceptors.request.use(config => {
+instance.interceptors.request.use(
+  (config) => {
+    if (accessToken) {
+      config.headers['Authorization'] = `Bearer ${accessToken}`
+    }
     return config
-})
+  },
+  (error) => Promise.reject(error)
+)
 
 instance.interceptors.response.use(
     response => response,
@@ -47,14 +53,7 @@ instance.interceptors.response.use(
 
 
             try {
-                const hasRefreshToken = document.cookie.includes('authToken')
-                if (!hasRefreshToken) {
-                    isRefreshing = false
-                    failedQueue = []
-                    return instance(originalRequest)
-                }
-
-                const res = await instance.post('api/authen/refresh-token')
+                const res = await instance.post('/api/authen/refresh-token')
                 const newAccessToken = res.data.data.newAccessToken
 
                 setAccessToken(newAccessToken)

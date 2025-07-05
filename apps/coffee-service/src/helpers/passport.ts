@@ -2,7 +2,6 @@ import { ExtractJwt, Strategy as JwtStrategy, StrategyOptions} from 'passport-jw
 import { JwtPayload as NodeJwtPayload } from 'jsonwebtoken';
 import passport from 'passport';
 import { UserModel, UserRoleModel } from '@coffee/models'
-import { Request } from 'express';
 
 interface CustomJwtPayload extends NodeJwtPayload {
     id: string,
@@ -10,16 +9,9 @@ interface CustomJwtPayload extends NodeJwtPayload {
     email: string
 }
 
-const cookieExtractor = (req: Request) => {
-    let token = null
-    if (req && req.cookies) {
-        token = req.cookies['authToken']
-    }
-    return token
-}
 
 const opts: StrategyOptions = {
-    jwtFromRequest:  ExtractJwt.fromAuthHeaderAsBearerToken(),
+    jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
     secretOrKey: process.env.JWT_SECRET!
 }
 
