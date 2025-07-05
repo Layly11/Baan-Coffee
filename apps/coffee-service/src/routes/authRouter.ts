@@ -30,6 +30,7 @@ router.post(
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             maxAge: 60 * 60 * 24 * 7 * 1000,
+            sameSite: 'lax'
         })
         res.locals.response = {
             res_code: '0000',
@@ -51,7 +52,8 @@ router.post(
         res.cookie('authToken', token.refreshToken, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
-            maxAge: 60 * 60 * 24 * 7,
+            maxAge: 60 * 60 * 24 * 7 * 1000,
+            sameSite: 'lax'
         })
         res.locals.response = {
             res_code: '0000',

@@ -18,8 +18,8 @@ const withAuthenticated = (Component: React.FC): React.FC => {
                 const res = await axios.get('/api/authen/profile')
                 const user = res.data.user
                 dispatch({type: 'SET_USER', payload: user})
-            } catch (err) {
-                if (typeof err === 'object' && err !== null && 'status' in err && (err as any).status === 401) {
+            } catch (err: any) {
+                if (err.status === 401) {
                     if(router.pathname == '/'){
                         router.push('/login')
                     } else{

@@ -67,7 +67,7 @@ export const login = () => async (req: Request, res: Response, next: NextFunctio
     })
       .setProtectedHeader(header)
       .setIssuedAt()
-      .setExpirationTime(process.env.JWT_EXPIRES_IN!)
+      .setExpirationTime('1m')
       .sign(jwtSecret)
 
     const refreshToken = await new jose.SignJWT({
@@ -111,7 +111,7 @@ export const refreshToken = () => async (req: Request, res: Response, next: Next
       return next(new ServiceError(AuthenMasterError.ERR_REFRESH_TOKEN_NOT_FOUND))
     }
 
-    await redis.sRem(`refreshTokens:${userId}`, refreshToken);
+    // await redis.sRem(`refreshTokens:${userId}`, refreshToken);
 
     const user = await UserModel.findOne({ where: { id: userId } })
 
@@ -127,7 +127,7 @@ export const refreshToken = () => async (req: Request, res: Response, next: Next
     })
       .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
       .setIssuedAt()
-      .setExpirationTime(process.env.JWT_EXPIRES_IN!)
+      .setExpirationTime('1m')
       .sign(jwtSecret)
 
     const newRefreshToken = await new jose.SignJWT({
