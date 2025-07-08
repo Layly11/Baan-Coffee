@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import passport, { session } from 'passport';
-import { register, login, refreshToken, logout } from '../controller/authenController'
+import { register, login, refreshToken, logout, checkAvailability } from '../controller/authenController'
 import { findUserPermission } from '../controller/userController'
 
 const router = express.Router()
@@ -97,10 +97,25 @@ router.post(
      }
     );
 
+
+router.get(
+    '/check-availability',
+    checkAvailability(),
+    (req:Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            checkExist: res.locals.checkExist
+        }
+        res.json(res.locals.response)
+          next()
+    }
+)
+
+
 router.get(
     '/test',
     (req: Request, res: Response, next: NextFunction) => {
-        res.json({ user: req.user });
+        res.json({ user: req.user })
+        next()
     }
 )
 

@@ -24,11 +24,7 @@
 }
 
 .swal2-icon.swal2-success [class^=swal2-success-line],
-.swal2-success-ring {
-  background-color: #6d4c41 !important;
-  border-color: #a1887f !important;
-  opacity: 1 !important;
-}
+
 
 .swal2-icon.swal2-error {
   border-color: #d32f2f !important;
