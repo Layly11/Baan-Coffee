@@ -3,7 +3,7 @@ import React, { JSX, useEffect } from 'react'
 
 import { useRouter } from 'next/router'
 import { useDispatch, useSelector } from 'react-redux'
-import {UseSelectorProps} from '../props/useSelectorProps'
+import { UseSelectorProps } from '../props/useSelectorProps'
 import axios from '@/helpers/axios'
 import swalInstance from '../helpers/sweetalert'
 
@@ -17,36 +17,41 @@ const withAuthenticated = (Component: React.FC): React.FC => {
             try {
                 const res = await axios.get('/api/authen/profile')
                 const user = res.data.user
-                dispatch({type: 'SET_USER', payload: user})
+                dispatch({ type: 'SET_USER', payload: user })
             } catch (err: any) {
-                if (err.status === 401) {
-                    if(router.pathname == '/'){
+                if (err.response.status === 403) {
+                    if (router.pathname === '/') {
                         router.push('/login')
-                    } else{
-                         swalInstance.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Unauthorized'
-                    })
-                    router.push('/login')
+                    } else {
+                        swalInstance.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Forbidden'
+                        })
+                        router.push('/login')
                     }
                 } else {
-                    swalInstance.fire({
-                        icon: 'error',
-                        title: 'Error',
-                        text: 'Forbidden'
-                    })
-                    router.push('/login')
+                    if (router.pathname === '/') {
+                        router.push('/login')
+                    } else {
+                        swalInstance.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Unauthorized'
+
+                        })
+                        router.push('/login')
+                    }
                 }
             }
         }
 
         useEffect(() => {
-            if(user === null) {
+            if (user === null) {
                 handleFetchUserProfile()
             }
         }, [])
-        
+
         return <Component {...props} />
     }
     return ComponentWithAuthenticated

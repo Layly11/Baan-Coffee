@@ -76,7 +76,7 @@ export const login = () => async (req: Request, res: Response, next: NextFunctio
     })
       .setProtectedHeader(header)
       .setIssuedAt()
-      .setExpirationTime(process.env.JWT_REFRESH_EXPIRES_IN!)
+      .setExpirationTime('2m')
       .sign(jwtRefreshSecret)
 
     await redis.sAdd(`refreshTokens:${user.id}`, refreshToken);
@@ -127,7 +127,7 @@ export const refreshToken = () => async (req: Request, res: Response, next: Next
     })
       .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
       .setIssuedAt()
-      .setExpirationTime('1m')
+      .setExpirationTime(process.env.JWT_EXPIRES_IN!)
       .sign(jwtSecret)
 
     const newRefreshToken = await new jose.SignJWT({
@@ -172,5 +172,27 @@ export const logout = () => async (req: Request, res: Response, next: NextFuncti
 
   } catch (error) {
     next(error)
+  }
+}
+
+export const checkAvailability = () => async (req: Request, res: Response, next: NextFunction) => {
+  const {email, username} = req.query 
+  let checkExist: {emailTaken: boolean | null, usernameTaken: boolean|null} = {emailTaken: null, usernameTaken: null}
+  try{
+    if(email) {
+      const emailStr = email as string
+      const user = await UserModel.findOne({ where: { email: emailStr } })
+      checkExist.emailTaken = !!user
+    }
+     if (username) {
+      const usernameStr = username as string
+      const user = await UserModel.findOne({ where: { username: usernameStr } })
+      checkExist.usernameTaken = !!user
+    }
+
+    res.locals.checkExist = checkExist
+    next()
+  } catch (err) {
+    next(err)
   }
 }

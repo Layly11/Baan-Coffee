@@ -34,7 +34,7 @@ instance.interceptors.response.use(
     async error => {
         const originalRequest = error.config
 
-        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/authen/refresh-token')) {
+        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/authen/refresh-token') && accessToken) {
             originalRequest._retry = true
 
             if (isRefreshing) {
@@ -49,8 +49,6 @@ instance.interceptors.response.use(
             }
 
             isRefreshing = true
-
-
 
             try {
                 const res = await instance.post('/api/authen/refresh-token')

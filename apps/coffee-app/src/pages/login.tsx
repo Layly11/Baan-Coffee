@@ -12,6 +12,7 @@ import { redirectToDefaultPage } from '../utils/redirectUtils'
 import swalInstance, { Alert } from '../helpers/sweetalert'
 import { setAccessToken } from '@/helpers/axios'
 import { useDispatch } from 'react-redux'
+import Link from 'next/link'
 
 const Title = styled.div`
   font-size: 3em;
@@ -84,7 +85,8 @@ const LoginPage = (): JSX.Element => {
   const router = useRouter()
   const [email, setEmail] = useState<string>('')
   const [password, setPassword] = useState<string>('')
-  const [loading, setLoading] = useState<boolean>(false); 
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const dispatch = useDispatch()
 
   useEffect(() => {
@@ -92,11 +94,11 @@ const LoginPage = (): JSX.Element => {
       .then((res) => {
         redirectToDefaultPage(res.data?.user?.permissions as Array<{ name: string, view: boolean }> | undefined, router)
       })
-      .catch(() => {})
+      .catch(() => { })
   }, [router])
 
 
-    const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
     setEmail(e.target.value);
   };
 
@@ -108,37 +110,36 @@ const LoginPage = (): JSX.Element => {
   const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
     e.preventDefault()
     setLoading(true);
-    try{
-      const res = await axios.post('/api/authen/login/',{ email, password})
-      
-      if(res.data?.res_code === '0000') {
-         console.log('Login successful');
-         const token = res.data.data.accessToken
-         setAccessToken(token)
-         dispatch({ type: 'SET_USER_TOKEN', payload: token })
-         const profileRes = await axios.get('/api/authen/profile');
-         if(profileRes.data.user){
+    try {
+      const res = await axios.post('/api/authen/login/', { email, password })
+
+      if (res.data?.res_code === '0000') {
+        setErrorMessage(null)
+        const token = res.data.data.accessToken
+        setAccessToken(token)
+        dispatch({ type: 'SET_USER_TOKEN', payload: token })
+        const profileRes = await axios.get('/api/authen/profile');
+        if (profileRes.data.user) {
           redirectToDefaultPage(profileRes.data?.user?.permissions as Array<{ name: string, view: boolean }> | undefined, router)
-         } else {
-           swalInstance.fire({
-                icon: 'success',
-                title: 'Login Success',
-                text: 'Redirecting...',
-                timer: 1500,
-                showConfirmButton: false
-            });
-         }
+        } else {
+          swalInstance.fire({
+            icon: 'success',
+            title: 'Login Success',
+            text: 'Redirecting...',
+            timer: 1500,
+            showConfirmButton: false
+          });
+        }
       }
     } catch (error) {
-       console.error('Login failed:', error);
-       Alert(error as any)
+      setErrorMessage('Invalid email or password.') 
     } finally {
       setLoading(false)
     }
   }
 
   return (
-      <>
+    <>
       <Head>
         <title>{title.LOGIN_TITLE}</title>
       </Head>
@@ -207,10 +208,19 @@ const LoginPage = (): JSX.Element => {
                       required
                     />
                   </InputGroup>
+                  {errorMessage && (
+                    <p style={{ color: 'red', marginTop: '-10px', marginBottom: '10px' }}>{errorMessage}</p>
+                  )}
                   <Button type="submit" disabled={loading}>
                     {loading ? 'Signing In...' : 'Sign In'}
                   </Button>
                 </LoginForm>
+                <div style={{ textAlign: 'left', marginTop: '20px' }}>
+                  <span style={{ color: '#4e342e' }}>Don't have an account? </span>
+                  <Link href="/signup" style={{ color: '#795548', fontWeight: 'bold', textDecoration: 'underline' }}>
+                    Sign Up
+                  </Link>
+                </div>
               </ContainerStyled>
               {/* คุณสามารถเพิ่มส่วนอื่นๆ เช่น ลืมรหัสผ่าน, สมัครสมาชิก ที่นี่ได้ */}
             </div>
