@@ -1,0 +1,1 @@
+export const isEnglishOnly = (text: string) => /^[a-zA-Z0-9._\-@]+$/.test(text) 
