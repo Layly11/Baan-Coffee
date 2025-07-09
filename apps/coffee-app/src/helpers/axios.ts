@@ -34,7 +34,7 @@ instance.interceptors.response.use(
     async error => {
         const originalRequest = error.config
 
-        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/authen/refresh-token') && accessToken) {
+        if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/authen/refresh-token')) {
             originalRequest._retry = true
 
             if (isRefreshing) {

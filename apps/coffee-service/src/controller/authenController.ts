@@ -85,7 +85,7 @@ export const login = () => async (req: Request, res: Response, next: NextFunctio
     })
       .setProtectedHeader(header)
       .setIssuedAt()
-      .setExpirationTime('1m')
+      .setExpirationTime(process.env.JWT_EXPIRES_IN!)
       .sign(jwtSecret)
 
     const refreshToken = await new jose.SignJWT({
@@ -94,7 +94,7 @@ export const login = () => async (req: Request, res: Response, next: NextFunctio
     })
       .setProtectedHeader(header)
       .setIssuedAt()
-      .setExpirationTime('2m')
+      .setExpirationTime(process.env.JWT_REFRESH_EXPIRES_IN!)
       .sign(jwtRefreshSecret)
 
     await redis.sAdd(`refreshTokens:${user.id}`, refreshToken);
