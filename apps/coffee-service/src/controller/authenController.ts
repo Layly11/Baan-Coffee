@@ -7,6 +7,7 @@ import winston from '../helpers/winston'
 import validator from 'validator';
 import USER_ROLE from '../constants/masters/userRole.json'
 import { getRedisClient } from '../helpers/redis'
+import {isEnglishOnly} from '../utils/validator'
 
 export const register = () => async (req: Request, res: Response, next: NextFunction) => {
   const { username, email, password } = req.body
@@ -14,14 +15,31 @@ export const register = () => async (req: Request, res: Response, next: NextFunc
     winston.error('User registration failed: Missing required fields')
     return next(new ServiceError(AuthenMasterError.ERR_USER_REGISTER_REQUIRED))
   }
+
   try {
     const existingUser = await UserModel.findOne({ where: { email } })
     if (existingUser) {
       return next(new ServiceError(AuthenMasterError.ERR_REGISTER_USER_EXIST))
     }
-    if (!validator.isEmail(email)) {
-      return next(new ServiceError(AuthenMasterError.ERR_REGISTER_USER_EMAIL_INVALID))
+
+        if (!isEnglishOnly(username)) {
+    return next(new ServiceError(AuthenMasterError.ERR_REGISTER_USERNAME_INVALID))
+  }
+  if (!isEnglishOnly(email) || !validator.isEmail(email)) {
+    return next(new ServiceError(AuthenMasterError.ERR_REGISTER_USER_EMAIL_INVALID))
+  }
+
+
+    if (!validator.isStrongPassword(password, {
+      minLength: 8,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+    })) {
+      return next(new ServiceError(AuthenMasterError.ERR_REGISTER_PASSWORD_WEAK))
     }
+
     const newUser = await UserModel.create({ username, email, password, role_id: USER_ROLE.CASHIER.id })
 
     res.locals.newUser = newUser
@@ -164,10 +182,10 @@ export const logout = () => async (req: Request, res: Response, next: NextFuncti
 
 
     res.clearCookie('authToken', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict'
-  });
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
     next()
 
   } catch (error) {
@@ -176,15 +194,15 @@ export const logout = () => async (req: Request, res: Response, next: NextFuncti
 }
 
 export const checkAvailability = () => async (req: Request, res: Response, next: NextFunction) => {
-  const {email, username} = req.query 
-  let checkExist: {emailTaken: boolean | null, usernameTaken: boolean|null} = {emailTaken: null, usernameTaken: null}
-  try{
-    if(email) {
+  const { email, username } = req.query
+  let checkExist: { emailTaken: boolean | null, usernameTaken: boolean | null } = { emailTaken: null, usernameTaken: null }
+  try {
+    if (email) {
       const emailStr = email as string
       const user = await UserModel.findOne({ where: { email: emailStr } })
       checkExist.emailTaken = !!user
     }
-     if (username) {
+    if (username) {
       const usernameStr = username as string
       const user = await UserModel.findOne({ where: { username: usernameStr } })
       checkExist.usernameTaken = !!user

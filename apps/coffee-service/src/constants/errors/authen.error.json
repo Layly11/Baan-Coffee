@@ -15,17 +15,33 @@
       "th": "ข้อมูลUserมีอยู่แล้ว"
     }
   },
-  "ERR_REGISTER_USER_EMAIL_INVALID": {
+    "ERR_REGISTER_USERNAME_INVALID": {
     "statusCode": 400,
     "resCode": "0403",
+    "resDesc": {
+      "en": "Username is invalid",
+      "th": "กรอกUsernameไม่ถูกต้อง"
+    }
+  },
+  "ERR_REGISTER_USER_EMAIL_INVALID": {
+    "statusCode": 400,
+    "resCode": "0404",
     "resDesc": {
       "en": "Email is invalid Foramt",
       "th": "กรอกอีเมลที่ถูกต้อง"
     }
   },
+  "ERR_REGISTER_PASSWORD_WEAK": {
+    "statusCode": 400,
+    "resCode": "0405",
+    "resDesc": {
+      "en": "Password is too weak. Please include uppercase, lowercase, numbers, and symbols.",
+      "th": "รหัสอ่อนแอเกินไป ควรใส่ uppercase, lowercase, numbers, and symbols."
+    }
+  },
   "ERR_USER_LOGIN_REQUIRED": {
     "statusCode": 400,
-    "resCode": "0404",
+    "resCode": "0406",
     "resDesc": {
       "en": "User Login is required.",
       "th": "จำเป็นต้องเข้าสู่ระบบ กรอกข้อมูลให้ครบถ้วน"
@@ -33,7 +49,7 @@
   },
   "ERR_LOGIN_USER_INVALID": {
     "statusCode": 401,
-    "resCode": "0405",
+    "resCode": "0407",
     "resDesc": {
       "en": "Email or Password Invalid",
       "th": "กรอกข้อมูล email password ผิดพลาด"
@@ -41,7 +57,7 @@
   },
   "ERR_REFRESH_TOKEN_NOT_FOUND": {
     "statusCode": 401,
-    "resCode": "0406",
+    "resCode": "0408",
     "resDesc": {
       "en": "RefreshToken not found",
       "th": "ไม่เจอ refreshToken"
@@ -49,7 +65,7 @@
   },
     "ERR_REFRESH_TOKEN_INVALID": {
     "statusCode": 401,
-    "resCode": "0406",
+    "resCode": "0409",
     "resDesc": {
       "en": "RefreshToken Invalid",
       "th": "refreshToken ไม่ตรง"
@@ -57,7 +73,7 @@
   },
       "ERR_USER_NOT_FOUND": {
     "statusCode": 401,
-    "resCode": "0407",
+    "resCode": "0410",
     "resDesc": {
       "en": "User not found when refreshToken",
       "th": "ไม่เจอ User ตอน RefreshToken"

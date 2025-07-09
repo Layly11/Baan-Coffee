@@ -9,6 +9,7 @@ import title from '../constants/title.json'
 import axios from '@/helpers/axios'
 import swalInstance, { Alert } from '../helpers/sweetalert'
 import Link from 'next/link'
+import validator from 'validator'
 
 
 const Title = styled.div`
@@ -47,7 +48,7 @@ const Label = styled.label`
   color: #4e342e;
 `
 
-const Input = styled.input<{ $hasError?: boolean}>`
+const Input = styled.input<{ $hasError?: boolean }>`
   padding: 12px 15px;
   border: 1px solid ${({ $hasError }) => ($hasError ? 'red' : '#ccc')};
   border-radius: 8px;
@@ -56,7 +57,7 @@ const Input = styled.input<{ $hasError?: boolean}>`
     border-color: #795548;
     outline: none;
     box-shadow: 0 0 0 2px  ${({ $hasError }) =>
-        $hasError ? 'red' : 'rgba(121, 85, 72, 0.2)'};
+    $hasError ? 'red' : 'rgba(121, 85, 72, 0.2)'};
   }
 `
 
@@ -85,6 +86,7 @@ const ErrorText = styled.span`
   margin-top: 5px;
 `
 
+
 const SignupPage = (): JSX.Element => {
   const router = useRouter()
   const [email, setEmail] = useState('')
@@ -94,10 +96,54 @@ const SignupPage = (): JSX.Element => {
   const [loading, setLoading] = useState(false)
   const [emailError, setEmailError] = useState<string | null>(null)
   const [usernameError, setUsernameError] = useState<string | null>(null)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null)
+
+  const validatePassword = (password: string) => {
+    const minLength = 8
+    const hasUpperCase = /[A-Z]/.test(password)
+    const hasLowerCase = /[a-z]/.test(password)
+    const hasNumber = /[0-9]/.test(password)
+    const hasSpecialChar = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+
+    if (password.length < minLength) return 'Password must be at least 8 characters long.'
+    if (!hasUpperCase) return 'Password must include at least one uppercase letter.'
+    if (!hasLowerCase) return 'Password must include at least one lowercase letter.'
+    if (!hasNumber) return 'Password must include at least one number.'
+    if (!hasSpecialChar) return 'Password must include at least one special character.'
+
+    return null
+  }
+  const isEnglishOnly = (text: string) => /^[a-zA-Z0-9._-]+$/.test(text)
+
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault()
+    resetErrors()
+    if (!username) {
+      setUsernameError('Please enter your username')
+      return
+    }
+    setUsernameError(null)
+    if (!email) {
+      setEmailError('Please enter your email')
+      return
+    }
+    setEmailError(null)
+
+    if (!password) {
+      setPasswordError('Please enter your password')
+      return
+    }
+    setPasswordError(null)
+    const pwdError = validatePassword(password)
+    if (pwdError) {
+      setPasswordError(pwdError)
+      return
+    }
+    setPasswordError(null)
     if (password !== confirmPassword) {
+      setConfirmPasswordError('Passwords do not match')
       swalInstance.fire({
         icon: 'error',
         title: 'Password Mismatch',
@@ -105,12 +151,17 @@ const SignupPage = (): JSX.Element => {
       })
       return
     }
+    setConfirmPasswordError(null)
+
+    if(emailError || usernameError || passwordError || confirmPasswordError){
+      return
+    }
 
     setLoading(true)
     try {
       const res = await axios.post('/api/authen/register', {
-        username,
-        email,
+        username: username.trim(),
+        email: email.trim(),
         password,
       })
 
@@ -149,6 +200,11 @@ const SignupPage = (): JSX.Element => {
 
   const checkEmailAvailability = async (value: string) => {
     if (!value) return
+    if (!validator.isEmail(value) || /[ก-๙]/i.test(value)) {
+      setEmailError('Invalid Format Email (example@gmail.com)')
+      return
+    }
+
     try {
       const res = await axios.get('/api/authen/check-availability', { params: { email: value } })
       setEmailError(res.data.checkExist.emailTaken ? 'Email already exist' : null)
@@ -159,12 +215,22 @@ const SignupPage = (): JSX.Element => {
 
   const checkUsernameAvailability = async (value: string) => {
     if (!value) return
+    if (!isEnglishOnly(value)) {
+      setUsernameError('Username must contain only English letters or numbers')
+      return
+    }
     try {
       const res = await axios.get('/api/authen/check-availability', { params: { username: value } })
       setUsernameError(res.data.checkExist.usernameTaken ? 'Username already exists' : null)
     } catch (err) {
       Alert({ data: err })
     }
+  }
+  const resetErrors = () => {
+    setEmailError(null)
+    setUsernameError(null)
+    setPasswordError(null)
+    setConfirmPasswordError(null)
   }
 
 
@@ -234,7 +300,7 @@ const SignupPage = (): JSX.Element => {
                       onChange={(e) => {
                         const value = e.target.value
                         setEmail(value)
-                        if (usernameError && value) setEmailError(null) 
+                        if (emailError && value) setEmailError(null)
                       }}
                       onBlur={(e) => checkEmailAvailability(e.target.value)}
                       $hasError={!!emailError}
@@ -250,9 +316,25 @@ const SignupPage = (): JSX.Element => {
                       name="password"
                       placeholder="Enter your password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        setPassword(value)
+                        if (passwordError && value) setPasswordError(null)
+                      }}
+                      onBlur={(e) => {
+                        const value = e.target.value
+                        const pwd = validatePassword(value)
+                        if (pwd && value) {
+                          setPasswordError(pwd)
+                        }
+                        if (value === '') {
+                          setPasswordError(null)
+                        }
+                      }}
+                      $hasError={!!passwordError}
                       required
                     />
+                    {passwordError && <ErrorText>{passwordError}</ErrorText>}
                   </InputGroup>
                   <InputGroup>
                     <Label htmlFor="confirmPassword">Confirm Password</Label>
@@ -262,9 +344,25 @@ const SignupPage = (): JSX.Element => {
                       name="confirmPassword"
                       placeholder="Confirm your password"
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        setConfirmPassword(value)
+                        if (confirmPasswordError && value) {
+                          setConfirmPasswordError(null)
+                        }
+                      }}
+                      onBlur={(e) => {
+                        if (confirmPassword !== password) {
+                          setConfirmPasswordError('Passwords do not match')
+                        }
+                        if (e.target.value === '') {
+                          setConfirmPasswordError(null)
+                        }
+                      }}
+                      $hasError={!!confirmPasswordError}
                       required
                     />
+                    {confirmPasswordError && <ErrorText>{confirmPasswordError}</ErrorText>}
                   </InputGroup>
                   <Button type="submit" disabled={loading}>
                     {loading ? 'Signing Up...' : 'Sign Up'}
