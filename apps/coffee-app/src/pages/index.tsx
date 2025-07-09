@@ -57,7 +57,7 @@ const HomePage = (): JSX.Element => {
       </AnimatedLogoContainer>
     )
   }
-  return <MainLayout />
+  return <MainLayout isFetching={isLoading}/>
 }
 
 export default withAuthenticated(HomePage)
