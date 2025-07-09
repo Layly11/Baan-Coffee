@@ -1,0 +1,22 @@
+{
+  "SUPER_ADMID": {
+    "id": 1,
+    "label": "Super Admin",
+    "value": "SUPER_ADMID"
+  },
+  "MANAGER": {
+    "id": 2,
+    "label": "Manager",
+    "value": "MANAGER"
+  },
+  "BARISTA": {
+    "id": 3,
+    "label": "Barista",
+    "value": "BARISTA"
+  },
+  "CASHIER": {
+    "id": 4,
+    "label": "Cashier",
+    "value": "CASHIER"
+  }
+}

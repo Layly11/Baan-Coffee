@@ -3,6 +3,7 @@ user: {
     id: string,
     username: string,
     email: string,
+    last_login: string
     permissions: Permission[],
     role: string
 

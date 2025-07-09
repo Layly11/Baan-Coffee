@@ -5,7 +5,7 @@ import { useSelector } from "react-redux"
 const DashBoardPage = () => {
   const user = useSelector((state: UseSelectorProps) => state.user)
   return (
-    <div>This is DashBoard Page {user?.email}</div>
+    <div>This is DashBoard Page {user?.email} - {user?.role} - {user?.last_login}</div>
   )
 }
 
