@@ -85,7 +85,7 @@ router.get(
 
 router.post(
     '/logout',
-     logout,
+     logout(),
      (req: Request, res: Response, next: NextFunction) => {
          res.locals.response = {
             res_code: '0000',

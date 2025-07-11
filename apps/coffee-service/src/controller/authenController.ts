@@ -186,6 +186,7 @@ export const logout = () => async (req: Request, res: Response, next: NextFuncti
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict'
     });
+    
     next()
 
   } catch (error) {
