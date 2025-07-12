@@ -5,9 +5,13 @@ import { Provider, useDispatch } from 'react-redux'
 import store from '../store'
 import title from '../constants/title.json'
 
+import 'rc-tooltip/assets/bootstrap.css'
+import 'react-datepicker/dist/react-datepicker.css'
+
 import '../styles/sweetalert.css'
 import '../styles/globals.css'
-import { setAccessToken, setStoreDispatch } from '@/helpers/axios'
+import '../styles/datePicker.css'
+import { setStoreDispatch } from '@/helpers/axios'
 
 const SetupAxiosDispatch = () => {
   const dispatch = useDispatch()
