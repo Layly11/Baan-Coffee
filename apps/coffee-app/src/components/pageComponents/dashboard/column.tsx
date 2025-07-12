@@ -1,9 +1,14 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+import { useRouter } from 'next/router'
+
 export const Columns = (): any[] => {
+    const router = useRouter()
     return [
         {
             label: 'Date',
             key: 'date',
-            width: '30%',
+            width: '20%',
         },
         {
             label: 'TotalSale',
@@ -12,29 +17,48 @@ export const Columns = (): any[] => {
         },
         {
             label: 'Order',
-            key: 'order',
-            width: '35%',
-            dataMutation: (row:any) => `${row.shift} (${row.staffCount} person)`
+            key: 'orders',
+            width: '15%',
         },
         {
             label: 'Shift',
             key: 'shift',
-            width: '30%',
+            width: '20%',
+            dataMutation: (row: any) => {
+                return `${row.shift.length} ${row.shift.map(
+                    (shift: any) =>  `(${shift.employee_name})`
+                )}`
+            }
         },
         {
             label: 'Best Seller Menu',
             key: 'bestSeller',
-            width: '30%',
+            width: '15%',
         },
-         {
+        {
             label: 'Notifications',
             key: 'notifications',
-            width: '30%',
+            width: '20%',
         },
-         {
+        {
             label: 'View Details',
             key: 'viewDetails',
-            width: '30%',
+            width: '20%',
+            dataMutation: (row: any) => {
+                return (
+                    <div
+                     style={{
+                cursor: 'pointer',
+                color: '#1477F8'
+              }}
+              onClick={() => {
+                router.push(`/dashboard/${row.id}`)
+              }}
+                    >
+                        <FontAwesomeIcon icon={faMagnifyingGlass} color="#3B5475" size='lg' />
+                    </div>
+                )
+            }
         },
 
 

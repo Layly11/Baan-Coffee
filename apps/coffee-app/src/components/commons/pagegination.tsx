@@ -41,7 +41,7 @@ const Button = styled.button<{ $selected?: boolean }>`
     color: white;
     padding: 4px 10px;
     border-radius: 4px;
-    background: rgba(128, 61, 237, 0.5);
+    background:rgb(199, 142, 51);
   }
   ${(props) =>
     props.$selected === true &&
@@ -49,7 +49,7 @@ const Button = styled.button<{ $selected?: boolean }>`
       cursor: default;
       padding: 4px 10px;
       border-radius: 4px;
-      background: #DECEF8;
+      background: #FFF3E0;
     `
   }
 `
