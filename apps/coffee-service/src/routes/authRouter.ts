@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import passport, { session } from 'passport';
+import passport from 'passport';
 import { register, login, refreshToken, logout, checkAvailability } from '../controller/authenController'
 import { findUserPermission } from '../controller/userController'
 
