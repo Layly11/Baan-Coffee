@@ -14,6 +14,10 @@ import Table from "@/components/commons/table"
 import { Columns } from "@/components/pageComponents/dashboard/column"
 import { fetchDashboardSummary } from '../../utils/requestUtils'
 import { Alert } from "@/helpers/sweetalert"
+import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.json'
+import PermissionActionMaster from '../../constants/masters/PermissionActionMaster.json'
+import { checkPermission } from "@/helpers/checkPermission"
+import { checkRouterQueryAndAutoFetchData } from "@/utils/parseUtils"
 
 
 const pathname = '/dashboard'
@@ -22,11 +26,11 @@ const DashBoardPage = () => {
   const user = useSelector((state: UseSelectorProps) => state.user)
   const router = useRouter()
   const [isFetching, setIsFetching] = useState(false)
-  const [isSearch, setIsSearch] = useState(false)
-  const [total, setTotal] = useState(0)
+  const [isSearch, setIsSearch] = useState(true)
   const [page, setPage] = useState(!isNaN(Number(router.query.page)) ? Number(router.query.page) : 0)
   const [pageSize, setPageSize] = useState(!isNaN(Number(router.query.limit)) ? Number(router.query.limit) : 10)
-  const [rows, setRows] = useState([])
+  const [total, setTotal] = useState(0)
+  const [rows, setRows] = useState<any>([])
   const [startDate, setStartDate] = useState<Date | null>(
     router.query.startDate != undefined
       ? dayjs(router.query.startDate as string).toDate()
@@ -35,13 +39,14 @@ const DashBoardPage = () => {
 
   const [endDate, setEndDate] = useState<Date | null>(
     router.query.endDate !== undefined
-      ? dayjs(router.query.startDate as string).toDate()
+      ? dayjs(router.query.endDate as string).toDate()
       : dayjs().toDate()
   )
 
   const fetchDashboardSummaryList = async (page?: number) => {
     try {
       setIsFetching(true)
+      setIsSearch(false)
       const config = {
         params: {
           start_date: dayjs(startDate).format('YYYY-MM-DD'),
@@ -51,19 +56,18 @@ const DashBoardPage = () => {
         }
       }
       const response = await fetchDashboardSummary(config)
-      console.log('Response: ', response.data)
+      console.log('DATA', response.data)
       if (response.data != null) {
         const total = response.data.total
         const summary = response.data.summaryList.map((summary: any) => ({
           id: summary.id,
-          date:  dayjs(summary.date).format('DD/MM/YYYY'),
+          date: dayjs(summary.date).format('DD/MM/YYYY'),
           totalSales: summary.total_sales,
           orders: summary.total_orders,
           shift: summary.shifts,
           bestSeller: summary.top_products[0]?.product_name || '-',
           notifications: summary.inventory_statuses.some((i: any) => i.status !== 'normal') ? '1 รายการ' : '-',
         }))
-        console.log('Summary: ', summary)
         setRows(summary)
         setTotal(total)
         setIsFetching(false)
@@ -74,21 +78,18 @@ const DashBoardPage = () => {
     }
   }
 
-  useEffect(() => {
-    fetchDashboardSummaryList()
-  }, [])
 
-    const handleOnClickSearch = async (): Promise<void> => {
+  const handleOnClickSearch = async (): Promise<void> => {
     setIsSearch(false)
     setPage(0)
     router.replace({
       pathname,
       query: {
         startDate: dayjs(startDate).format('YYYY-MM-DD'),
-        endDate: dayjs(startDate).format('YYYY-MM-DD'),
+        endDate: dayjs(endDate).format('YYYY-MM-DD'),
       }
     })
-     fetchDashboardSummaryList()
+    fetchDashboardSummaryList()
   }
 
   const handleOnChangePage = async (page: number): Promise<void> => {
@@ -100,6 +101,45 @@ const DashBoardPage = () => {
 
     fetchDashboardSummaryList(page)
   }
+
+
+  useEffect(() => {
+    const page = PermissionMenuMaster.DASHBOARD
+    const action = PermissionActionMaster.VIEW
+    checkPermission({ user, page, action }, router)
+  }, [user])
+
+  useEffect(() => {
+    if (!router.isReady) return
+    if (router.query.startDate && dayjs(router.query.startDate as string).isValid()) {
+      setStartDate(dayjs(router.query.startDate as string).toDate())
+    } else {
+      setStartDate(dayjs().startOf('day').toDate())
+    }
+
+
+    if (router.query.endDate && dayjs(router.query.endDate as string).isValid()) {
+      setEndDate(dayjs(router.query.endDate as string).toDate())
+    } else {
+      setEndDate(dayjs().toDate())
+    }
+
+    if (router.query.page) {
+      setPage(Number(router.query.page))
+    }
+    if (router.query.limit) {
+      setPageSize(Number(router.query.limit))
+    }
+  }, [router.isReady, router.query])
+
+  useEffect(() => {
+    if (!router.isReady) return
+    checkRouterQueryAndAutoFetchData({
+      query: router.query,
+      fetchData: fetchDashboardSummaryList
+    })
+  }, [router.isReady, router.query])
+
   return (
     <>
       <Head>

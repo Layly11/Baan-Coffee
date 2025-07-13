@@ -31,6 +31,8 @@ export const Header = ({
                                 setEndDate={setEndDate}
                             />
                         </Col>
+                        <Col lg={7}>
+                        </Col>
                         <Col lg={2} xs={12}>
                             <SearchButton
                                 handleOnClickSearch={handleOnClickSearch}

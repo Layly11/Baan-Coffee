@@ -130,6 +130,12 @@ const Menu = ({ user }: User): JSX.Element => {
       name: 'Dashboard',
       permission: PermissionMenuMaster.DASHBOARD,
       icon: 'dashboard'
+    },
+        {
+      path: '/productMenu',
+      name: 'ProductMenu',
+      permission: PermissionMenuMaster.DASHBOARD,
+      icon: 'dashboard'
     }
   ]
 

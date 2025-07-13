@@ -39,7 +39,9 @@ export const getDashBoardData = () => async (req: Request, res: Response, next: 
         limit: Number(limit) || 10,
         offset: Number(offset) || 0,
         order: [['createdAt', 'ASC']],
+        distinct: true
     })
+    console.log('WHERE : ', where.date)
     res.locals.total = count
     res.locals.summaryList = rows
     next()
