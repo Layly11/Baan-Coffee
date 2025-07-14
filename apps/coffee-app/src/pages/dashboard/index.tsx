@@ -59,22 +59,15 @@ const DashBoardPage = () => {
       console.log('DATA', response.data)
       if (response.data != null) {
         const total = response.data.total
-        const summary = response.data.summaryList.map((summary: any) => ({
-          id: summary.id,
-          date: dayjs(summary.date).format('DD/MM/YYYY'),
-          totalSales: summary.total_sales,
-          orders: summary.total_orders,
-          shift: summary.shifts,
-          bestSeller: summary.top_products[0]?.product_name || '-',
-          notifications: summary.inventory_statuses.some((i: any) => i.status !== 'normal') ? '1 รายการ' : '-',
-        }))
+        const summary = response.data.summaryList
         setRows(summary)
         setTotal(total)
-        setIsFetching(false)
       }
     } catch (err) {
       console.error(err)
       Alert({ data: err })
+    } finally{
+      setIsFetching(false)
     }
   }
 

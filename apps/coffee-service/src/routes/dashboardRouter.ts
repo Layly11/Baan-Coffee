@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { getDashBoardData } from '../controller/dashboardController'
+import { getDashBoardData, getDashboardDetail } from '../controller/dashboardController'
 
 const router = express.Router()
 
@@ -20,4 +20,19 @@ router.get(
     }
 )
 
+router.get(
+    '/detail/:id',
+    getDashboardDetail(),
+     (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: {
+                detail: res.locals.detail
+            }
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
 export default router

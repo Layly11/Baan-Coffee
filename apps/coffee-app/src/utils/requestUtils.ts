@@ -13,3 +13,15 @@ export const fetchDashboardSummary = async (config: any): Promise<any> => {
     })
  })
 }
+
+export const fetchDashboardDetail = async (id: any): Promise<any> => {
+ return await new Promise((resolve, rejects) => {
+    axios.get(`/api/dashboard/detail/${id}`)
+    .then((res) => {
+        resolve(res.data)
+    })
+    .catch((err) => {
+        rejects(err)
+    })
+ })
+}

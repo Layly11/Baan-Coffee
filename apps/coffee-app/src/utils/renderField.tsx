@@ -24,7 +24,7 @@ export const Column = styled.div<TColumn>`
   justify-content: ${({ $justifyContent = 'flex-start' }) => $justifyContent};
   gap: 3px;
   margin-bottom: 10px;
-  word-break: break-all;
+  word-break: break-word;
   text-align: ${({ $align = 'left' }) => $align};
   font-size: ${({ $fontSize = '1em' }) => $fontSize};
   color: ${({ $color = '#3B5475' }) => $color};
