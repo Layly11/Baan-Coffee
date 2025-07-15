@@ -1,8 +1,8 @@
 {
-  "SUPER_ADMID": {
+  "SUPER_ADMIN": {
     "id": 1,
     "label": "Super Admin",
-    "value": "SUPER_ADMID"
+    "value": "SUPER_ADMIN"
   },
   "MANAGER": {
     "id": 2,

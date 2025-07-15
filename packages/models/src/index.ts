@@ -7,6 +7,8 @@ import { InventoryStatusModel } from './models/InventoryStatus'
 import { OrderModel } from './models/Orders';
 import { ShiftTodayModel } from './models/ShiftToday';
 import { TopProductModel } from './models/TopProduct';
+import { CategoriesModel } from './models/Categories';
+import { ProductModel } from './models/Product';
 
 
 UserModel.belongsTo(UserRoleModel,{
@@ -62,6 +64,17 @@ TopProductModel.belongsTo(DailySummaryModel, {
 });
 
 
+CategoriesModel.hasMany(ProductModel, {
+  foreignKey: 'category_id',
+  as: 'products',
+});
+
+ProductModel.belongsTo(CategoriesModel, {
+  foreignKey: 'category_id',
+  as: 'category',
+});
+
+
 
 export * from './sequelize'
 export * from './models/User'
@@ -73,3 +86,5 @@ export * from './models/InventoryStatus';
 export * from './models/Orders';
 export * from './models/ShiftToday';
 export * from './models/TopProduct'; 
+export * from './models/Categories'; 
+export * from './models/Product'; 

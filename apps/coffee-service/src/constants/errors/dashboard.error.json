@@ -1,0 +1,25 @@
+{
+  "ERR_DATE_INVALID_FORMAT": {
+    "statusCode": 400,
+    "resCode": "4001",
+    "resDesc": {
+      "en": "start_date or end_date invalid format",
+      "th": "start_date หรือ end_date ผิด format"
+    }
+  },
+    "ERR_ID_NOT_A_NUMBER": {
+    "statusCode": 400,
+    "resCode": "4002",
+    "resDesc": {
+      "en": "ID is not a number",
+      "th": "ID ไม่ใช่ตัวเลข"
+    }
+  },  "ERR_DETAIL_UNDEFINDED": {
+    "statusCode": 400,
+    "resCode": "4003",
+    "resDesc": {
+      "en": "Detail is undefined",
+      "th": "Detail เป็น undefined"
+    }
+  }
+}
