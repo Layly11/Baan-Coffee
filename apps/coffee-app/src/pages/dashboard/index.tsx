@@ -66,7 +66,7 @@ const DashBoardPage = () => {
     } catch (err) {
       console.error(err)
       Alert({ data: err })
-    } finally{
+    } finally {
       setIsFetching(false)
     }
   }
@@ -117,10 +117,10 @@ const DashBoardPage = () => {
       setEndDate(dayjs().toDate())
     }
 
-    if (router.query.page) {
+    if (typeof router.query.page === 'string' && !isNaN(Number(router.query.page))) {
       setPage(Number(router.query.page))
     }
-    if (router.query.limit) {
+    if (typeof router.query.limit === 'string' && !isNaN(Number(router.query.limit))) {
       setPageSize(Number(router.query.limit))
     }
   }, [router.isReady, router.query])
@@ -131,6 +131,7 @@ const DashBoardPage = () => {
       query: router.query,
       fetchData: fetchDashboardSummaryList
     })
+    console.log('Fetch')
   }, [router.isReady, router.query])
 
   return (

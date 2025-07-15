@@ -11,6 +11,7 @@ import Detail from "@/components/pageComponents/dashboard/detail/detail"
 import { useRouter } from "next/router"
 import { fetchDashboardDetail } from '../../utils/requestUtils'
 import { Alert } from "@/helpers/sweetalert"
+import DetailsTable from "@/components/pageComponents/dashboard/detail/detailTable"
 
 const DashBoardPage = () => {
     const router = useRouter()
@@ -23,6 +24,7 @@ const DashBoardPage = () => {
         try {
             const response = await fetchDashboardDetail(id)
             console.log('Detail: ', response.data.detail)
+            console.log('Inventory Detail: ', dashboardInfo.inventory_statuses)
             setDashboardInfo(response.data.detail)
         } catch (err) {
             console.error(err)
@@ -31,15 +33,15 @@ const DashBoardPage = () => {
             })
             router.push('/dashboard')
         } finally {
-             setIsFetching(false)
+            setIsFetching(false)
         }
     }
 
-useEffect(() => {
-  if (id !== undefined) {
-    handleFetchDashboardDetail()
-  }
-}, [id])
+    useEffect(() => {
+        if (id !== undefined) {
+            handleFetchDashboardDetail()
+        }
+    }, [id])
 
     return (
         <>
@@ -53,8 +55,17 @@ useEffect(() => {
                             <Title>Sales Summary</Title>
                         </Col>
                     </Row>
-                    <Row style={{ margin: '10px -10px 0px -10px' }}>
-                        <Detail  dashboardInfo={dashboardInfo} isFetching={isFetching} />
+                    <Row style={{ margin: '10px -10px 0px -40px' }}>
+                        <Detail dashboardInfo={dashboardInfo} isFetching={isFetching} mode={'summary'} />
+                    </Row>
+                    <Row style={{ margin: '10px -10px 0px -40px' }}>
+                        <DetailsTable detailInfo={dashboardInfo.inventory_statuses} title={'Inventory Status'} type={'inventory'} />
+                    </Row>
+                    <Row style={{ margin: '10px -10px 0px -40px' }}>
+                        <DetailsTable detailInfo={dashboardInfo.shifts} title={'Shift Panel'} type={'shift'} />
+                    </Row>
+                    <Row style={{ margin: '10px -10px 0px -40px' }}>
+                        <DetailsTable detailInfo={dashboardInfo.top_products} title={'Top Product'} type={'top_products'} />
                     </Row>
                 </Container>
             </MainLayout>
