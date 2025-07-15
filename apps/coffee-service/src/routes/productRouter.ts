@@ -11,7 +11,8 @@ router.get(
             res_code: '0000',
             res_desc: '',
             data: {
-                products:  res.locals.products
+                products: res.locals.products,
+                categoryList: res.locals.categoryList
             }
         }
         res.json(res.locals.response)

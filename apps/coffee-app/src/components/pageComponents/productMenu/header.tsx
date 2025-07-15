@@ -1,26 +1,57 @@
 import { DateRange } from "@/components/header/dateRange";
 import { SearchButton } from "@/components/header/searchBtn";
 import { JSX } from "react";
-import { Col, Container, Row } from "react-grid-system";
+import { Col, Container, Hidden, Row } from "react-grid-system";
 import { AddButton } from "./addBtn";
+import { SelectData } from "@/components/header/selectData";
+import { ClearFilterButton } from "@/components/pageComponents/productMenu/clearFilter";
 
 interface HeaderProps {
+    categories: any,
+    setCategories: (categories: string[]) => void
+    categoryList: string[]
     onAddItem: () => void
+    handleOnClearSearch: () => void
     handleOnClickSearch: () => Promise<void>
 }
 
-export const Header = ({onAddItem,handleOnClickSearch}: HeaderProps): JSX.Element => {
+
+export const Header = ({ categories, setCategories, categoryList, onAddItem, handleOnClearSearch, handleOnClickSearch }: HeaderProps): JSX.Element => {
     return (
         <Row style={{ margin: '0px -10px' }}>
             <Col lg={12}>
                 <Container fluid>
                     <Row style={{ margin: '10px -10px 0px -31px' }}>
+                        <Col lg={3} xs={6} sm={6}>
+                            <SelectData
+                                placeholder="Categories"
+                                value={categories}
+                                setValue={setCategories}
+                                jsonList={Object.fromEntries(
+                                    categoryList.map((name) => [name, { label: name }])
+                                )}
+                                isSearchable={false}
+                                isMulti
+                                isClearable={false}
+                                hideSelectedOptions={false}
+                                isShowCheckbox
+                                selectAll={{
+                                    label: 'All Categories'
+                                }}
+
+                            />
+                        </Col>
                         <Col lg={2} xs={12}>
-                         <SearchButton
+                            <SearchButton
                                 handleOnClickSearch={handleOnClickSearch}
                                 isFetching={false}
                             />
                         </Col>
+                        <Hidden xs sm md>
+                            <Col lg={2}>
+                                <ClearFilterButton handleOnClearSearch={handleOnClearSearch} />
+                            </Col>
+                        </Hidden>
                         <Col lg={2}>
                             <AddButton onClick={onAddItem} />
                         </Col>

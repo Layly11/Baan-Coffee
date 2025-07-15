@@ -10,7 +10,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/router"
 import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.json'
 import PermissionActionMaster from '../../constants/masters/PermissionActionMaster.json'
-import { checkRouterQueryAndAutoFetchData } from "@/utils/parseUtils"
+import { checkNullUndefiendEmptyString, checkRouterQueryAndAutoFetchData, parseToArrayAndRemoveSelectAllValue } from "@/utils/parseUtils"
 import { checkPermission } from "@/helpers/checkPermission"
 import { Header } from '../../components/pageComponents/productMenu/header'
 import Table from "@/components/commons/table"
@@ -30,22 +30,34 @@ const ProductMenuPage = () => {
     const [total, setTotal] = useState(0)
     const [rows, setRows] = useState<any>([])
 
+    const [categories, setCategories] = useState<string | string[]>(router.query.categories ?? [])
+    const [categortList, setCategoryList] = useState<string[]>([])
     const fetchProducts = async (page?: number) => {
         try {
             setIsFetching(true)
             const config = {
                 params: {
+                    categories: parseToArrayAndRemoveSelectAllValue(checkNullUndefiendEmptyString(categories)),
                     limit: (pageSize),
                     offset: (pageSize * (page ?? 0))
                 }
             }
             const response = await fetchProductsDetail(config)
             console.log('Products: ', response.data.products)
-            if(response !== null) {
+
+            if (Array.isArray(response.data.products)) {
                 const products = response.data.products
+                const category = response.data.categoryList
                 setRows(products)
                 setTotal(products.length)
+
+                const uniqueCategoryNames: string[] = Array.from(
+                    new Set(category.map((c: any) => c.name).filter(Boolean))
+                )
+                setCategoryList(uniqueCategoryNames)
             }
+
+
         } catch (err) {
             console.error(err)
             Alert({ data: err })
@@ -56,15 +68,24 @@ const ProductMenuPage = () => {
     useEffect(() => {
         fetchProducts()
     },[])
-
-      const handleOnClickSearch = async (): Promise<void> => {
+    const handleOnClickSearch = async (): Promise<void> => {
         setIsSearch(false)
         setPage(0)
-        router.replace({
-          pathname
+        await router.replace({
+            pathname,
+            query: {
+                categories
+            }
         })
         fetchProducts()
-      }
+    }
+
+    const handleOnClearSearch = (): void => {
+        setCategories([])
+        router.replace({
+            pathname
+        })
+    }
 
 
 
@@ -93,6 +114,8 @@ const ProductMenuPage = () => {
     //       fetchData: fetchDashboardSummaryList
     //     })
     //   }, [router.isReady, router.query])
+
+
     return (
         <>
             <Head>
@@ -108,8 +131,12 @@ const ProductMenuPage = () => {
                         </Col>
                     </Row>
                     <Header
-                    onAddItem={handleAddItem}
-                    handleOnClickSearch={handleOnClickSearch}
+                        categories={categories}
+                        setCategories={setCategories}
+                        categoryList={categortList}
+                        onAddItem={handleAddItem}
+                        handleOnClearSearch={handleOnClearSearch}
+                        handleOnClickSearch={handleOnClickSearch}
                     />
                     <Row style={{ margin: '20px -10px 0px -10px' }}>
                         <Col xs={12}>
