@@ -1,5 +1,6 @@
 import { NextFunction, Request, Response } from "express"
 import { ProductModel, CategoriesModel } from '@coffee/models'
+import {getBlobSasToken, uploadToAzureBlob} from '../utils/azureBlob'
 
 export const getProductData = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -12,6 +13,13 @@ export const getProductData = () => async (req: Request, res: Response, next: Ne
                 : []
 
         console.log('CategoriesArray: ', categories)
+
+        const sasToken = getBlobSasToken('Cappuccino.png')
+
+        console.log(`https://baancoffee.blob.core.windows.net/product-images/Cappuccino.png?${sasToken}`)
+        const image_url = `https://baancoffee.blob.core.windows.net/product-images/Cappuccino.png?${sasToken}`
+        console.log('sasToken: ',sasToken)
+
 
         const data = await ProductModel.findAll({
             include: [
@@ -38,7 +46,7 @@ export const getProductData = () => async (req: Request, res: Response, next: Ne
             name: product.name,
             price: product.price,
             status: product.status,
-            image_url: product.image_url,
+            image_url: image_url,
             category_name: product.category?.name || null
         }));
         res.locals.products = products

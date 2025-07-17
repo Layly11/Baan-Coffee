@@ -95,6 +95,7 @@ const ProductMenuPage = () => {
         checkPermission({ user, page, action }, router)
     }, [user])
 
+    
     const handleOnChangePage = async (page: number): Promise<void> => {
         setPage(page)
         router.replace({
@@ -102,18 +103,25 @@ const ProductMenuPage = () => {
             query: { ...router.query, page }
         })
 
+        fetchProducts(page)
     }
 
     const handleAddItem = () => {
 
     }
-    //   useEffect(() => {
-    //     if (!router.isReady) return
-    //     checkRouterQueryAndAutoFetchData({
-    //       query: router.query,
-    //       fetchData: fetchDashboardSummaryList
-    //     })
-    //   }, [router.isReady, router.query])
+useEffect(() => {
+    if (!router.isReady) return
+    if (router.query.categories) {
+      setCategories(router.query.categories)
+    }
+
+    if (typeof router.query.page === 'string' && !isNaN(Number(router.query.page))) {
+      setPage(Number(router.query.page))
+    }
+    if (typeof router.query.limit === 'string' && !isNaN(Number(router.query.limit))) {
+      setPageSize(Number(router.query.limit))
+    }
+  }, [router.isReady, router.query])
 
 
     return (

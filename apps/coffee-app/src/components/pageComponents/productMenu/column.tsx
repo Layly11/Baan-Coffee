@@ -23,6 +23,13 @@ export const Columns = (): any[] => {
             label: 'Image',
             key: 'image_url',
             width: '50%',
+            dataMutation: (row: any) => (
+                <img
+                    src={row.image_url}
+                    alt='banner'
+                    style={{ width: '200px', height: 'auto', borderRadius: '8px' }}
+                />
+            )
         },
         {
             label: 'Price',
