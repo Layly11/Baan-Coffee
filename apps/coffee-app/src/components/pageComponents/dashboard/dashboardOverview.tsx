@@ -6,7 +6,7 @@ import { FaCheck, FaLayerGroup, FaRegCreditCard, FaShoppingCart, FaSyncAlt } fro
 import { OrderStatusCard } from "./widget/orderStatusCard"
 import { MdCancel } from "react-icons/md"
 import { BestSellingProductsChart, WeeklySalesChart } from "./widget/charts"
-import { fetchDashboardOverViews } from "@/utils/requestUtils"
+import { fetchDashboardOverViewsRequester } from "@/utils/requestUtils"
 import { Alert } from "@/helpers/sweetalert"
 
 type TodayOrders = {
@@ -33,7 +33,7 @@ const DashBoardOverview = (): JSX.Element => {
 
     const fetchDashBoardOverview = async () => {
         try {
-            const res = await fetchDashboardOverViews()
+            const res = await fetchDashboardOverViewsRequester()
             if (res.data !== null) {
                 const overview = res.data.overview
                 setTodayOrders(overview.todayOrders)

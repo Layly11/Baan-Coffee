@@ -12,7 +12,7 @@ import { dayjs } from '../../helpers/dayjs'
 import { Header } from "@/components/pageComponents/dashboard/header"
 import Table from "@/components/commons/table"
 import { Columns } from "@/components/pageComponents/dashboard/column"
-import { fetchDashboardSummary } from '../../utils/requestUtils'
+import { fetchDashboardSummaryRequester } from '../../utils/requestUtils'
 import { Alert } from "@/helpers/sweetalert"
 import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.json'
 import PermissionActionMaster from '../../constants/masters/PermissionActionMaster.json'
@@ -56,7 +56,7 @@ const DashBoardPage = () => {
           offset: (pageSize * (page ?? 0))
         }
       }
-      const response = await fetchDashboardSummary(config)
+      const response = await fetchDashboardSummaryRequester(config)
       console.log('DATA', response.data)
       if (response.data != null) {
         const total = response.data.total

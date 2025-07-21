@@ -9,7 +9,7 @@ import Title from "@/components/commons/title"
 import withAuthenticated from "@/hocs/withAuthenticated"
 import Detail from "@/components/pageComponents/dashboard/detail/detail"
 import { useRouter } from "next/router"
-import { fetchDashboardDetail } from '../../utils/requestUtils'
+import { fetchDashboardDetailRequester } from '../../utils/requestUtils'
 import { Alert } from "@/helpers/sweetalert"
 import DetailsTable from "@/components/pageComponents/dashboard/detail/detailTable"
 
@@ -22,7 +22,7 @@ const DashBoardPage = () => {
 
     const handleFetchDashboardDetail = async () => {
         try {
-            const response = await fetchDashboardDetail(id)
+            const response = await fetchDashboardDetailRequester(id)
             console.log('Detail: ', response.data.detail)
             console.log('Inventory Detail: ', dashboardInfo.inventory_statuses)
             setDashboardInfo(response.data.detail)

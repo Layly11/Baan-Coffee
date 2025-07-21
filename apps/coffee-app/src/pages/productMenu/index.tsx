@@ -16,8 +16,8 @@ import { Header } from '../../components/pageComponents/productMenu/header'
 import Table from "@/components/commons/table"
 import { Columns } from "@/components/pageComponents/productMenu/column"
 import Swal, { Alert } from "@/helpers/sweetalert"
-import { createProduct, fetchProductsDetail, updateProduct } from "@/utils/requestUtils"
-import { AddProductModal } from "@/components/pageComponents/productMenu/modal"
+import { createProductRequester, deleteProductRequester, fetchCategoryRequester, fetchProductsDetailRequester, updateProductRequester } from "@/utils/requestUtils"
+import { AddProductModal, CategoryModal, DeleteProductModal } from "@/components/pageComponents/productMenu/modal"
 
 const pathname = '/productMenu'
 const ProductMenuPage = () => {
@@ -45,7 +45,10 @@ const ProductMenuPage = () => {
     const [isActive, setIsActive] = useState<boolean>(false)
     const [isClearSearch, setIsClearSearch] = useState<boolean>(false)
     const [disableConfirm, setDisableConfirm] = useState(true)
-
+    const [isRemoveImage, setIsRemoveImage] = useState(false)
+    const [deletingId, setDeletingId] = useState<number | null>(null)
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [showCategoryModal, setShowCategoryModal] = useState(false)
     const fetchProducts = async (page?: number) => {
         try {
             setIsFetching(true)
@@ -56,7 +59,7 @@ const ProductMenuPage = () => {
                     offset: (pageSize * (page ?? 0))
                 }
             }
-            const response = await fetchProductsDetail(config)
+            const response = await fetchProductsDetailRequester(config)
 
             if (Array.isArray(response.data.products)) {
                 const products = response.data.products
@@ -64,14 +67,6 @@ const ProductMenuPage = () => {
                 setRows(products)
                 setTotal(products.length)
                 console.log('Products: ', products)
-
-                const uniqueCategoryNames: string[] = Array.from(
-                    new Set(category.map((c: any) => c.name).filter(Boolean))
-                )
-                setCategoryList(uniqueCategoryNames)
-
-                const formattedList = Array.from(category.map((c: any) => [c.id, { label: c.name }]))
-                setNewCategoryList(formattedList as any)
             }
 
 
@@ -82,8 +77,38 @@ const ProductMenuPage = () => {
             setIsFetching(false)
         }
     }
+
+    const fetchCategories = async () => {
+        try{
+             setIsFetching(true)
+
+             const response = await fetchCategoryRequester()
+
+             if(response.data !== null) {
+                  const category = response.data.category
+
+                const uniqueCategoryNames: string[] = Array.from(
+                    new Set(category.map((c: any) => c.name).filter(Boolean))
+                )
+                setCategoryList(uniqueCategoryNames)
+
+                const formattedList = Array.from(category.map((c: any) => [c.id, { label: c.name }]))
+                setNewCategoryList(formattedList as any)
+
+             }
+
+        } catch (err) {
+            console.error(err)
+            Alert({data: err})
+        }
+        finally {
+            setIsFetching(false)
+        }
+    }
+
     useEffect(() => {
         fetchProducts()
+        fetchCategories()
         setIsClearSearch(false)
     }, [isClearSearch])
 
@@ -166,7 +191,7 @@ const ProductMenuPage = () => {
             }
             formData.append('is_active', isActive ? '1' : '0')
 
-            await createProduct(formData)
+            await createProductRequester(formData)
 
             fetchProducts()
             setShowAddModal(false)
@@ -183,7 +208,7 @@ const ProductMenuPage = () => {
         try {
             setShowAddModal(false)
             const formData = new FormData()
-            if (newFile !== null && newFile !== undefined){
+            if (newFile !== null && newFile !== undefined) {
                 formData.append('product_image', newFile)
             }
             if (newPrice !== '' && (Number(newPrice) > 200 || Number(newPrice) < 1)) {
@@ -198,7 +223,9 @@ const ProductMenuPage = () => {
 
             formData.append('is_active', isActive ? '1' : '0')
 
-            await updateProduct(formData, editingItemId)
+            formData.append("is_remove_image", String(isRemoveImage))
+
+            await updateProductRequester(formData, editingItemId)
             fetchProducts()
             setShowAddModal(false)
             resetProductForm()
@@ -235,6 +262,36 @@ const ProductMenuPage = () => {
     }, [router.isReady, router.query])
 
 
+    const handleDeleteItem = (id: number): void => {
+        setDeletingId(id)
+        setShowDeleteModal(true)
+    }
+
+    const confirmDelete = async (): Promise<void> => {
+        if (deletingId == null) return
+        try {
+            await deleteProductRequester(deletingId)
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Item deleted successfully',
+                showConfirmButton: false,
+                showCloseButton: true
+            })
+            fetchProducts()
+        } catch (error) {
+            console.error(error)
+            Alert({ data: error })
+        } finally {
+            setShowDeleteModal(false)
+            setDeletingId(null)
+        }
+    }
+
+    const handleAddCategory = () => {
+        setShowCategoryModal(true)
+    }
+
     return (
         <>
             <Head>
@@ -254,6 +311,7 @@ const ProductMenuPage = () => {
                         setCategories={setCategories}
                         categoryList={categortList}
                         onAddItem={handleAddItem}
+                        onAddCategory={handleAddCategory}
                         handleOnClearSearch={handleOnClearSearch}
                         handleOnClickSearch={handleOnClickSearch}
                     />
@@ -266,7 +324,7 @@ const ProductMenuPage = () => {
                                 setPageSize={setPageSize}
                                 setPage={handleOnChangePage}
                                 page={page}
-                                columns={Columns(handleEditItem)}
+                                columns={Columns(handleEditItem, (id) => { handleDeleteItem(id) },)}
                                 rows={rows}
                                 isSearch={isSearch}
                             />
@@ -297,6 +355,22 @@ const ProductMenuPage = () => {
                         disableConfirm={disableConfirm}
                         setDisableConfirm={setDisableConfirm}
                         items={rows}
+                        setRemoveImage={setIsRemoveImage}
+                    />
+                    <DeleteProductModal
+                        visible={showDeleteModal}
+                        onCancel={() => {
+                            setShowDeleteModal(false)
+                            setDeletingId(null)
+                        }}
+                        onConfirm={confirmDelete}
+                    />
+                    <CategoryModal 
+                    visible={showCategoryModal}
+                    onClose= {() => {
+                        setShowCategoryModal(false)
+                        fetchCategories()
+                    }}
                     />
                 </Container>
             </MainLayout >

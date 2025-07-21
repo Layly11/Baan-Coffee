@@ -70,5 +70,30 @@
       "en": "Invalid category_id",
       "th": "Category_id ผิด"
     }
+  },
+  "CATEGORIES_NAME_NOT_FOUND": {
+    "statusCode": 400,
+    "resCode": "4010",
+    "resDesc": {
+      "en": "Categories Name Not Found",
+      "th": "หา Categories Name ไม่เจอ"
+    }
+  },
+    "CATEGORY_NOT_FOUND": {
+    "statusCode": 400,
+    "resCode": "4011",
+    "resDesc": {
+      "en": "Category Not Found Please Check your ID Category is Correct?",
+      "th": "ไม่เจอ Category โปรดเช็ค ID Category ว่าถูกต้องมั้ย"
+    }
+  },
+    "CATEGORY_IS_IN_USE_BY_SOME_PRODUCT": {
+    "statusCode": 400,
+    "resCode": "4012",
+    "resDesc": {
+      "en": "Category is in use by some products",
+      "th": "Category ถูกใช้อยู่ โดย Product"
+    }
   }
+  
 }

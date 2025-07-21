@@ -5,24 +5,27 @@ import { Col, Container, Hidden, Row } from "react-grid-system";
 import { AddButton } from "./addBtn";
 import { SelectData } from "@/components/header/selectData";
 import { ClearFilterButton } from "@/components/pageComponents/productMenu/clearFilter";
+import { CategoriesButton } from "./categoriesBtn";
 
 interface HeaderProps {
     categories: any,
     setCategories: (categories: string[]) => void
     categoryList: string[]
     onAddItem: () => void
+    onAddCategory: () => void
     handleOnClearSearch: () => void
     handleOnClickSearch: () => Promise<void>
+    
 }
 
 
-export const Header = ({ categories, setCategories, categoryList, onAddItem, handleOnClearSearch, handleOnClickSearch }: HeaderProps): JSX.Element => {
+export const Header = ({ categories, setCategories, categoryList, onAddItem, onAddCategory, handleOnClearSearch, handleOnClickSearch }: HeaderProps): JSX.Element => {
     return (
         <Row style={{ margin: '0px -10px' }}>
             <Col lg={12}>
                 <Container fluid>
                     <Row style={{ margin: '10px -10px 0px -31px' }}>
-                        <Col lg={2.5} xs={6} sm={6}>
+                        <Col lg={3.5} xs={6} sm={6}>
                             <SelectData
                                 placeholder="Categories"
                                 value={categories}
@@ -54,6 +57,9 @@ export const Header = ({ categories, setCategories, categoryList, onAddItem, han
                         </Hidden>
                         <Col lg={2}>
                             <AddButton onClick={onAddItem} />
+                        </Col>
+                        <Col lg={2}>
+                             <CategoriesButton onClick={onAddCategory} />
                         </Col>
                     </Row>
                 </Container>

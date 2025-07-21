@@ -5,12 +5,13 @@ import {
     ModalCardBody,
     ModalContainer,
 } from "@/components/commons/modal";
-import { JSX, useEffect } from "react";
-import { Col, Row } from "react-grid-system";
+import { JSX, useEffect, useState } from "react";
+import { Col, Container, Row } from "react-grid-system";
 import { FileUploader } from "react-drag-drop-files";
-import Swal from "../../../helpers/sweetalert";
+import Swal, { Alert } from "../../../helpers/sweetalert";
 import styled from "styled-components";
 import { SelectData } from "@/components/header/selectData";
+import { AddCategoryRequester, deleteCategoryRequester, fetchCategoryRequester, updateCategoryRequester } from "@/utils/requestUtils";
 
 interface AddProductModalProps {
     visible: boolean;
@@ -34,6 +35,7 @@ interface AddProductModalProps {
     disableConfirm: boolean
     setDisableConfirm: React.Dispatch<React.SetStateAction<boolean>>
     items: any
+    setRemoveImage: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 export const AddProductModal = ({
@@ -57,7 +59,8 @@ export const AddProductModal = ({
     setIsActive,
     disableConfirm,
     setDisableConfirm,
-    items
+    items,
+    setRemoveImage
 }: AddProductModalProps): JSX.Element => {
     const fileTypes = ["JPG", "PNG", "JPEG"];
     const palette = {
@@ -71,7 +74,7 @@ export const AddProductModal = ({
         },
         btnConfirmActive: {
             color: "#ffffff",
-            backgroundColor: "#a692ee",
+            backgroundColor: "#5D3A00",
         },
     };
 
@@ -125,6 +128,7 @@ export const AddProductModal = ({
     }, [previewUrl])
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+        setRemoveImage(false)
         const file = e.target.files?.[0];
         if (file === null || file === undefined) return;
         if (!validateImageFile(file)) return;
@@ -144,6 +148,7 @@ export const AddProductModal = ({
     };
 
     const handleRemoveFile = (): void => {
+        setRemoveImage(true)
         setUploadedFileName(null);
         setPreviewUrl(null);
         onChangeFile(null as unknown as File);
@@ -152,6 +157,7 @@ export const AddProductModal = ({
         }
     };
     const handleFileUpload = (file: File): void => {
+        setRemoveImage(false)
         if (!validateImageFile(file)) return;
         onChangeFile(file);
         setUploadedFileName(file.name);
@@ -497,6 +503,247 @@ export const AddProductModal = ({
     );
 };
 
+export const DeleteProductModal = ({ visible, onCancel, onConfirm }: any): JSX.Element => {
+    if (!visible) return <></>
+
+    return (
+        <ModalBackgroundContainer style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}>
+            <ModalContainer>
+                <ModalCard style={{ backgroundColor: '#f7f0e8', borderRadius: '16px', boxShadow: '0 4px 20px rgba(93, 58, 0, 0.2)' }}>
+                    <ModalCardBody>
+                        <div style={{ textAlign: 'center', padding: '30px 20px' }}>
+                            <i className="fa fa-trash fa-4x" style={{ color: '#5D3A00', marginBottom: '20px' }} />
+                            <h2 style={{ fontSize: '22px', fontWeight: 700, marginBottom: '10px', color: '#3e2c1c' }}>Delete Item</h2>
+                            <p style={{ color: '#6b4c3b', fontSize: '15px', marginBottom: '40px' }}>
+                                Are you sure you want to delete this item?<br />
+                                This action cannot be undone.
+                            </p>
+                            <Row gutterWidth={16}>
+                                <Col md={6}>
+                                    <div onClick={onCancel}>
+                                        <ButtonContainer
+                                            $backgroundColor="#fff"
+                                            $color="#a18c7c"
+                                            style={{
+                                                border: '1px solid #c4b5a5',
+                                                borderRadius: '8px',
+                                            }}
+                                        >
+                                            ยกเลิก
+                                        </ButtonContainer>
+                                    </div>
+                                </Col>
+                                <Col md={6}>
+                                    <div onClick={() => { void onConfirm() }}>
+                                        <ButtonContainer
+                                            $backgroundColor="#5D3A00"
+                                            $color="#fff"
+                                            style={{ borderRadius: '8px' }}
+                                        >
+                                            ยืนยัน
+                                        </ButtonContainer>
+                                    </div>
+                                </Col>
+                            </Row>
+                        </div>
+                    </ModalCardBody>
+                </ModalCard>
+            </ModalContainer>
+        </ModalBackgroundContainer>
+    )
+}
+
+
+
+interface AddCategoriesModalProps {
+    visible: boolean
+    onClose: () => void
+}
+interface Category {
+    id: number
+    name: string
+}
+
+export const CategoryModal = ({ visible, onClose }: AddCategoriesModalProps): JSX.Element => {
+    const [categories, setCategories] = useState<Category[]>([])
+    const [editingId, setEditingId] = useState<number | null>(null)
+    const [categoryName, setCategoryName] = useState('')
+    const [modalVisible, setModalVisible] = useState(false)
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [deletingId, setDeletingId] = useState<number | null>(null)
+
+    const fetchCategoriesDetail = async () => {
+        try {
+            const res = await fetchCategoryRequester()
+            if (res.data !== null) {
+                const category = res.data.category
+                setCategories(category)
+            }
+        } catch (err) {
+            console.error(err)
+            Alert({ data: err })
+        }
+    }
+
+    useEffect(() => {
+        fetchCategoriesDetail()
+    }, [])
+
+    const handleEdit = (cat: Category) => {
+        setEditingId(cat.id)
+        setCategoryName(cat.name)
+        setModalVisible(true)
+    }
+
+    const handleConfirmAddCategory = async (): Promise<void> => {
+        try {
+            if (categoryName !== '' || categoryName !== null) {
+                await AddCategoryRequester({ category_name: categoryName })
+                fetchCategoriesDetail()
+                setModalVisible(false)
+                setCategoryName('')
+                setEditingId(null)
+            }
+        } catch (err) {
+            console.error(err)
+            Alert({ data: err })
+        }
+    }
+
+    const handleConfirmEditCategory = async (): Promise<void> => {
+        try {
+            await updateCategoryRequester({ category_name: categoryName }, editingId)
+            fetchCategoriesDetail()
+            setModalVisible(false)
+            setCategoryName('')
+            setEditingId(null)
+        } catch (err) {
+            console.error(err)
+            Alert({ data: err })
+        }
+    }
+
+    const handleDelete = async () => {
+        try {
+            await deleteCategoryRequester(deletingId)
+            Swal.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Category deleted successfully',
+                showConfirmButton: false,
+                showCloseButton: true
+            })
+
+        } catch (err: any) {
+            console.error(err)
+
+
+            const code = err?.response?.data?.res_code
+
+            if (code === '4012') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Cannot delete',
+                    text: "Category is in use by some products",
+                    showCloseButton: true,
+                    confirmButtonColor: '#5D3A00'
+                })
+            } else {
+                Alert({ data: err })
+            }
+        } finally {
+            fetchCategoriesDetail()
+            setShowDeleteModal(false)
+            setDeletingId(null)
+        }
+    }
+
+    if (!visible) return <></>
+
+    return (
+        <ModalOverlay>
+            <MainModalContainer>
+                <ModalHeader>
+                    <ModalTitle>Categories</ModalTitle>
+                    <CloseButton onClick={() => onClose()}>×</CloseButton>
+                </ModalHeader>
+
+                <ModalContent>
+                    <AddButton onClick={() => {
+                        setCategoryName('')
+                        setEditingId(null)
+                        setModalVisible(true)
+                    }}>
+                        <PlusIcon>+</PlusIcon>
+                        Add Category
+                    </AddButton>
+
+                    <CategoriesList>
+                        {categories.map((cat) => (
+                            <CategoryItem key={cat.id}>
+                                <CategoryName>{cat.name}</CategoryName>
+                                <ActionButtons>
+                                    <EditButton onClick={() => handleEdit(cat)}>
+                                        Edit
+                                    </EditButton>
+                                    <DeleteButton onClick={() => {
+                                        setDeletingId(cat.id)
+                                        setShowDeleteModal(true)
+                                    }}>
+                                        Delete
+                                    </DeleteButton>
+                                </ActionButtons>
+                            </CategoryItem>
+                        ))}
+                    </CategoriesList>
+                </ModalContent>
+
+                {/* Add/Edit Modal */}
+                {modalVisible && (
+                    <SubModalOverlay>
+                        <SubModalContainer>
+                            <SubModalHeader>
+                                <SubModalTitle>
+                                    {editingId ? 'Edit Category' : 'Add New Category'}
+                                </SubModalTitle>
+                            </SubModalHeader>
+
+                            <SubModalContent>
+                                <InputLabel>Category Name</InputLabel>
+                                <StyledInput
+                                    value={categoryName}
+                                    onChange={(e) => setCategoryName(e.target.value)}
+                                    placeholder="Enter category name"
+                                />
+                            </SubModalContent>
+
+                            <SubModalFooter>
+                                <CancelButton onClick={() => setModalVisible(false)}>
+                                    Cancel
+                                </CancelButton>
+                                <SaveButton onClick={() => editingId ? handleConfirmEditCategory() : handleConfirmAddCategory()}>
+                                    {editingId ? 'Update' : 'Save'}
+                                </SaveButton>
+                            </SubModalFooter>
+                        </SubModalContainer>
+                    </SubModalOverlay>
+                )}
+
+                <DeleteProductModal
+                    visible={showDeleteModal}
+                    onCancel={() => {
+                        setShowDeleteModal(false)
+                    }}
+                    onConfirm={handleDelete}
+                />
+            </MainModalContainer>
+        </ModalOverlay>
+    )
+}
+
+
+
+
 const Input = styled.input<{ $isUrlError?: boolean }>`
   width: 100%;
   padding: 10px 14px;
@@ -511,3 +758,310 @@ const Input = styled.input<{ $isUrlError?: boolean }>`
     outline: none;
   }
 `;
+
+const ModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+`
+
+const MainModalContainer = styled.div`
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    overflow: hidden;
+    animation: modalAppear 0.3s ease-out;
+
+    @keyframes modalAppear {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+`
+
+const ModalHeader = styled.div`
+    padding: 24px 32px;
+    border-bottom: 1px solid #f0f0f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(135deg, #5D3A00 0%, #8B4513 100%);
+    color: white;
+`
+
+const ModalTitle = styled.h2`
+    margin: 0;
+    font-size: 24px;
+    font-weight: 600;
+    color: white;
+`
+
+const CloseButton = styled.button`
+    background: none;
+    border: none;
+    font-size: 32px;
+    color: white;
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s;
+
+    &:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+`
+
+const ModalContent = styled.div`
+    padding: 32px;
+    max-height: 60vh;
+    overflow-y: auto;
+`
+
+const AddButton = styled.button`
+    background: linear-gradient(135deg, #5D3A00 0%, #8B4513 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    padding: 16px 24px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+    transition: transform 0.2s, box-shadow 0.2s;
+
+    &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(93, 58, 0, 0.3);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+`
+
+const PlusIcon = styled.span`
+    font-size: 20px;
+    font-weight: bold;
+`
+
+const CategoriesList = styled.div`
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+`
+
+const CategoryItem = styled.div`
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    border: 1px solid #e9ecef;
+    transition: all 0.2s;
+
+    &:hover {
+        background: #f1f3f4;
+        border-color: #5D3A00;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    }
+`
+
+const CategoryName = styled.span`
+    font-size: 16px;
+    font-weight: 500;
+    color: #2c3e50;
+`
+
+const ActionButtons = styled.div`
+    display: flex;
+    gap: 8px;
+`
+
+const EditButton = styled.button`
+    background: #A47148; /* กาแฟลาเต้ */
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+        background: #8C5C3A; /* กาแฟเข้มขึ้น */
+        transform: translateY(-1px);
+    }
+`
+
+const DeleteButton = styled.button`
+    background: #B04A3F; /* แดงน้ำตาลอิฐ */
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+
+    &:hover {
+        background: #923C33; /* แดงน้ำตาลเข้ม */
+        transform: translateY(-1px);
+    }
+`
+// Sub Modal (Add/Edit)
+const SubModalOverlay = styled.div`
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1100;
+`
+
+const SubModalContainer = styled.div`
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+    width: 90%;
+    max-width: 500px;
+    overflow: hidden;
+    animation: subModalAppear 0.3s ease-out;
+
+    @keyframes subModalAppear {
+        from {
+            opacity: 0;
+            transform: scale(0.8) translateY(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
+`
+
+const SubModalHeader = styled.div`
+    padding: 24px 32px;
+    border-bottom: 1px solid #f0f0f0;
+    background: #f8f9fa;
+`
+
+const SubModalTitle = styled.h3`
+    margin: 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #2c3e50;
+`
+
+const SubModalContent = styled.div`
+    padding: 32px;
+`
+
+const InputLabel = styled.label`
+    display: block;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+`
+
+const StyledInput = styled.input`
+    width: 100%;
+    padding: 16px;
+    border: 2px solid #e9ecef;
+    border-radius: 12px;
+    font-size: 16px;
+    background: #f8f9fa;
+    transition: all 0.2s;
+    box-sizing: border-box;
+
+    &:focus {
+        outline: none;
+        border-color: #5D3A00;
+        background: white;
+        box-shadow: 0 0 0 3px rgba(93, 58, 0, 0.1);
+    }
+
+    &::placeholder {
+        color: #adb5bd;
+    }
+`
+
+const SubModalFooter = styled.div`
+    padding: 24px 32px;
+    border-top: 1px solid #f0f0f0;
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    background: #f8f9fa;
+`
+
+const CancelButton = styled.button`
+    background: white;
+    color: #6c757d;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        background: #f8f9fa;
+        border-color: #adb5bd;
+        color: #495057;
+    }
+`
+
+const SaveButton = styled.button`
+    background: linear-gradient(135deg, #5D3A00 0%, #8B4513 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+
+    &:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 6px 16px rgba(93, 58, 0, 0.3);
+    }
+
+    &:active {
+        transform: translateY(0);
+    }
+`
