@@ -1,6 +1,6 @@
 import { NextFunction, Request, Response } from "express"
 import { ProductModel, CategoriesModel, sequelize } from '@coffee/models'
-import { getBlobSasToken, uploadToAzureBlob, getblobUrlSas, parseBlobUrl } from '../utils/azureBlob'
+import { getBlobSasToken, uploadToAzureBlob, getblobUrlSas, parseBlobUrl, deleteFromAzureImage } from '../utils/azureBlob'
 import { ServiceError } from "@coffee/helpers"
 import ProductMasterError from '../constants/errors/product.error.json'
 import path from "path"
@@ -22,7 +22,7 @@ export const getProductData = () => async (req: Request, res: Response, next: Ne
                 {
                     model: CategoriesModel,
                     as: 'category',
-                    attributes: ['name'],
+                    attributes: ['id', 'name'],
                     ...(categoryArray.length > 0 && {
                         where: {
                             name: categoryArray
@@ -44,18 +44,16 @@ export const getProductData = () => async (req: Request, res: Response, next: Ne
             }
         }
 
-        const categoryList = await CategoriesModel.findAll({ attributes: ['id', 'name'] })
-
         const products = data.map((product: any) => ({
             id: product.id,
             name: product.name,
             price: product.price,
             status: product.status,
             image_url: product.image_url,
+            category_id: product.category.id || null,
             category_name: product.category?.name || null
         }));
         res.locals.products = products
-        res.locals.categoryList = categoryList
         return next()
     } catch (err) {
         next(err)
@@ -184,7 +182,13 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
         }
 
         if (isRemoveImage === 'true') {
-            item.image_url = null
+            if (item.image_url) {
+                await deleteFromAzureImage({
+                    containerName: process.env.AZURE_STORAGE_CONTAINER_NAME!,
+                    blobPath: parseBlobUrl(item.image_url).blobName
+                })
+                item.image_url = null
+            }
         }
 
 
@@ -222,6 +226,17 @@ export const deleteProduct = () => async (req: Request, res: Response, next: Nex
 
         if (!item) {
             return next(new ServiceError(ProductMasterError.PRODUCT_NOT_FOUND))
+        }
+
+        if (item.image_url) {
+            try {
+                await deleteFromAzureImage({
+                    containerName: process.env.AZURE_STORAGE_CONTAINER_NAME!,
+                    blobPath: parseBlobUrl(item.image_url).blobName
+                })
+            } catch (err) {
+                return next(err)
+            }
         }
 
         await item.destroy()

@@ -20,6 +20,8 @@ export const ModalBackgroundContainer = styled.div<{ color?: string }>`
   font-size: inherit;
   cursor: auto;
 
+  backdrop-filter: blur(4px);
+
   &::-webkit-scrollbar {
     width: 8px;
     height: 8px;
@@ -139,6 +141,18 @@ export const ModalContainer = styled.div`
   margin-bottom: auto;
   box-sizing: border-box;
   transition: all ease 0.2s;
+  animation: modalAppear 0.3s ease-out;
+
+   @keyframes modalAppear {
+        from {
+            opacity: 0;
+            transform: scale(0.9) translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+    }
 
   @media screen and (max-width: 1366px) {
     width: 70%;
@@ -152,6 +166,7 @@ export const ModalContainer = styled.div`
     margin: 0;
   }
 `
+
 
 export const ModalCard = styled.div`
   display: flex;
@@ -309,7 +324,7 @@ export const TextAreaFeild = styled.textarea<ITextAreaFeild>`
       border-color: ${'#545454'};
     }
     `
-}
+  }
 `
 
 interface IButtonContainer {

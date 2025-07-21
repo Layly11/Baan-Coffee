@@ -29,7 +29,6 @@ router.get(
             res_desc: '',
             data: {
                 products: res.locals.products,
-                categoryList: res.locals.categoryList
             }
         }
         res.json(res.locals.response)

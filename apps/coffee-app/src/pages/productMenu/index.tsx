@@ -63,7 +63,6 @@ const ProductMenuPage = () => {
 
             if (Array.isArray(response.data.products)) {
                 const products = response.data.products
-                const category = response.data.categoryList
                 setRows(products)
                 setTotal(products.length)
                 console.log('Products: ', products)

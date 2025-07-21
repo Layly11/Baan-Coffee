@@ -82,6 +82,14 @@ export const parseBlobUrl = (blobUrl: string) => {
 }
 
 
+export const deleteFromAzureImage = async ({ containerName, blobPath }: { containerName: string, blobPath: string }) => {
+  const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING)
+  const containerClient = blobServiceClient.getContainerClient(containerName)
+
+  const blobClient = containerClient.getBlockBlobClient(blobPath)
+  await blobClient.deleteIfExists()
+}
+
 // const getBlobUrlSas = async (blobUrl: string) => {
 //   if (!blob.blobServiceClient) {
 //     throw new Error('BlobServiceClient is not initialized. Call initialBlob() first.')
