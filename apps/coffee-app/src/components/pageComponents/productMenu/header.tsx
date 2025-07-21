@@ -22,7 +22,7 @@ export const Header = ({ categories, setCategories, categoryList, onAddItem, han
             <Col lg={12}>
                 <Container fluid>
                     <Row style={{ margin: '10px -10px 0px -31px' }}>
-                        <Col lg={3} xs={6} sm={6}>
+                        <Col lg={2.5} xs={6} sm={6}>
                             <SelectData
                                 placeholder="Categories"
                                 value={categories}

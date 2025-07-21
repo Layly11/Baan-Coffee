@@ -27,6 +27,13 @@ export const getDashBoardData = () => async (req: Request, res: Response, next: 
                 }
             })
         }
+
+        console.log({
+  start: momentAsiaBangkok(startDate).startOf('day').toISOString(),
+  end: momentAsiaBangkok(endDate).endOf('day').toISOString()
+})
+
+
         const { count, rows } = await DailySummaryModel.findAndCountAll({
             include: [
                 {
@@ -66,6 +73,94 @@ export const getDashBoardData = () => async (req: Request, res: Response, next: 
         next(err)
     }
 
+}
+
+export const getDashBoardOverview = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const todayStart = momentAsiaBangkok().startOf('day').toISOString()
+        const todayEnd = momentAsiaBangkok().endOf('day').toISOString()
+
+        const todayData = await DailySummaryModel.findOne({
+            where: {
+                date: {
+                    [Op.between]: [todayStart, todayEnd]
+                }
+            }
+        })
+
+        const yesterdayStart = momentAsiaBangkok().subtract(1, 'day').startOf('day').toISOString()
+        const yesterdayEnd = momentAsiaBangkok().subtract(1, 'day').endOf('day').toISOString()
+
+        const yesterdayData = await DailySummaryModel.findOne({
+            where: {
+                date: {
+                    [Op.between]: [yesterdayStart, yesterdayEnd]
+                }
+            }
+        })
+
+        const monthStart = momentAsiaBangkok().startOf('month').toISOString()
+        const monthEnd = momentAsiaBangkok().endOf('month').toISOString()
+
+        const monthData = await DailySummaryModel.findAll({
+            where: {
+                date: {
+                    [Op.between]: [monthStart, monthEnd]
+                }
+            }
+        })
+
+        const thisMonthSales = monthData.reduce((sum, item) => sum + item.total_sales, 0)
+
+        const allData = await DailySummaryModel.findAll()
+
+        const allTimeSales = allData.reduce((sum, item) => sum + item.total_sales, 0)
+        const allOrderSales = allData.reduce((sum, item) => sum + item.total_orders, 0)
+        const weeklySales = allData.map((value) => ({
+            date: dayjs(value.date).format('DD/MM/YYYY'),
+            total_sales:  value.total_sales
+        }))
+
+        console.log(weeklySales)
+        const orders = await OrderModel.findAll()
+        const allOrderPending = orders.filter((value) => value.status === 'pending')
+        const allOrderComplete = orders.filter((value) => value.status === 'complete')
+        const allOrderCancelled = orders.filter((value) => value.status === 'cancelled')
+
+        const topProduct = await TopProductModel.findAll()
+
+        const topProductMapping = topProduct.map((value) => ({
+            name: value.product_name,
+            value: value.total_sold
+        }))
+
+
+        res.locals.overview = {
+            todayOrders: {
+                todaySales: todayData?.total_sales,
+                payments: todayData?.payments
+            },
+            yesterdayOrders: {
+                yesterdaySales: yesterdayData?.total_sales,
+                payments: yesterdayData?.payments
+            },
+            thisMonthSales,
+            allData: {
+                allTimeSales,
+                allOrderSales,
+                allOrderPending,
+                allOrderComplete,
+                allOrderCancelled
+            },
+            weeklySales,
+            topProductMapping
+
+        }
+        next()
+
+    } catch (err) {
+        next(err)
+    }
 }
 
 

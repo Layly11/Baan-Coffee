@@ -15,8 +15,9 @@ import { checkPermission } from "@/helpers/checkPermission"
 import { Header } from '../../components/pageComponents/productMenu/header'
 import Table from "@/components/commons/table"
 import { Columns } from "@/components/pageComponents/productMenu/column"
-import { Alert } from "@/helpers/sweetalert"
-import { fetchProductsDetail } from "@/utils/requestUtils"
+import Swal, { Alert } from "@/helpers/sweetalert"
+import { createProduct, fetchProductsDetail, updateProduct } from "@/utils/requestUtils"
+import { AddProductModal } from "@/components/pageComponents/productMenu/modal"
 
 const pathname = '/productMenu'
 const ProductMenuPage = () => {
@@ -32,6 +33,19 @@ const ProductMenuPage = () => {
 
     const [categories, setCategories] = useState<string | string[]>(router.query.categories ?? [])
     const [categortList, setCategoryList] = useState<string[]>([])
+    const [newCategoryList, setNewCategoryList] = useState([])
+    const [newCategory, setNewCategory] = useState<string | string[]>()
+    const [showAddModal, setShowAddModal] = useState(false)
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+    const [newFile, setNewFile] = useState<File | null>(null)
+    const [uploadedFileName, setUploadedFileName] = useState<string | null>(null)
+    const [editingItemId, setEditingItemId] = useState<number | null>(null)
+    const [newProductName, setNewProductName] = useState<string>('')
+    const [newPrice, setNewPrice] = useState<string>('')
+    const [isActive, setIsActive] = useState<boolean>(false)
+    const [isClearSearch, setIsClearSearch] = useState<boolean>(false)
+    const [disableConfirm, setDisableConfirm] = useState(true)
+
     const fetchProducts = async (page?: number) => {
         try {
             setIsFetching(true)
@@ -43,18 +57,21 @@ const ProductMenuPage = () => {
                 }
             }
             const response = await fetchProductsDetail(config)
-            console.log('Products: ', response.data.products)
 
             if (Array.isArray(response.data.products)) {
                 const products = response.data.products
                 const category = response.data.categoryList
                 setRows(products)
                 setTotal(products.length)
+                console.log('Products: ', products)
 
                 const uniqueCategoryNames: string[] = Array.from(
                     new Set(category.map((c: any) => c.name).filter(Boolean))
                 )
                 setCategoryList(uniqueCategoryNames)
+
+                const formattedList = Array.from(category.map((c: any) => [c.id, { label: c.name }]))
+                setNewCategoryList(formattedList as any)
             }
 
 
@@ -67,7 +84,9 @@ const ProductMenuPage = () => {
     }
     useEffect(() => {
         fetchProducts()
-    },[])
+        setIsClearSearch(false)
+    }, [isClearSearch])
+
     const handleOnClickSearch = async (): Promise<void> => {
         setIsSearch(false)
         setPage(0)
@@ -80,13 +99,13 @@ const ProductMenuPage = () => {
         fetchProducts()
     }
 
-    const handleOnClearSearch = (): void => {
-        setCategories([])
+    const handleOnClearSearch = () => {
+        setCategories(() => [])
+        setIsClearSearch(true)
         router.replace({
             pathname
         })
     }
-
 
 
     useEffect(() => {
@@ -95,7 +114,7 @@ const ProductMenuPage = () => {
         checkPermission({ user, page, action }, router)
     }, [user])
 
-    
+
     const handleOnChangePage = async (page: number): Promise<void> => {
         setPage(page)
         router.replace({
@@ -107,21 +126,113 @@ const ProductMenuPage = () => {
     }
 
     const handleAddItem = () => {
-
-    }
-useEffect(() => {
-    if (!router.isReady) return
-    if (router.query.categories) {
-      setCategories(router.query.categories)
+        setShowAddModal(true)
     }
 
-    if (typeof router.query.page === 'string' && !isNaN(Number(router.query.page))) {
-      setPage(Number(router.query.page))
+
+    const handleEditItem = (id: number): void => {
+        const item = rows.find((i: any) => i.id === id)
+        if (item !== null && item !== undefined) {
+            setNewFile(null)
+            setNewProductName(item.name)
+            setNewCategory(String(item.category_id ?? ''))
+            setNewPrice(item.price)
+            setEditingItemId(item.id)
+            setPreviewUrl(item.image_url)
+            setIsActive(item.status)
+            setUploadedFileName(item.image_url?.split('/').slice(-1)[0].split('?')[0] ?? null)
+            setShowAddModal(true)
+        }
     }
-    if (typeof router.query.limit === 'string' && !isNaN(Number(router.query.limit))) {
-      setPageSize(Number(router.query.limit))
+
+
+    const handleFile = (file: File | null): void => {
+        setNewFile(file)
     }
-  }, [router.isReady, router.query])
+
+    const handleConfirmAdd = async (): Promise<void> => {
+        try {
+            setShowAddModal(false)
+            const formData = new FormData()
+            if (newFile !== null && newFile !== undefined) formData.append('product_image', newFile)
+            if (newProductName !== '') formData.append('product_name', newProductName)
+            if (newCategory !== null && newCategory !== undefined) formData.append('categories', Array.isArray(newCategory) ? newCategory.join(',') : newCategory)
+            if (newPrice !== '' && (Number(newPrice) > 200 || Number(newPrice) < 1)) {
+                Swal.fire({ icon: 'error', title: 'Duration ควรอยู่ระหว่าง 1 ถึง 600 วินาที', text: 'กรุณาเลือกค่าใหม่อีกครั้ง', showCloseButton: true, showConfirmButton: false })
+                return
+            }
+            if (newPrice !== '') {
+                formData.append('price', newPrice)
+            }
+            formData.append('is_active', isActive ? '1' : '0')
+
+            await createProduct(formData)
+
+            fetchProducts()
+            setShowAddModal(false)
+            resetProductForm()
+            setEditingItemId(null)
+
+        } catch (err) {
+            console.error(err)
+            Alert({ data: err })
+        }
+    }
+
+    const handleConfirmEdit = async (): Promise<void> => {
+        try {
+            setShowAddModal(false)
+            const formData = new FormData()
+            if (newFile !== null && newFile !== undefined){
+                formData.append('product_image', newFile)
+            }
+            if (newPrice !== '' && (Number(newPrice) > 200 || Number(newPrice) < 1)) {
+                Swal.fire({ icon: 'error', title: 'Duration ควรอยู่ระหว่าง 1 ถึง 600 วินาที', text: 'กรุณาเลือกค่าใหม่อีกครั้ง', showCloseButton: true, showConfirmButton: false })
+                return
+            }
+            formData.append('product_name', newProductName)
+            if (newCategory !== undefined) {
+                formData.append('categories', Array.isArray(newCategory) ? newCategory.join(',') : newCategory)
+            }
+            formData.append('price', newPrice)
+
+            formData.append('is_active', isActive ? '1' : '0')
+
+            await updateProduct(formData, editingItemId)
+            fetchProducts()
+            setShowAddModal(false)
+            resetProductForm()
+            setEditingItemId(null)
+        } catch (err) {
+            console.error(err)
+            Alert({ data: err })
+        }
+    }
+
+    const resetProductForm = () => {
+        setNewProductName('')
+        setNewCategory([])
+        setNewPrice('')
+        setEditingItemId(null)
+        setNewFile(null)
+        setPreviewUrl(null)
+        setUploadedFileName(null)
+        setIsActive(false)
+    }
+
+    useEffect(() => {
+        if (!router.isReady) return
+        if (router.query.categories) {
+            setCategories(router.query.categories)
+        }
+
+        if (typeof router.query.page === 'string' && !isNaN(Number(router.query.page))) {
+            setPage(Number(router.query.page))
+        }
+        if (typeof router.query.limit === 'string' && !isNaN(Number(router.query.limit))) {
+            setPageSize(Number(router.query.limit))
+        }
+    }, [router.isReady, router.query])
 
 
     return (
@@ -155,12 +266,38 @@ useEffect(() => {
                                 setPageSize={setPageSize}
                                 setPage={handleOnChangePage}
                                 page={page}
-                                columns={Columns()}
+                                columns={Columns(handleEditItem)}
                                 rows={rows}
                                 isSearch={isSearch}
                             />
                         </Col>
                     </Row>
+                    <AddProductModal
+                        visible={showAddModal}
+                        onClose={() => {
+                            setShowAddModal(false)
+                            resetProductForm()
+                        }}
+                        onConfirm={editingItemId != null ? handleConfirmEdit : handleConfirmAdd}
+                        onChangeFile={handleFile}
+                        editingItemId={editingItemId}
+                        setPreviewUrl={setPreviewUrl}
+                        previewUrl={previewUrl}
+                        setUploadedFileName={setUploadedFileName}
+                        uploadedFileName={uploadedFileName}
+                        productName={newProductName}
+                        setProductName={setNewProductName}
+                        categories={newCategory}
+                        setCategories={setNewCategory}
+                        categoryList={newCategoryList}
+                        price={newPrice}
+                        setNewPrice={setNewPrice}
+                        isActive={isActive}
+                        setIsActive={() => setIsActive(prev => !prev)}
+                        disableConfirm={disableConfirm}
+                        setDisableConfirm={setDisableConfirm}
+                        items={rows}
+                    />
                 </Container>
             </MainLayout >
         </>

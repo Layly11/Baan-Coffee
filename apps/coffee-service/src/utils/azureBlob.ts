@@ -1,9 +1,10 @@
 import {
-    BlobServiceClient,
-    BlobSASPermissions,
-    generateBlobSASQueryParameters,
-    StorageSharedKeyCredential,
-    SASProtocol
+  BlobServiceClient,
+  BlobSASPermissions,
+  generateBlobSASQueryParameters,
+  StorageSharedKeyCredential,
+  SASProtocol,
+  ContainerSASPermissions
 } from '@azure/storage-blob'
 
 import winston from '../helpers/winston'
@@ -13,29 +14,28 @@ const AZURE_STORAGE_CONNECTION_STRING = process.env.AZURE_BLOB_CONNECTION || ''
 
 const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME!
 
-export const uploadToAzureBlob = async (buffer: Buffer, originalName: string): Promise<string> => {
-    const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING)
-    const containerClient = blobServiceClient.getContainerClient(containerName)
+export const uploadToAzureBlob = async ({ containerName, blobPath, data, contentType }: { containerName: string, blobPath: string, data: Buffer, contentType: string }): Promise<string> => {
+  const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING)
+  const containerClient = blobServiceClient.getContainerClient(containerName)
 
-    const blobName = `${uuidv4()}-${originalName}`
-    const blockBlobClient = containerClient.getBlockBlobClient(blobName)
+  const blobClient = containerClient.getBlockBlobClient(blobPath)
 
-    await blockBlobClient.uploadData(buffer, {
-        blobHTTPHeaders: { blobContentType: 'image/jpeg' }
-    })
-    winston.info(`Upload file success Container name: ${process.env.AZURE_STORAGE_CONTAINER_NAME}, Result URL: ${blockBlobClient.url}`)
-    return blockBlobClient.url
+  await blobClient.uploadData(data, {
+    blobHTTPHeaders: { blobContentType: contentType }
+  })
+  winston.info(`Upload file success Container name: ${process.env.AZURE_STORAGE_CONTAINER_NAME}, Result URL: ${blobClient.url}`)
+  return blobClient.url
 }
 
 export const getBlobSasToken = (blobName: string) => {
-    const accountName = process.env.AZURE_ACCOUNT_NAME!
-    const accountKey = process.env.AZURE_ACCESS_KEY!
-    const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME!
+  const accountName = process.env.AZURE_ACCOUNT_NAME!
+  const accountKey = process.env.AZURE_ACCESS_KEY!
+  const containerName = process.env.AZURE_STORAGE_CONTAINER_NAME!
 
-    const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey)
-    const expiresOn = new Date(new Date().valueOf() + 3600 * 1000)
+  const sharedKeyCredential = new StorageSharedKeyCredential(accountName, accountKey)
+  const expiresOn = new Date(new Date().valueOf() + 3600 * 1000)
 
-      const sasToken = generateBlobSASQueryParameters(
+  const sasToken = generateBlobSASQueryParameters(
     {
       containerName,
       blobName,
@@ -47,6 +47,38 @@ export const getBlobSasToken = (blobName: string) => {
   ).toString()
 
   return sasToken
+}
+
+export const getblobUrlSas = async (blobName: string) => {
+  const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING)
+  const containerClient = blobServiceClient.getContainerClient(containerName)
+
+  const blockBlobClient = containerClient.getBlockBlobClient(blobName)
+
+  const permissions = new ContainerSASPermissions()
+  permissions.read = true
+
+   const blobUrlSas = await blockBlobClient.generateSasUrl({
+    expiresOn: new Date(new Date().valueOf() + 3600 * 1000),
+    permissions
+  })
+  
+  return blobUrlSas
+}
+
+export const parseBlobUrl = (blobUrl: string) => {
+  const url = new URL(blobUrl)
+
+  const pathParts = url.pathname.split('/').filter(Boolean)
+
+  if (pathParts.length < 1) {
+    throw new Error('Invalid Blob URL. Cannot extract container and blob name.')
+  }
+
+  const containerName = pathParts.shift()!
+  const blobName = decodeURIComponent(pathParts.join('/'))
+
+  return { containerName, blobName }
 }
 
 

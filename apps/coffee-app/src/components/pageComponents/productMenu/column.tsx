@@ -6,29 +6,47 @@ import Badge from '@/components/commons/Badge'
 import { Hidden } from 'react-grid-system'
 import ProductStatusMaster from '../../../constants/masters/ProductStatusMaster.json'
 
-export const Columns = (): any[] => {
+export const Columns = (handleEditItem?: (id: number) => void,): any[] => {
     const router = useRouter()
     return [
-        {
-            label: 'Categories',
-            key: 'category_name',
-            width: '30%',
-        },
         {
             label: 'ProductName',
             key: 'name',
             width: '50%',
         },
         {
+            label: 'Categories',
+            key: 'category_name',
+            width: '30%',
+        },
+        {
             label: 'Image',
             key: 'image_url',
             width: '50%',
             dataMutation: (row: any) => (
-                <img
-                    src={row.image_url}
-                    alt='banner'
-                    style={{ width: '200px', height: 'auto', borderRadius: '8px' }}
-                />
+                row.image_url ? (
+                    <img
+                        src={row.image_url}
+                        alt='product'
+                        style={{ width: '200px', height: 'auto', borderRadius: '8px' }}
+                    />
+                ) : (
+                    <div
+                        style={{
+                            width: '200px',
+                            height: '150px',
+                            border: '1px dashed #ccc',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            borderRadius: '8px',
+                            color: '#888',
+                            fontStyle: 'italic'
+                        }}
+                    >
+                        No Image
+                    </div>
+                )
             )
         },
         {
@@ -70,6 +88,7 @@ export const Columns = (): any[] => {
                     <i
                         className='fas fa-pen'
                         style={{ color: '#374151', cursor: 'pointer' }}
+                        onClick={() => handleEditItem?.(Number(row.id))}
                     />
                     <i
                         className='fas fa-ban'
