@@ -28,10 +28,6 @@ export const getDashBoardData = () => async (req: Request, res: Response, next: 
             })
         }
 
-        console.log({
-  start: momentAsiaBangkok(startDate).startOf('day').toISOString(),
-  end: momentAsiaBangkok(endDate).endOf('day').toISOString()
-})
 
 
         const { count, rows } = await DailySummaryModel.findAndCountAll({

@@ -23,8 +23,6 @@ const DashBoardPage = () => {
     const handleFetchDashboardDetail = async () => {
         try {
             const response = await fetchDashboardDetailRequester(id)
-            console.log('Detail: ', response.data.detail)
-            console.log('Inventory Detail: ', dashboardInfo.inventory_statuses)
             setDashboardInfo(response.data.detail)
         } catch (err) {
             console.error(err)

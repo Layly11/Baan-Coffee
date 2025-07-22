@@ -65,7 +65,6 @@ const ProductMenuPage = () => {
                 const products = response.data.products
                 setRows(products)
                 setTotal(products.length)
-                console.log('Products: ', products)
             }
 
 

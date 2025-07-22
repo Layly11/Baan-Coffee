@@ -104,8 +104,6 @@ export const AddProductModal = ({
 
             setDisableConfirm(!hasChanged)
 
-            console.log("PreviewURl: ", previewUrl)
-            console.log("item.image_url: ", item.image_url)
         } else {
             const isFilled =
                 productName.trim() !== '' &&

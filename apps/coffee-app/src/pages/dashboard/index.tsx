@@ -57,7 +57,6 @@ const DashBoardPage = () => {
         }
       }
       const response = await fetchDashboardSummaryRequester(config)
-      console.log('DATA', response.data)
       if (response.data != null) {
         const total = response.data.total
         const summary = response.data.summaryList
