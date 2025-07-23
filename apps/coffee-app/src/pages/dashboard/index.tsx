@@ -12,12 +12,13 @@ import { dayjs } from '../../helpers/dayjs'
 import { Header } from "@/components/pageComponents/dashboard/header"
 import Table from "@/components/commons/table"
 import { Columns } from "@/components/pageComponents/dashboard/column"
-import { fetchDashboardSummary } from '../../utils/requestUtils'
+import { fetchDashboardSummaryRequester } from '../../utils/requestUtils'
 import { Alert } from "@/helpers/sweetalert"
 import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.json'
 import PermissionActionMaster from '../../constants/masters/PermissionActionMaster.json'
 import { checkPermission } from "@/helpers/checkPermission"
 import { checkRouterQueryAndAutoFetchData } from "@/utils/parseUtils"
+import DashBoardOverview from "@/components/pageComponents/dashboard/dashboardOverview"
 
 
 const pathname = '/dashboard'
@@ -34,7 +35,7 @@ const DashBoardPage = () => {
   const [startDate, setStartDate] = useState<Date | null>(
     router.query.startDate != undefined
       ? dayjs(router.query.startDate as string).toDate()
-      : dayjs().startOf('day').toDate()
+      : dayjs().endOf('day').subtract(30, 'day').startOf('day').toDate()
   )
 
   const [endDate, setEndDate] = useState<Date | null>(
@@ -43,7 +44,7 @@ const DashBoardPage = () => {
       : dayjs().toDate()
   )
 
-  const fetchDashboardSummaryList = async (page?: number) => {
+  const fetchDashboardSummaryList = async (page?: number): Promise<void> => {
     try {
       setIsFetching(true)
       setIsSearch(false)
@@ -55,8 +56,7 @@ const DashBoardPage = () => {
           offset: (pageSize * (page ?? 0))
         }
       }
-      const response = await fetchDashboardSummary(config)
-      console.log('DATA', response.data)
+      const response = await fetchDashboardSummaryRequester(config)
       if (response.data != null) {
         const total = response.data.total
         const summary = response.data.summaryList
@@ -71,6 +71,12 @@ const DashBoardPage = () => {
     }
   }
 
+  useEffect(() => {
+    const fetchData = async (): Promise<void> => {
+      await fetchDashboardSummaryList()
+    }
+    fetchData()
+  }, [])
 
   const handleOnClickSearch = async (): Promise<void> => {
     setIsSearch(false)
@@ -82,7 +88,7 @@ const DashBoardPage = () => {
         endDate: dayjs(endDate).format('YYYY-MM-DD'),
       }
     })
-    fetchDashboardSummaryList()
+    await fetchDashboardSummaryList()
   }
 
   const handleOnChangePage = async (page: number): Promise<void> => {
@@ -91,10 +97,8 @@ const DashBoardPage = () => {
       pathname,
       query: { ...router.query, page }
     })
-
-    fetchDashboardSummaryList(page)
+    await fetchDashboardSummaryList(page)
   }
-
 
   useEffect(() => {
     const page = PermissionMenuMaster.DASHBOARD
@@ -104,17 +108,20 @@ const DashBoardPage = () => {
 
   useEffect(() => {
     if (!router.isReady) return
+
+    const defaultEnd = dayjs().endOf('day')
+    const defaultStart = defaultEnd.subtract(30, 'day').startOf('day')
     if (router.query.startDate && dayjs(router.query.startDate as string).isValid()) {
       setStartDate(dayjs(router.query.startDate as string).toDate())
     } else {
-      setStartDate(dayjs().startOf('day').toDate())
+      setStartDate(defaultStart.toDate())
     }
 
 
     if (router.query.endDate && dayjs(router.query.endDate as string).isValid()) {
       setEndDate(dayjs(router.query.endDate as string).toDate())
     } else {
-      setEndDate(dayjs().toDate())
+      setEndDate(defaultEnd.toDate())
     }
 
     if (typeof router.query.page === 'string' && !isNaN(Number(router.query.page))) {
@@ -125,13 +132,13 @@ const DashBoardPage = () => {
     }
   }, [router.isReady, router.query])
 
+  
   useEffect(() => {
     if (!router.isReady) return
     checkRouterQueryAndAutoFetchData({
       query: router.query,
       fetchData: fetchDashboardSummaryList
     })
-    console.log('Fetch')
   }, [router.isReady, router.query])
 
   return (
@@ -142,9 +149,11 @@ const DashBoardPage = () => {
 
       <MainLayout isFetching={user === null}>
         <Container fluid>
+          <DashBoardOverview
+          />
           <Row justify='between' style={{ margin: '0px -10px' }}>
             <Col sm={12}>
-              <Title>DashBoard</Title>
+              <Title>DashBoard Details</Title>
             </Col>
           </Row>
           <Header

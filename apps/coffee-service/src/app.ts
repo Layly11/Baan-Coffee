@@ -15,10 +15,6 @@ app.enable('trust proxy')
 
 app.disable('x-powered-by')
 
-app.use(cors({
-  origin: 'http://localhost:9301',
-  credentials: true           
-}));
 
 app.use(express.json());
 app.use(urlencoded({ extended: true }))

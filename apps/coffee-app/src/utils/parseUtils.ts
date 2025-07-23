@@ -16,3 +16,17 @@ export const checkRouterQueryAndAutoFetchData = async ({query, fetchData, didFet
      if (didFetch !== undefined) didFetch()
  }
 }
+
+export const parseToArrayAndRemoveSelectAllValue = (val: any): string[] | undefined => {
+  if (val === undefined) return undefined
+
+  if (Array.isArray(val)) {
+    return val?.filter((i) => i !== '*')
+  }
+  return [val]
+}
+
+export const checkNullUndefiendEmptyString = (val: any): any | undefined => {
+  if (val !== undefined && val !== null && val !== '') return val
+  return undefined
+}

@@ -265,8 +265,6 @@ export default function MainLayout({ isFetching, children }: { isFetching: boole
   }
 
 
-
-
   return (
     <Container className="container">
       <Sidebar>

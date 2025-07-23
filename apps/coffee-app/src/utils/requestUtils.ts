@@ -2,7 +2,7 @@ import { resolve } from 'path'
 import axios from '../helpers/axios'
 import { rejects } from 'assert'
 
-export const fetchDashboardSummary = async (config: any): Promise<any> => {
+export const fetchDashboardSummaryRequester = async (config: any): Promise<any> => {
  return await new Promise((resolve, rejects) => {
     axios.get('/api/dashboard/summary-list', config)
     .then((res) => {
@@ -14,7 +14,20 @@ export const fetchDashboardSummary = async (config: any): Promise<any> => {
  })
 }
 
-export const fetchDashboardDetail = async (id: any): Promise<any> => {
+
+export const fetchDashboardOverViewsRequester = async (): Promise<any> => {
+ return await new Promise((resolve, rejects) => {
+    axios.get('/api/dashboard/overview')
+    .then((res) => {
+        resolve(res.data)
+    })
+    .catch((err) => {
+        rejects(err)
+    })
+ })
+}
+
+export const fetchDashboardDetailRequester = async (id: any): Promise<any> => {
  return await new Promise((resolve, rejects) => {
     axios.get(`/api/dashboard/detail/${id}`)
     .then((res) => {
@@ -25,3 +38,106 @@ export const fetchDashboardDetail = async (id: any): Promise<any> => {
     })
  })
 }
+
+export const fetchProductsDetailRequester = async (config: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.get('/api/products', config)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+
+
+export const createProductRequester =  async (data: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.post('/api/products/create', data)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+
+
+export const updateProductRequester =  async (data: any, id: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.patch(`/api/products/item/${id}`, data)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+
+export const deleteProductRequester =  async (id: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.delete(`/api/products/item/${id}`)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+
+
+export const fetchCategoryRequester = async (): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.get('/api/products/categories')
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+
+
+export const AddCategoryRequester =  async (data: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.post('/api/products/categories/create', data)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+
+
+export const updateCategoryRequester =  async (data: any, id: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.patch(`/api/products/category/${id}`, data)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+
+
+export const deleteCategoryRequester =  async (id: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.delete(`/api/products/category/${id}`)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+
