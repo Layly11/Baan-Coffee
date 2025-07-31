@@ -1,6 +1,10 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { getProductData, getCategory, createProduct, updateProduct, deleteProduct, createCategory, updateCategory, deleteCategory, getBestSeller } from '../controller/productController'
 import multer from 'multer'
+import { authMiddleware, findUserPermission, validateUserPermission } from '../controller/userController';
+
+import { PRODUCT_MENU } from '../constants/masters/portalPermissionMaster.json'
+import { VIEW } from '../constants/masters/portalPermissionActionMaster.json'
 const router = express.Router()
 
 const upload = multer({
@@ -22,6 +26,9 @@ const upload = multer({
 
 router.get(
     '/',
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(PRODUCT_MENU, VIEW),
     getProductData(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {

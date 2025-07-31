@@ -15,7 +15,7 @@ interface HeaderProps {
     onAddCategory: () => void
     handleOnClearSearch: () => void
     handleOnClickSearch: () => Promise<void>
-    
+
 }
 
 
@@ -56,10 +56,10 @@ export const Header = ({ categories, setCategories, categoryList, onAddItem, onA
                             </Col>
                         </Hidden>
                         <Col lg={2}>
-                            <AddButton onClick={onAddItem} />
+                            <CategoriesButton onClick={onAddCategory} />
                         </Col>
                         <Col lg={2}>
-                             <CategoriesButton onClick={onAddCategory} />
+                            <AddButton onClick={onAddItem} />
                         </Col>
                     </Row>
                 </Container>

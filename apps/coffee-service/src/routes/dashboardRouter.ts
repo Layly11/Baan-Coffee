@@ -30,6 +30,9 @@ router.get(
 
 router.get(
     '/overview',
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(DASHBOARD, VIEW),
     getDashBoardOverview(),
      (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -46,6 +49,9 @@ router.get(
 
 router.get(
     '/detail/:id',
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(DASHBOARD, VIEW),
     getDashboardDetail(),
      (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {

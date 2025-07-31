@@ -674,8 +674,8 @@ export const CategoryModal = ({ visible, onClose }: AddCategoriesModalProps): JS
                         if (categories.length >= 4) {
                             swalInstance.fire({
                                 icon: 'warning',
-                                title: 'Limit Full',
-                                text: 'You cannot add more than 10 category',
+                                title: 'Limit เต็ม',
+                                text: 'Category เต็ม categoy ห้ามเกิน 4 item',
                                 showCloseButton: true,
                                 showConfirmButton: false
                             })

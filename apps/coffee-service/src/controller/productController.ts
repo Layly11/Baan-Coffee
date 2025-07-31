@@ -101,18 +101,24 @@ export const createProduct = () => async (req: Request, res: Response, next: Nex
             return next(new ServiceError(ProductMasterError.IS_ACTIVE_REQUIRE))
         }
 
+
+
         let imageUrl
         if (file) {
-            const fileExtension = path.extname(file.originalname).toLowerCase()
-            const fileName = `Product_${uuidv4().substring(0, 8)}${fileExtension}`
-            const blobPath = `${fileName}`
+            try {
+                const fileExtension = path.extname(file.originalname).toLowerCase()
+                const fileName = `Product_${uuidv4().substring(0, 8)}${fileExtension}`
+                const blobPath = `${fileName}`
 
-            imageUrl = await uploadToAzureBlob({
-                containerName: process.env.AZURE_STORAGE_CONTAINER_NAME!,
-                blobPath,
-                data: file.buffer,
-                contentType: file.mimetype
-            })
+                imageUrl = await uploadToAzureBlob({
+                    containerName: process.env.AZURE_STORAGE_CONTAINER_NAME!,
+                    blobPath,
+                    data: file.buffer,
+                    contentType: file.mimetype
+                })
+            } catch (err) {
+                next(err)
+            }
         }
 
         const newProduct = await ProductModel.create(
@@ -268,7 +274,7 @@ export const createCategory = () => async (req: Request, res: Response, next: Ne
 
         const category = await CategoriesModel.findAll()
 
-        if(category.length >= 4) {
+        if (category.length >= 4) {
             return next(new ServiceError(ProductMasterError.CATEGORY_LIMIT))
         }
 
@@ -355,7 +361,7 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
                     attributes: ['name', 'price', 'image_url'],
                 },
             ],
-            group: ['top_products.id','product_id','product.id'],
+            group: ['top_products.id', 'product_id', 'product.id'],
             order: [[Sequelize.literal('totalSold'), 'DESC']],
         });
 
@@ -366,11 +372,11 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
             Desc: "Best selling item",
             price: value.product.price,
             imageSource: value.product.image_url
-        }) )
+        }))
 
 
         res.locals.bestSeller = bestSellerMapping
-        
+
         return next()
 
     } catch (err) {
