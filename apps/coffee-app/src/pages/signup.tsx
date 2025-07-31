@@ -179,8 +179,6 @@ const SignupPage = (): JSX.Element => {
       }
     } catch (err: any) {
       const message = err?.response?.data?.res_code.toLowerCase()
-      console.log(message)
-
       if (message === '0404') {
         setEmailError('Email already exists')
       }

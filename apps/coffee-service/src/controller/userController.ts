@@ -2,12 +2,42 @@ import { ServiceError } from "@coffee/helpers";
 import { NextFunction, Request, Response } from "express";
 import HTTP_ERROR from '../constants/errors/httpError.json'
 import { query_type } from "../types/types";
-import { MapUserPermissionModel, MenuPermissionModel } from "@coffee/models";
+import { MapUserPermissionModel, MenuPermissionModel, UserModel, UserRoleModel } from "@coffee/models";
+import {jwtVerify} from 'jose'
 
+
+export const authMiddleware = () => async (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization
+  const token = authHeader?.split(' ')[1]
+
+  if (!token) {
+    return res.status(401).json({ res_desc: 'Unauthorized' })
+  }
+      const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET)
+
+ try {
+  const { payload } = await jwtVerify(token, jwtSecret) as any
+   const user = await UserModel.findByPk(payload.id, {
+                   attributes: ['id', 'username', 'email', 'role_id','last_login'],
+                   include: [
+                       {
+                           model: UserRoleModel,
+                           as: 'role',
+                           attributes: ['name'] 
+                       }
+                   ]
+               })  
+  req.user = user as any
+  next()
+} catch (err) {
+  return next(new ServiceError(HTTP_ERROR.ERR_HTTP_401))
+}
+}
 
 export const findUserPermission = () => async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as any
-    if(!user) throw new ServiceError(HTTP_ERROR.ERR_HTTP_401)
+
+    if (!user) return next(new ServiceError(HTTP_ERROR.ERR_HTTP_401))
 
     const query: query_type = {
         include: [
@@ -22,7 +52,7 @@ export const findUserPermission = () => async (req: Request, res: Response, next
         }
     }
 
-    try{
+    try {
         const permissionMapping = await MapUserPermissionModel.findAll(
             query
         )
@@ -55,5 +85,23 @@ export const findUserPermission = () => async (req: Request, res: Response, next
     } catch (error) {
         next(error)
     }
+
+}
+
+export const validateUserPermission = (name: string, action: string) => {
     
+    return (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const permission = res.locals.permissions.find(
+                (permission: any) => permission.name === name
+            )
+
+            if (!permission?.[action.toLowerCase()]) {
+                return next(new ServiceError(HTTP_ERROR.ERR_HTTP_403))
+            }
+            next()
+        } catch (err) {
+            next(err)
+        }
+    }
 }

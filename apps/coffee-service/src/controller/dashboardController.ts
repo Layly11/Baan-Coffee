@@ -117,7 +117,6 @@ export const getDashBoardOverview = () => async (req: Request, res: Response, ne
             total_sales: value.total_sales
         }))
 
-        console.log(weeklySales)
         const orders = await OrderModel.findAll()
         const allOrderPending = orders.filter((value) => value.status === 'pending')
         const allOrderComplete = orders.filter((value) => value.status === 'complete')

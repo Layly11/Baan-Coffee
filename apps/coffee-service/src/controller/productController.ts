@@ -358,7 +358,6 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
             group: ['top_products.id','product_id','product.id'],
             order: [[Sequelize.literal('totalSold'), 'DESC']],
         });
-                console.log('Data: ', bestSellers)
 
 
         const bestSellerMapping = bestSellers.map((value: any) => ({
@@ -369,7 +368,6 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
             imageSource: value.product.image_url
         }) )
 
-        console.log('Data: ', bestSellerMapping)
 
         res.locals.bestSeller = bestSellerMapping
         

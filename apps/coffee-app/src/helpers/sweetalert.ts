@@ -19,8 +19,6 @@ export const Alert = (props: IAlert): void => {
     const err: AxiosError = props.data
 
     const response = err.response as any
-
-    console.log("ResponseError: ", response?.data.res_desc)
     const text = response?.data.res_desc
 
     if (err?.status !== 200) {
