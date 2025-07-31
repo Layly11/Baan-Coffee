@@ -8,7 +8,8 @@ interface CategoriesButtonProps {
 const CategoriesButton = ({ onClick }: CategoriesButtonProps): JSX.Element => {
   return (
     <ButtonWrapper $successalt onClick={onClick}>
-      <i className='fas fa-plus' />&nbsp; Add Categories
+      <i className='fas fa-plus' />
+      &nbsp;<span style={{ marginLeft: '2px' }}>Add Category</span>
     </ButtonWrapper>
   )
 }

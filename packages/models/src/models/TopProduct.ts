@@ -9,6 +9,7 @@ import {
 
 import { sequelize } from '../sequelize';
 import { DailySummaryModel } from './DailySummary';
+import { ProductModel } from './Product';
 
 export class TopProductModel extends Model<
     InferAttributes<TopProductModel>,
@@ -16,7 +17,7 @@ export class TopProductModel extends Model<
 > {
     declare id: CreationOptional<number>;
     declare summary_id: ForeignKey<DailySummaryModel['id']>;
-    declare product_name: string;
+    declare product_id: ForeignKey<ProductModel['id']>;
     declare total_sold: number;
     declare total_sales: number;
     
@@ -36,8 +37,8 @@ TopProductModel.init(
             type: DataTypes.INTEGER,
             allowNull: false,
         },
-        product_name: {
-            type: DataTypes.STRING,
+        product_id: {
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         total_sold: {

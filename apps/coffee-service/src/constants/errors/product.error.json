@@ -94,6 +94,14 @@
       "en": "Category is in use by some products",
       "th": "Category ถูกใช้อยู่ โดย Product"
     }
+  },
+     "CATEGORY_LIMIT": {
+    "statusCode": 400,
+    "resCode": "4013",
+    "resDesc": {
+      "en": "Category is Limit No more than 4 Items",
+      "th": "Category is Limit No more than 4 Items"
+    }
   }
   
 }

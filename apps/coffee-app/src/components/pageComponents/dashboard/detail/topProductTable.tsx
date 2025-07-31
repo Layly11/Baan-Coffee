@@ -154,7 +154,7 @@ const TableTopProuduct = ({ isFetching, rows, columns }: TableSummaryProps): JSX
                         return (
                             <Row key={row.id ?? rowIndex}>
                                 <DataCell>{rowIndex + 1}</DataCell>
-                                <DataCell >{row.product_name !== null ? row.product_name : '-'}</DataCell>
+                                <DataCell >{row.product.name !== null ? row.product.name: '-'}</DataCell>
                                 <DataCell >{row.total_sold !== null ? row.total_sold : '-'}</DataCell>
                                 <DataCell>{row.total_sales !== null ? row.total_sales : '-'}</DataCell>
                             </Row>

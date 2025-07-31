@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { DailySummaryModel, InventoryStatusModel, OrderModel, ShiftTodayModel, TopProductModel } from '@coffee/models'
+import { DailySummaryModel, InventoryStatusModel, OrderModel, ProductModel, ShiftTodayModel, TopProductModel } from '@coffee/models'
 import { momentAsiaBangkok, ServiceError } from "@coffee/helpers";
 import { Op } from 'sequelize'
 import { dayjs } from "@coffee/helpers";
@@ -114,7 +114,7 @@ export const getDashBoardOverview = () => async (req: Request, res: Response, ne
         const allOrderSales = allData.reduce((sum, item) => sum + item.total_orders, 0)
         const weeklySales = allData.map((value) => ({
             date: dayjs(value.date).format('DD/MM/YYYY'),
-            total_sales:  value.total_sales
+            total_sales: value.total_sales
         }))
 
         console.log(weeklySales)
@@ -123,10 +123,18 @@ export const getDashBoardOverview = () => async (req: Request, res: Response, ne
         const allOrderComplete = orders.filter((value) => value.status === 'complete')
         const allOrderCancelled = orders.filter((value) => value.status === 'cancelled')
 
-        const topProduct = await TopProductModel.findAll()
+        const topProduct = await TopProductModel.findAll({
+            include: [
+                {
+                    model: ProductModel,
+                    as: 'product',
+                    attributes: ['name', 'price', 'image_url']
+                },
+            ],
+        })
 
-        const topProductMapping = topProduct.map((value) => ({
-            name: value.product_name,
+        const topProductMapping = topProduct.map((value: any) => ({
+            name: value.product.name,
             value: value.total_sold
         }))
 
@@ -178,7 +186,14 @@ export const getDashboardDetail = () => async (req: Request, res: Response, next
                 },
                 {
                     model: TopProductModel,
-                    as: 'top_products'
+                    as: 'top_products',
+                    include: [
+                        {
+                            model: ProductModel,
+                            as: 'product',
+                            attributes: ['id', 'name', 'price', 'image_url']
+                        }
+                    ]
                 }
             ],
             where: { id }

@@ -1,10 +1,11 @@
 import { NextFunction, Request, Response } from "express"
-import { ProductModel, CategoriesModel, sequelize } from '@coffee/models'
+import { ProductModel, CategoriesModel, sequelize, TopProductModel } from '@coffee/models'
 import { getBlobSasToken, uploadToAzureBlob, getblobUrlSas, parseBlobUrl, deleteFromAzureImage } from '../utils/azureBlob'
 import { ServiceError } from "@coffee/helpers"
 import ProductMasterError from '../constants/errors/product.error.json'
 import path from "path"
 import { v4 as uuidv4 } from 'uuid'
+import { Sequelize } from "sequelize"
 export const getProductData = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { categories, limit, offset } = req.query
@@ -35,14 +36,14 @@ export const getProductData = () => async (req: Request, res: Response, next: Ne
             order: [['createdAt', 'ASC']]
         })
 
-        for (const product of data) {
-            if (product.image_url) {
-                const url = product.image_url
-                const { blobName } = parseBlobUrl(url)
-                const blobUrlSas = await getblobUrlSas(blobName)
-                product.image_url = blobUrlSas
-            }
-        }
+        // for (const product of data) {
+        //     if (product.image_url) {
+        //         const url = product.image_url
+        //         const { blobName } = parseBlobUrl(url)
+        //         const blobUrlSas = await getblobUrlSas(blobName)
+        //         product.image_url = blobUrlSas
+        //     }
+        // }
 
         const products = data.map((product: any) => ({
             id: product.id,
@@ -265,6 +266,12 @@ export const createCategory = () => async (req: Request, res: Response, next: Ne
     try {
         const { category_name: categoryName } = req.body
 
+        const category = await CategoriesModel.findAll()
+
+        if(category.length >= 4) {
+            return next(new ServiceError(ProductMasterError.CATEGORY_LIMIT))
+        }
+
         if (!categoryName) {
             return next(ProductMasterError.CATEGORIES_NAME_NOT_FOUND)
         }
@@ -327,6 +334,47 @@ export const deleteCategory = () => async (req: Request, res: Response, next: Ne
         await item.destroy()
 
         return next()
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const getBestSeller = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const bestSellers = await TopProductModel.findAll({
+            attributes: [
+                'id',
+                'product_id',
+                [Sequelize.fn('SUM', Sequelize.col('total_sold')), 'totalSold'],
+                [Sequelize.fn('SUM', Sequelize.col('total_sales')), 'totalSales'],
+            ],
+            include: [
+                {
+                    model: ProductModel,
+                    as: 'product',
+                    attributes: ['name', 'price', 'image_url'],
+                },
+            ],
+            group: ['top_products.id','product_id','product.id'],
+            order: [[Sequelize.literal('totalSold'), 'DESC']],
+        });
+                console.log('Data: ', bestSellers)
+
+
+        const bestSellerMapping = bestSellers.map((value: any) => ({
+            id: value.id,
+            name: value.product.name,
+            Desc: "Best selling item",
+            price: value.product.price,
+            imageSource: value.product.image_url
+        }) )
+
+        console.log('Data: ', bestSellerMapping)
+
+        res.locals.bestSeller = bestSellerMapping
+        
+        return next()
+
     } catch (err) {
         next(err)
     }

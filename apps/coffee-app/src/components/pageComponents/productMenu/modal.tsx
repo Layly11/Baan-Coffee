@@ -12,6 +12,7 @@ import Swal, { Alert } from "../../../helpers/sweetalert";
 import styled from "styled-components";
 import { SelectData } from "@/components/header/selectData";
 import { AddCategoryRequester, deleteCategoryRequester, fetchCategoryRequester, updateCategoryRequester } from "@/utils/requestUtils";
+import swalInstance from "../../../helpers/sweetalert";
 
 interface AddProductModalProps {
     visible: boolean;
@@ -670,6 +671,16 @@ export const CategoryModal = ({ visible, onClose }: AddCategoriesModalProps): JS
                     <AddButton onClick={() => {
                         setCategoryName('')
                         setEditingId(null)
+                        if (categories.length >= 4) {
+                            swalInstance.fire({
+                                icon: 'warning',
+                                title: 'Limit Full',
+                                text: 'You cannot add more than 10 category',
+                                showCloseButton: true,
+                                showConfirmButton: false
+                            })
+                            return
+                        }
                         setModalVisible(true)
                     }}>
                         <PlusIcon>+</PlusIcon>

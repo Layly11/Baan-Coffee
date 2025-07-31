@@ -9,6 +9,7 @@ import cors from 'cors'
 
 const APP = () => {
 const app = express()
+app.use(cors());
 
 app.set('trust proxy', true)
 app.enable('trust proxy')

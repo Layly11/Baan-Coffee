@@ -74,6 +74,16 @@ ProductModel.belongsTo(CategoriesModel, {
   as: 'category',
 });
 
+TopProductModel.belongsTo(ProductModel, {
+    foreignKey: 'product_id',
+    as: 'product'
+});
+
+ProductModel.hasMany(TopProductModel, {
+  foreignKey: 'product_id',
+  as: 'topProducts'
+});
+
 
 
 export * from './sequelize'
@@ -88,3 +98,4 @@ export * from './models/ShiftToday';
 export * from './models/TopProduct'; 
 export * from './models/Categories'; 
 export * from './models/Product'; 
+export * from './models/Customer'

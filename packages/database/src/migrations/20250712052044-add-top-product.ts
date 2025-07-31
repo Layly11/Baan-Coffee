@@ -17,9 +17,13 @@ export = {
           key: 'id',
         }
       },
-      product_name: {
-        type: Sequelize.STRING,
+      product_id: {
+        type: Sequelize.INTEGER,
         allowNull: false,
+        references: {
+          model: 'products',
+          key: 'id'
+        }
       },
       total_sold: {
         type: Sequelize.INTEGER,

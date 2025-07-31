@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { getProductData, getCategory, createProduct, updateProduct, deleteProduct, createCategory, updateCategory, deleteCategory } from '../controller/productController'
+import { getProductData, getCategory, createProduct, updateProduct, deleteProduct, createCategory, updateCategory, deleteCategory, getBestSeller } from '../controller/productController'
 import multer from 'multer'
 const router = express.Router()
 
@@ -36,6 +36,21 @@ router.get(
     }
 )
 
+router.get(
+    '/bestSeller',
+    getBestSeller(),
+     (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: {
+                bestSeller: res.locals.bestSeller
+            }
+        }
+        res.json(res.locals.response)
+        next()
+     }
+)
 
 router.post(
     '/create',
@@ -116,6 +131,7 @@ router.post(
         next()
     }
 )
+
 
 router.patch(
     '/category/:id',
