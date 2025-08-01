@@ -117,6 +117,7 @@ export const createProduct = () => async (req: Request, res: Response, next: Nex
                     contentType: file.mimetype
                 })
             } catch (err) {
+                await transaction.commit()
                 next(err)
             }
         }

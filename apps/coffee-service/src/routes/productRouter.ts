@@ -4,15 +4,15 @@ import multer from 'multer'
 import { authMiddleware, findUserPermission, validateUserPermission } from '../controller/userController';
 
 import { PRODUCT_MENU } from '../constants/masters/portalPermissionMaster.json'
-import { VIEW } from '../constants/masters/portalPermissionActionMaster.json'
+import { VIEW, CREATE, EDIT, DELETE } from '../constants/masters/portalPermissionActionMaster.json'
 const router = express.Router()
 
 const upload = multer({
     storage: multer.memoryStorage(),
     limits: {
         fileSize: 2 * 1024 * 1024,
-        files: 1,                 
-        fields: 5,               
+        files: 1,
+        fields: 5,
         fieldNameSize: 100
     },
     fileFilter: (req, file, cb) => {
@@ -45,8 +45,11 @@ router.get(
 
 router.get(
     '/bestSeller',
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(PRODUCT_MENU, VIEW),
     getBestSeller(),
-     (req: Request, res: Response, next: NextFunction) => {
+    (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
             res_code: '0000',
             res_desc: '',
@@ -56,12 +59,15 @@ router.get(
         }
         res.json(res.locals.response)
         next()
-     }
+    }
 )
 
 router.post(
     '/create',
     upload.single('product_image'),
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(PRODUCT_MENU, CREATE),
     createProduct(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -78,6 +84,9 @@ router.post(
 
 router.patch(
     '/item/:id',
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(PRODUCT_MENU, EDIT),
     upload.single('product_image'),
     updateProduct(),
     (req: Request, res: Response, next: NextFunction) => {
@@ -94,21 +103,28 @@ router.patch(
 )
 
 router.delete(
-  '/item/:id',
-  deleteProduct(),
-  (req: Request, res: Response, next: NextFunction) => {
-    res.locals.response = {
-      res_code: '0000',
-      res_desc: '',
-      data: undefined
+    '/item/:id',
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(PRODUCT_MENU, DELETE),
+    deleteProduct(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: undefined
+        }
+        res.json(res.locals.response)
+        next()
     }
-    res.json(res.locals.response)
-    next()
-  }
 )
 
 router.get(
     '/categories',
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(PRODUCT_MENU, VIEW),
+    getProductData(),
     getCategory(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -125,13 +141,17 @@ router.get(
 
 router.post(
     '/categories/create',
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(PRODUCT_MENU, CREATE),
+    getProductData(),
     createCategory(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
             res_code: '0000',
             res_desc: '',
             data: {
-                newCategories:  res.locals.newCategories
+                newCategories: res.locals.newCategories
             }
         }
         res.json(res.locals.response)
@@ -142,6 +162,9 @@ router.post(
 
 router.patch(
     '/category/:id',
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(PRODUCT_MENU, EDIT),
     updateCategory(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -158,17 +181,20 @@ router.patch(
 
 
 router.delete(
-  '/category/:id',
-  deleteCategory(),
-  (req: Request, res: Response, next: NextFunction) => {
-    res.locals.response = {
-      res_code: '0000',
-      res_desc: '',
-      data: undefined
+    '/category/:id',
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(PRODUCT_MENU, DELETE),
+    deleteCategory(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: undefined
+        }
+        res.json(res.locals.response)
+        next()
     }
-    res.json(res.locals.response)
-    next()
-  }
 )
 
 
