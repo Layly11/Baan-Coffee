@@ -21,6 +21,7 @@ export class ProductModel extends Model<
     declare category_id: ForeignKey<CategoriesModel['id']>;
     declare status: boolean;
     declare image_url: CreationOptional<string | null>;
+    declare description: CreationOptional<string | null>;
 
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
@@ -51,6 +52,10 @@ ProductModel.init(
             defaultValue: true
         },
         image_url: {
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        description : {
             type: DataTypes.STRING,
             allowNull: true
         },

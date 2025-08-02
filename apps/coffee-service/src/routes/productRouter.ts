@@ -1,7 +1,7 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { getProductData, getCategory, createProduct, updateProduct, deleteProduct, createCategory, updateCategory, deleteCategory, getBestSeller } from '../controller/productController'
+import { getProductData, getCategory, createProduct, updateProduct, deleteProduct, createCategory, updateCategory, deleteCategory, getBestSeller, getProductByCategory, getCategoryMobile } from '../controller/productController'
 import multer from 'multer'
-import { authMiddleware, findUserPermission, validateUserPermission } from '../controller/userController';
+import { authMiddleware, authMiddlewareCustomer, findUserPermission, validateUserPermission } from '../controller/userController';
 
 import { PRODUCT_MENU } from '../constants/masters/portalPermissionMaster.json'
 import { VIEW, CREATE, EDIT, DELETE } from '../constants/masters/portalPermissionActionMaster.json'
@@ -12,7 +12,7 @@ const upload = multer({
     limits: {
         fileSize: 2 * 1024 * 1024,
         files: 1,
-        fields: 5,
+        fields: 6,
         fieldNameSize: 100
     },
     fileFilter: (req, file, cb) => {
@@ -43,24 +43,6 @@ router.get(
     }
 )
 
-router.get(
-    '/bestSeller',
-    authMiddleware(),
-    findUserPermission(),
-    validateUserPermission(PRODUCT_MENU, VIEW),
-    getBestSeller(),
-    (req: Request, res: Response, next: NextFunction) => {
-        res.locals.response = {
-            res_code: '0000',
-            res_desc: '',
-            data: {
-                bestSeller: res.locals.bestSeller
-            }
-        }
-        res.json(res.locals.response)
-        next()
-    }
-)
 
 router.post(
     '/create',
@@ -124,7 +106,6 @@ router.get(
     authMiddleware(),
     findUserPermission(),
     validateUserPermission(PRODUCT_MENU, VIEW),
-    getProductData(),
     getCategory(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -144,7 +125,6 @@ router.post(
     authMiddleware(),
     findUserPermission(),
     validateUserPermission(PRODUCT_MENU, CREATE),
-    getProductData(),
     createCategory(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -196,6 +176,60 @@ router.delete(
         next()
     }
 )
+
+////// Mobile ////////
+
+router.get(
+    '/bestSeller',
+    authMiddlewareCustomer(),
+    getBestSeller(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '1111',
+            res_desc: '',
+            data: {
+                bestSeller: res.locals.bestSeller
+            }
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
+router.get(
+    '/category',
+    authMiddlewareCustomer(),
+    getCategoryMobile(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '1111',
+            res_desc: '',
+            data: {
+                category: res.locals.category
+            }
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
+router.get(
+    '/productData',
+    authMiddlewareCustomer(),
+    getProductByCategory(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '1111',
+            res_desc: '',
+            data: {
+                productData: res.locals.productsData
+            }
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
 
 
 export default router

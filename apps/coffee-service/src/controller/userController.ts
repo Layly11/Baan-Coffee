@@ -2,7 +2,7 @@ import { ServiceError } from "@coffee/helpers";
 import { NextFunction, Request, Response } from "express";
 import HTTP_ERROR from '../constants/errors/httpError.json'
 import { query_type } from "../types/types";
-import { MapUserPermissionModel, MenuPermissionModel, UserModel, UserRoleModel } from "@coffee/models";
+import { CustomersModel, MapUserPermissionModel, MenuPermissionModel, UserModel, UserRoleModel } from "@coffee/models";
 import {jwtVerify} from 'jose'
 
 
@@ -28,6 +28,33 @@ export const authMiddleware = () => async (req: Request, res: Response, next: Ne
                    ]
                })  
   req.user = user as any
+  next()
+} catch (err) {
+  return next(new ServiceError(HTTP_ERROR.ERR_HTTP_401))
+}
+}
+
+
+export const authMiddlewareCustomer = () => async (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization
+  const token = authHeader?.split(' ')[1]
+
+  if (!token) {
+    return res.status(401).json({ res_desc: 'Unauthorized' })
+  }
+ const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET_CUSTOMER)
+
+ try {
+  const { payload } = await jwtVerify(token, jwtSecret) as any
+
+  const exists = await CustomersModel.findByPk(payload.id)
+
+  if(!exists){
+    return next(new ServiceError(HTTP_ERROR.ERR_HTTP_401))
+  }
+
+  req.user = exists
+
   next()
 } catch (err) {
   return next(new ServiceError(HTTP_ERROR.ERR_HTTP_401))

@@ -37,6 +37,8 @@ interface AddProductModalProps {
     setDisableConfirm: React.Dispatch<React.SetStateAction<boolean>>
     items: any
     setRemoveImage: React.Dispatch<React.SetStateAction<boolean>>
+    newDescription: string
+    setNewDescription:  React.Dispatch<React.SetStateAction<string>>
 }
 
 export const AddProductModal = ({
@@ -61,7 +63,9 @@ export const AddProductModal = ({
     disableConfirm,
     setDisableConfirm,
     items,
-    setRemoveImage
+    setRemoveImage,
+    newDescription,
+    setNewDescription
 }: AddProductModalProps): JSX.Element => {
     const fileTypes = ["JPG", "PNG", "JPEG"];
     const palette = {
@@ -101,22 +105,22 @@ export const AddProductModal = ({
                 String(categories) !== String(item.category_id ?? '') ||
                 price !== String(item.price ?? '') ||
                 isActive !== item.status ||
-                previewUrl !== item.image_url
+                previewUrl !== item.image_url ||
+                newDescription !== item.description
 
             setDisableConfirm(!hasChanged)
 
         } else {
+           const isCategoryValid = categoryList.some(([key]) => String(key) === String(categories));
             const isFilled =
                 productName.trim() !== '' &&
-                categories !== null &&
-                categories !== undefined &&
-                categories !== '' &&
+                isCategoryValid &&
                 price !== undefined &&
                 price.trim() !== ''
 
             setDisableConfirm(!isFilled)
         }
-    }, [visible, productName, categories, price, isActive, editingItemId, items, setDisableConfirm, previewUrl])
+    }, [visible, productName, categories, price, isActive, editingItemId, items, setDisableConfirm, previewUrl, newDescription])
 
     useEffect(() => {
         return () => {
@@ -155,7 +159,7 @@ export const AddProductModal = ({
             URL.revokeObjectURL(previewUrl);
         }
     };
-    const handleFileUpload = (file: File): void => {
+    const handleFileUpload = (file: any): void => {
         setRemoveImage(false)
         if (!validateImageFile(file)) return;
         onChangeFile(file);
@@ -244,7 +248,7 @@ export const AddProductModal = ({
                                                             className="sub-title"
                                                             style={{ fontSize: "14px", fontWeight: "400" }}
                                                         >
-                                                            Recommended image size: 1060 x 475 px Maximum file
+                                                            Recommended image size: 600 x 600 px Maximum file and without background
                                                             size: 2 MB.
                                                         </div>
                                                         <div
@@ -451,6 +455,21 @@ export const AddProductModal = ({
                                             }
                                         }}
 
+                                    />
+                                </Col>
+                            </Row>
+
+                            <Row style={{ marginTop: "12px", alignItems: "center" }}>
+                                <Col lg={2.2}>
+                                    <label style={{ fontWeight: 500, color: "#b3b3b3" }}>
+                                        Description
+                                    </label>
+                                </Col>
+                                <Col lg={5.3}>
+                                    <Input
+                                        type="text"
+                                        value={newDescription}
+                                        onChange={(e) => setNewDescription(e.target.value)}
                                     />
                                 </Col>
                             </Row>

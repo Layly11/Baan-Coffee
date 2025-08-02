@@ -42,6 +42,7 @@ const ProductMenuPage = () => {
     const [editingItemId, setEditingItemId] = useState<number | null>(null)
     const [newProductName, setNewProductName] = useState<string>('')
     const [newPrice, setNewPrice] = useState<string>('')
+    const [newDescription, setNewDescription] = useState<string>('')
     const [isActive, setIsActive] = useState<boolean>(false)
     const [isClearSearch, setIsClearSearch] = useState<boolean>(false)
     const [disableConfirm, setDisableConfirm] = useState(true)
@@ -162,6 +163,7 @@ const ProductMenuPage = () => {
             setNewPrice(item.price)
             setEditingItemId(item.id)
             setPreviewUrl(item.image_url)
+            setNewDescription(item.description)
             setIsActive(item.status)
             setUploadedFileName(item.image_url?.split('/').slice(-1)[0].split('?')[0] ?? null)
             setShowAddModal(true)
@@ -179,13 +181,18 @@ const ProductMenuPage = () => {
             const formData = new FormData()
             if (newFile !== null && newFile !== undefined) formData.append('product_image', newFile)
             if (newProductName !== '') formData.append('product_name', newProductName)
-            if (newCategory !== null && newCategory !== undefined) formData.append('categories', Array.isArray(newCategory) ? newCategory.join(',') : newCategory)
+            if (newCategory !== null && newCategory !== undefined) {
+                formData.append('categories', Array.isArray(newCategory) ? newCategory.join(',') : newCategory)
+            }
             if (newPrice !== '' && (Number(newPrice) > 200 || Number(newPrice) < 1)) {
                 Swal.fire({ icon: 'error', title: 'Duration ควรอยู่ระหว่าง 1 ถึง 600 วินาที', text: 'กรุณาเลือกค่าใหม่อีกครั้ง', showCloseButton: true, showConfirmButton: false })
                 return
             }
             if (newPrice !== '') {
                 formData.append('price', newPrice)
+            }
+            if (newDescription !== '') {
+                formData.append('description',newDescription)
             }
             formData.append('is_active', isActive ? '1' : '0')
 
@@ -197,6 +204,7 @@ const ProductMenuPage = () => {
             setEditingItemId(null)
 
         } catch (err) {
+            resetProductForm()
             console.error(err)
             Alert({ data: err })
         }
@@ -219,6 +227,8 @@ const ProductMenuPage = () => {
             }
             formData.append('price', newPrice)
 
+            formData.append('description',newDescription)
+
             formData.append('is_active', isActive ? '1' : '0')
 
             formData.append("is_remove_image", String(isRemoveImage))
@@ -229,6 +239,7 @@ const ProductMenuPage = () => {
             resetProductForm()
             setEditingItemId(null)
         } catch (err) {
+            resetProductForm()
             console.error(err)
             Alert({ data: err })
         }
@@ -243,6 +254,7 @@ const ProductMenuPage = () => {
         setPreviewUrl(null)
         setUploadedFileName(null)
         setIsActive(false)
+        setNewDescription('')
     }
 
     useEffect(() => {
@@ -354,6 +366,9 @@ const ProductMenuPage = () => {
                         setDisableConfirm={setDisableConfirm}
                         items={rows}
                         setRemoveImage={setIsRemoveImage}
+                        newDescription= {newDescription}
+                        setNewDescription= {setNewDescription}
+
                     />
                     <DeleteProductModal
                         visible={showDeleteModal}

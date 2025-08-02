@@ -51,6 +51,7 @@ export const getProductData = () => async (req: Request, res: Response, next: Ne
             price: product.price,
             status: product.status,
             image_url: product.image_url,
+            description: product.description,
             category_id: product.category.id || null,
             category_name: product.category?.name || null
         }));
@@ -69,6 +70,7 @@ export const createProduct = () => async (req: Request, res: Response, next: Nex
             product_name: productName,
             categories,
             price,
+            description,
             is_active: isActive
         } = req.body
 
@@ -128,7 +130,8 @@ export const createProduct = () => async (req: Request, res: Response, next: Nex
                 price,
                 category_id: categories,
                 status: isActive,
-                image_url: imageUrl
+                image_url: imageUrl,
+                description: description
             },
             { transaction }
         )
@@ -156,6 +159,7 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
             product_name: productName,
             categories,
             price,
+            description,
             is_active: isActive,
             is_remove_image: isRemoveImage
         } = req.body
@@ -213,6 +217,9 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
         if (price !== undefined) {
             item.price = price
         }
+        if (description !== undefined) {
+            item.description = description
+        }
         if (isActive !== undefined) {
             item.status = isActive
         }
@@ -235,6 +242,8 @@ export const deleteProduct = () => async (req: Request, res: Response, next: Nex
         if (!item) {
             return next(new ServiceError(ProductMasterError.PRODUCT_NOT_FOUND))
         }
+
+        await TopProductModel.destroy({where: {product_id: id}})
 
         if (item.image_url) {
             try {
@@ -359,7 +368,8 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
                 {
                     model: ProductModel,
                     as: 'product',
-                    attributes: ['name', 'price', 'image_url'],
+                    attributes: ['name', 'price', 'image_url', 'description'],
+                    where: { status: 1}
                 },
             ],
             group: ['top_products.id', 'product_id', 'product.id'],
@@ -370,7 +380,7 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
         const bestSellerMapping = bestSellers.map((value: any) => ({
             id: value.id,
             name: value.product.name,
-            Desc: "Best selling item",
+            Desc: value.product.description,
             price: value.product.price,
             imageSource: value.product.image_url
         }))
@@ -380,6 +390,70 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
 
         return next()
 
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const getCategoryMobile = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+
+        const category = await CategoriesModel.findAll({ 
+            attributes: ['id', 'name'],
+            include: [
+                {
+                    model: ProductModel,
+                    as: 'products',
+                    required: true
+                }
+            ] 
+        })
+
+        const categoryMapped = category.map((cat) => ({
+            id: cat.id,
+            name: cat.name
+        }))
+
+        res.locals.category = categoryMapped
+
+        return next()
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const getProductByCategory = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const category = await CategoriesModel.findAll({
+            attributes: ['id', 'name'],
+            include: [
+                {
+                    model: ProductModel,
+                    as: 'products',
+                    where: { status: 1 }
+                   
+                }
+            ]
+        })
+
+        const mappedResult: Record<string, any[]> = {}
+
+        for(const categories of category) {
+            const categoriesName = categories.name
+            const products = (categories as any).products || []
+
+            mappedResult[categoriesName] = products.map((product: any) => ({
+                id: product.id,
+                title: product.name,
+                price: `${product.price} Bath`,
+                image: product.image_url,
+                desc: product.description,
+              }))
+        }
+
+        res.locals.productsData = mappedResult
+
+        return next()
     } catch (err) {
         next(err)
     }

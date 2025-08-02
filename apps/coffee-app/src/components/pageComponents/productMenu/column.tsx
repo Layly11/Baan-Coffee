@@ -55,6 +55,11 @@ export const Columns = (handleEditItem?: (id: number) => void,  handleDeleteItem
             width: '30%',
         },
         {
+            label: 'Description',
+            key: 'description',
+            width: '30%',
+        },
+        {
             label: 'Status',
             key: 'status',
             width: '30%',
