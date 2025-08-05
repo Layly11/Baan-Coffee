@@ -404,7 +404,8 @@ export const getCategoryMobile = () => async (req: Request, res: Response, next:
                 {
                     model: ProductModel,
                     as: 'products',
-                    required: true
+                    required: true,
+                    where: { status: 1}
                 }
             ] 
         })
