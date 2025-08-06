@@ -30,5 +30,53 @@
       "en": "Email or Password Invalid",
       "th": "กรอกข้อมูล email password ผิดพลาด"
     }
+  },
+  "ERR_CUSTOMER_OTP_REQUIRED": {
+    "statusCode": 401,
+    "resCode": "0405",
+    "resDesc": {
+      "en": "Email and OTP is Required",
+      "th": "ต้องการ Emai และ Password"
+    }
+  },
+    "ERR_CUSTOMER_EMAIL_NOT_FOUND": {
+    "statusCode": 401,
+    "resCode": "0406",
+    "resDesc": {
+      "en": "Customer not Found",
+      "th": "หาCustomer ไม่เจอ"
+    }
+  },
+   "ERR_CUSTOMER_ALREADY_VERIFIED": {
+    "statusCode": 401,
+    "resCode": "0407",
+    "resDesc": {
+      "en": "Customer Already Verified",
+      "th": "Customer ถูก verified แล้ว"
+    }
+  },
+  "ERR_CUSTOMER_OTP_INVALID": {
+    "statusCode": 401,
+    "resCode": "0408",
+    "resDesc": {
+      "en": "Customer OTP Invalid",
+      "th": "Customer OTP ผิด"
+    }
+  },
+  "ERR_CUSTOMER_EMAIL_REQUIRED" : {
+    "statusCode": 401,
+    "resCode": "0409",
+    "resDesc": {
+      "en": "Customer Email Required",
+      "th": "Customer OTP ผิด"
+    }
+  },
+  "ERR_CUSTOMER_NOT_VERIFIED" : {
+    "statusCode": 401,
+    "resCode": "0410",
+    "resDesc": {
+      "en": "Account not verified. Please verify your email before logging in.",
+      "th": "Account ยังไม่ได้ยืนยันตัวตนโปรดยืนยันตัวตน"
+    }
   }
 }

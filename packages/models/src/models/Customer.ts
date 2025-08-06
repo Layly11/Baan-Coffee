@@ -19,6 +19,8 @@ export class CustomersModel extends Model<
     declare email: string
     declare password: string
     declare phone: string
+    declare email_otp: CreationOptional<string | null>
+    declare email_otp_expire:  CreationOptional<Date | null>
     declare verified: boolean
     declare createdAt: CreationOptional<Date>
     declare updatedAt: CreationOptional<Date>
@@ -65,6 +67,16 @@ CustomersModel.init(
             type: DataTypes.STRING,
             unique: true,
             allowNull: false,
+        },
+        email_otp: {
+            field: 'email_otp',
+            type: DataTypes.STRING,
+            allowNull: true
+        },
+        email_otp_expire: {
+            field: 'email_otp_expire',
+            type: DataTypes.DATE,
+            allowNull: true
         },
         verified: {
             field: 'verified',
