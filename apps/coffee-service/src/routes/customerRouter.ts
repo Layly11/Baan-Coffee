@@ -1,9 +1,12 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { registerCustomer, loginCustomer, verifyOtpCustomer, resendOtpCustomer } from '../controller/customersController';
+import { otpLimiter, loginLimiter } from '../utils/ratelimit';
+
 const router = express.Router()
 
 router.post(
     '/register',
+    otpLimiter,
     registerCustomer(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -19,6 +22,7 @@ router.post(
 
 router.post(
     '/verify-otp',
+    otpLimiter,
     verifyOtpCustomer(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -33,6 +37,7 @@ router.post(
 
 router.post(
     '/resend-otp',
+    otpLimiter,
     resendOtpCustomer(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -47,6 +52,7 @@ router.post(
 
 router.post(
     '/login',
+    loginLimiter,
     loginCustomer(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
