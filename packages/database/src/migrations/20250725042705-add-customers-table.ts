@@ -28,14 +28,6 @@ export = {
          allowNull: false,
          unique: true
       },
-      email_otp: {
-        type: Sequelize.STRING,
-        allowNull: true,
-      },
-      email_otp_expire: {
-         type: Sequelize.DATE,
-         allowNull: true
-      },
       verified: {
         type: Sequelize.BOOLEAN,
         defaultValue: false

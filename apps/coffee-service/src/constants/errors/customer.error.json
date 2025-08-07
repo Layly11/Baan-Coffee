@@ -23,7 +23,7 @@
       "th": "จำเป็นต้องเข้าสู่ระบบ กรอกข้อมูลให้ครบถ้วน"
     }
   },
-    "ERR_LOGIN_CUSTOMER_INVALID": {
+  "ERR_LOGIN_CUSTOMER_INVALID": {
     "statusCode": 401,
     "resCode": "0404",
     "resDesc": {
@@ -39,7 +39,7 @@
       "th": "ต้องการ Emai และ Password"
     }
   },
-    "ERR_CUSTOMER_EMAIL_NOT_FOUND": {
+  "ERR_CUSTOMER_EMAIL_NOT_FOUND": {
     "statusCode": 401,
     "resCode": "0406",
     "resDesc": {
@@ -47,7 +47,7 @@
       "th": "หาCustomer ไม่เจอ"
     }
   },
-   "ERR_CUSTOMER_ALREADY_VERIFIED": {
+  "ERR_CUSTOMER_ALREADY_VERIFIED": {
     "statusCode": 401,
     "resCode": "0407",
     "resDesc": {
@@ -63,7 +63,7 @@
       "th": "Customer OTP ผิด"
     }
   },
-  "ERR_CUSTOMER_EMAIL_REQUIRED" : {
+  "ERR_CUSTOMER_EMAIL_REQUIRED": {
     "statusCode": 401,
     "resCode": "0409",
     "resDesc": {
@@ -71,12 +71,28 @@
       "th": "Customer OTP ผิด"
     }
   },
-  "ERR_CUSTOMER_NOT_VERIFIED" : {
+  "ERR_CUSTOMER_NOT_VERIFIED": {
     "statusCode": 401,
     "resCode": "0410",
     "resDesc": {
       "en": "Account not verified. Please verify your email before logging in.",
       "th": "Account ยังไม่ได้ยืนยันตัวตนโปรดยืนยันตัวตน"
+    }
+  },
+  "ERR_OTP_NOT_HAVE_IN_REDIS": {
+    "statusCode": 401,
+    "resCode": "0411",
+    "resDesc": {
+      "en": "OTP not have in redis",
+      "th": "OTP ไม่ได้อยู่ใน Redis"
+    }
+  },
+  "ERR_CUSTOMER_OTP_TOO_MANY_ATTEMPTS": {
+    "statusCode": 401,
+    "resCode": "0412",
+    "resDesc": {
+      "en": "Please wait a moment before requesting a new OTP.",
+      "th": "โปรดรอสักครู่ก่อนส่งคำขอ OTP ใหม่"
     }
   }
 }

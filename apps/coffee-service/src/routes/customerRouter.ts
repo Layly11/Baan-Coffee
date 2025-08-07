@@ -1,12 +1,11 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { registerCustomer, loginCustomer, verifyOtpCustomer, resendOtpCustomer } from '../controller/customersController';
-import { otpLimiter, loginLimiter } from '../utils/ratelimit';
+import { registerCustomer, loginCustomer, verifyOtpCustomer, resendOtpCustomer,checkCustomerExist, forgotPasswordWithOtp, verifyResetOtp, resendResetOtp } from '../controller/customersController';
+import {  getOtpLimiter,getLoginLimiter, getResetOtpLimiter } from '../utils/ratelimit';
 
 const router = express.Router()
 
 router.post(
     '/register',
-    otpLimiter,
     registerCustomer(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -20,9 +19,28 @@ router.post(
 )
 
 
+router.get(
+    '/check-customer',
+    checkCustomerExist(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '1111',
+            res_desc: '',
+            data:  {
+                emailExists: res.locals.emailExists,
+                phoneExists: res.locals.phoneExists
+            }
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
+
+
 router.post(
     '/verify-otp',
-    otpLimiter,
+    getOtpLimiter(),
     verifyOtpCustomer(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -37,7 +55,7 @@ router.post(
 
 router.post(
     '/resend-otp',
-    otpLimiter,
+    getOtpLimiter(),
     resendOtpCustomer(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -52,7 +70,7 @@ router.post(
 
 router.post(
     '/login',
-    loginLimiter,
+    getLoginLimiter(),
     loginCustomer(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -66,4 +84,53 @@ router.post(
         next()
     }
 )
+
+
+router.post(
+    '/forgot-password',
+    getResetOtpLimiter(),
+    forgotPasswordWithOtp(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '1111',
+            res_desc: '',
+            data: undefined
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
+
+router.post(
+    '/resend-reset-otp',
+    getResetOtpLimiter(),
+    resendResetOtp(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '1111',
+            res_desc: '',
+            data: undefined
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
+router.post(
+    '/verify-reset-otp',
+    getResetOtpLimiter(),
+    verifyResetOtp(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '1111',
+            res_desc: 'OTP verified successfully',
+            data: undefined
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
+
 export default router
