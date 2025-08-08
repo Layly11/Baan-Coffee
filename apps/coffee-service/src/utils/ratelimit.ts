@@ -21,6 +21,26 @@ export const getOtpLimiter = () => {
 }
 
 
+export const getVerifyLimiter = () => {
+  const redis = getRedisClient()
+  return rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 10,
+    message: {
+      res_code: '0498',
+      res_desc: 'Too many verify. Please try again later.'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req:any) => `otp:verify:${req.body?.email || ipKeyGenerator(req)}`,
+    store: new RedisStore({
+      sendCommand: async (...args: string[]) => redis.sendCommand(args),
+    })
+  })
+}
+
+
+
 export const getLoginLimiter = () => {
   const redis = getRedisClient()
   return rateLimit({
@@ -47,12 +67,51 @@ export const getResetOtpLimiter = () => {
     max: 5, // จำกัดได้สูงสุด 5 ครั้งในช่วงเวลานั้น
     message: {
       res_code: '0477',
-      res_desc: 'Too many password reset requests. Please try again later.',
+      res_desc: 'Too many OTP attempts. Please try again later.',
     },
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: (req: any) =>
       `reset_otp_limit:${req.body?.email || ipKeyGenerator(req)}`,
+      store: new RedisStore({
+      sendCommand: async (...args: string[]) => redis.sendCommand(args),
+    }),
+  })
+}
+
+export const getForgorPasswordLimiter = () => {
+  const redis = getRedisClient()
+  return rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 นาที
+    max: 5, // จำกัดได้สูงสุด 5 ครั้งในช่วงเวลานั้น
+    message: {
+      res_code: '0466',
+      res_desc: 'Too many password reset requests. Please try again later.',
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req: any) =>
+      `reset_forgot_limit:${req.body?.email || ipKeyGenerator(req)}`,
+      store: new RedisStore({
+      sendCommand: async (...args: string[]) => redis.sendCommand(args),
+    }),
+  })
+}
+
+
+export const getVerifyResetOtpLimiter = () => {
+  const redis = getRedisClient()
+  return rateLimit({
+    windowMs: 10 * 60 * 1000, // 10 นาที
+    max: 5, // จำกัดได้สูงสุด 5 ครั้งในช่วงเวลานั้น
+    message: {
+      res_code: '0466',
+      res_desc: 'Too many verify password reset. Please try again later.',
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req: any) =>
+      `reset_verify_limit:${req.body?.email || ipKeyGenerator(req)}`,
       store: new RedisStore({
       sendCommand: async (...args: string[]) => redis.sendCommand(args),
     }),

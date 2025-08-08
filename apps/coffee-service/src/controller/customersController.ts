@@ -262,7 +262,7 @@ export const verifyResetOtp = () => async (req: Request, res: Response, next: Ne
         }
 
         await redis.set(`reset_otp_verified:${email}`, "true", { EX: 300 })
-
+        await redis.del(redisKey);
         return next()
     } catch (err) {
         next(err)

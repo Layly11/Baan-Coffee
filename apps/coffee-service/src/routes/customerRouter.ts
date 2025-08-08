@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { registerCustomer, loginCustomer, verifyOtpCustomer, resendOtpCustomer,checkCustomerExist, forgotPasswordWithOtp, verifyResetOtp, resendResetOtp } from '../controller/customersController';
-import {  getOtpLimiter,getLoginLimiter, getResetOtpLimiter } from '../utils/ratelimit';
+import {  getOtpLimiter,getLoginLimiter, getResetOtpLimiter, getForgorPasswordLimiter, getVerifyResetOtpLimiter, getVerifyLimiter } from '../utils/ratelimit';
 
 const router = express.Router()
 
@@ -40,7 +40,7 @@ router.get(
 
 router.post(
     '/verify-otp',
-    getOtpLimiter(),
+    getVerifyLimiter(),
     verifyOtpCustomer(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -88,7 +88,7 @@ router.post(
 
 router.post(
     '/forgot-password',
-    getResetOtpLimiter(),
+    getForgorPasswordLimiter(),
     forgotPasswordWithOtp(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -119,7 +119,7 @@ router.post(
 
 router.post(
     '/verify-reset-otp',
-    getResetOtpLimiter(),
+    getVerifyResetOtpLimiter(),
     verifyResetOtp(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {

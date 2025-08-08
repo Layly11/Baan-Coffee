@@ -24,6 +24,11 @@ app.use(cookieParser(process.env.COOKIE_SECRET))
 
 app.use(passport.initialize());
 
+app.use((req: Request, res: Response, next: NextFunction) => {
+    res.header('Cache-Control', 'no-store, no-cache, max-age=0, must-revalidate') 
+    next()
+})
+
 app.use(createRequestLog())
 
 
