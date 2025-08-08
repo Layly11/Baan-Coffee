@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { registerCustomer, loginCustomer, verifyOtpCustomer, resendOtpCustomer,checkCustomerExist, forgotPasswordWithOtp, verifyResetOtp, resendResetOtp } from '../controller/customersController';
+import { registerCustomer, loginCustomer, verifyOtpCustomer, resendOtpCustomer,checkCustomerExist, forgotPasswordWithOtp, verifyResetOtp, resendResetOtp, requireResetVerified, resetPassword } from '../controller/customersController';
 import {  getOtpLimiter,getLoginLimiter, getResetOtpLimiter, getForgorPasswordLimiter, getVerifyResetOtpLimiter, getVerifyLimiter } from '../utils/ratelimit';
 
 const router = express.Router()
@@ -132,5 +132,20 @@ router.post(
     }
 )
 
+
+router.post(
+    '/reset-password',
+    requireResetVerified(),
+    resetPassword(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '1111',
+            res_desc: '',
+            data: undefined
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
 
 export default router

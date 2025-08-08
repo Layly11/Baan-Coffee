@@ -23,6 +23,10 @@ export const registerCustomer = () => async (req: Request, res: Response, next: 
 
         }
 
+        if (!password) {
+            return next(new ServiceError(CustomerMasterError.ERR_PASSWORD_REQUIRED));
+        }
+
         await CustomersModel.create(
             {
                 name,
@@ -240,7 +244,6 @@ export const resendResetOtp = () => async (req: Request, res: Response, next: Ne
     }
 }
 
-
 export const verifyResetOtp = () => async (req: Request, res: Response, next: NextFunction) => {
     const redis = getRedisClient()
     try {
@@ -270,4 +273,58 @@ export const verifyResetOtp = () => async (req: Request, res: Response, next: Ne
 }
 
 
+export const requireResetVerified = () => async (req: Request, res: Response, next: NextFunction) => {
+    const redis = getRedisClient();
+    try {
+        let { email } = req.body as any
 
+        if (!email) {
+            return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_REQUIRED));
+        }
+
+        const allowed = await redis.get(`reset_otp_verified:${email}`);
+
+        if (!allowed) {
+            return next(new ServiceError(CustomerMasterError.ERR_OTP_NOT_VERIFIED_OR_EXPIRED));
+        }
+
+        res.locals.resetVerifiedEmail = email;
+
+        return next();
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+
+export const resetPassword = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const email = (res.locals.resetVerifiedEmail as string) || (req.body.email as string);
+        const { newPassword } = req.body as any
+
+        if (!newPassword) {
+            return next(new ServiceError(CustomerMasterError.ERR_PASSWORD_REQUIRED));
+        }
+
+        const policy = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z\d])[A-Za-z\d\W_]{8,}$/;
+        if (!policy.test(newPassword)) {
+            return next(new ServiceError(CustomerMasterError.ERR_PASSWORD_POLICY_INVALID));
+        }
+
+        const customer = await CustomersModel.findOne({where: {email}})
+        if (!customer) {
+            return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_NOT_FOUND));
+        }
+
+        customer.password = newPassword
+        await customer.save()
+
+        const redis = getRedisClient();
+        await redis.del(`reset_otp_verified:${email}`);
+
+        return next()
+    } catch (err) {
+        next(err)
+    }
+}

@@ -94,5 +94,29 @@
       "en": "Please wait a moment before requesting a new OTP.",
       "th": "โปรดรอสักครู่ก่อนส่งคำขอ OTP ใหม่"
     }
+  },
+  "ERR_OTP_NOT_VERIFIED_OR_EXPIRED": {
+    "statusCode": 401,
+    "resCode": "0413",
+    "resDesc": {
+      "en": "OTP not verified or expired",
+      "th": "OTP ไม่ได้รับการยืนยัน หรือ หมดอายุ"
+    }
+  },
+  "ERR_PASSWORD_REQUIRED": {
+    "statusCode": 401,
+    "resCode": "0414",
+    "resDesc": {
+      "en": "Password Require",
+      "th": "ต้องการ Password"
+    }
+  },
+  "ERR_PASSWORD_POLICY_INVALID": {
+    "statusCode": 401,
+    "resCode": "0415",
+    "resDesc": {
+      "en": "Password Policy Invalid",
+      "th": "Password ผิด​ Policy"
+    }
   }
 }
