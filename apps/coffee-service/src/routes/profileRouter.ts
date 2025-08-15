@@ -1,8 +1,9 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { editProfileDetail, editProfileImage } from '../controller/profileController';
+import { deleteAccount, editProfileDetail, editProfileImage } from '../controller/profileController';
 
 
 import multer from 'multer';
+import { authMiddlewareCustomer } from '../controller/userController';
 const upload = multer({ storage: multer.memoryStorage() });
 
 const router = express.Router()
@@ -35,6 +36,21 @@ router.patch(
             data: {
                 customer: res.locals.customer
             }
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
+router.delete(
+    '/delete',
+    authMiddlewareCustomer(),
+    deleteAccount(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '1111',
+            res_desc: '',
+            data: undefined
         }
         res.json(res.locals.response)
         next()

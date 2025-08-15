@@ -90,6 +90,20 @@ export const deleteFromAzureImage = async ({ containerName, blobPath }: { contai
   await blobClient.deleteIfExists()
 }
 
+export const deleteFolderPrefix = async ({
+  containerName,
+  prefix,
+}: { containerName: string; prefix: string }) => {
+  const blobServiceClient = BlobServiceClient.fromConnectionString(AZURE_STORAGE_CONNECTION_STRING)
+  const containerClient = blobServiceClient.getContainerClient(containerName);
+
+  // listBlobsFlat() จะวนเจอทุก blob ที่ prefix ตรงกัน
+  for await (const blob of containerClient.listBlobsFlat({ prefix })) {
+    console.log(`Deleting blob: ${blob.name}`);
+    await containerClient.deleteBlob(blob.name);
+  }
+};
+
 // const getBlobUrlSas = async (blobUrl: string) => {
 //   if (!blob.blobServiceClient) {
 //     throw new Error('BlobServiceClient is not initialized. Call initialBlob() first.')
