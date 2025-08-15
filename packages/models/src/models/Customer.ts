@@ -19,6 +19,7 @@ export class CustomersModel extends Model<
     declare email: string
     declare password: string
     declare phone: string
+    declare image_url:  CreationOptional<string | null>
     declare verified: boolean
     declare createdAt: CreationOptional<Date>
     declare updatedAt: CreationOptional<Date>
@@ -65,6 +66,11 @@ CustomersModel.init(
             type: DataTypes.STRING,
             unique: true,
             allowNull: false,
+        },
+         image_url: {
+            field: 'image_url',
+            type: DataTypes.STRING,
+            allowNull: true,
         },
         verified: {
             field: 'verified',

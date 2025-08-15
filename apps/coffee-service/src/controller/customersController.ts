@@ -33,6 +33,7 @@ export const registerCustomer = () => async (req: Request, res: Response, next: 
                 email,
                 password,
                 phone,
+                image_url: null,
                 verified: false,
             }
         )
@@ -166,13 +167,7 @@ export const loginCustomer = () => async (req: Request, res: Response, next: Nex
             .sign(jwtSecret)
 
         res.locals.data = {
-            token,
-            customer: {
-                id: customer.id,
-                name: customer.name,
-                email: customer.email,
-                phone: customer.phone,
-            }
+            token
         }
         return next()
 
@@ -312,7 +307,7 @@ export const resetPassword = () => async (req: Request, res: Response, next: Nex
             return next(new ServiceError(CustomerMasterError.ERR_PASSWORD_POLICY_INVALID));
         }
 
-        const customer = await CustomersModel.findOne({where: {email}})
+        const customer = await CustomersModel.findOne({ where: { email } })
         if (!customer) {
             return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_NOT_FOUND));
         }
@@ -322,6 +317,29 @@ export const resetPassword = () => async (req: Request, res: Response, next: Nex
 
         const redis = getRedisClient();
         await redis.del(`reset_otp_verified:${email}`);
+
+        return next()
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const getProfileData = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const user = req.user as any
+        const customer = await CustomersModel.findByPk(user.id)
+
+        if (!customer) {
+            return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_NOT_FOUND));
+        }
+
+        res.locals.customer = {
+            id: customer.id,
+            name: customer.name,
+            email: customer.email,
+            phone: customer.phone,
+            profile_img: customer.image_url
+        }
 
         return next()
     } catch (err) {

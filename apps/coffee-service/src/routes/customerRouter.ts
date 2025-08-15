@@ -1,7 +1,13 @@
 import express, { Request, Response, NextFunction } from 'express';
 import { registerCustomer, loginCustomer, verifyOtpCustomer, resendOtpCustomer,checkCustomerExist, forgotPasswordWithOtp, verifyResetOtp, resendResetOtp, requireResetVerified, resetPassword } from '../controller/customersController';
 import {  getOtpLimiter,getLoginLimiter, getResetOtpLimiter, getForgorPasswordLimiter, getVerifyResetOtpLimiter, getVerifyLimiter } from '../utils/ratelimit';
+import { authMiddlewareCustomer } from '../controller/userController';
+import { getProfileData } from '../controller/customersController';
+import { RedisClientType } from 'redis';
 
+
+
+export default function createCustomerRouter({ redis }: { redis: RedisClientType }) {
 const router = express.Router()
 
 router.post(
@@ -40,7 +46,7 @@ router.get(
 
 router.post(
     '/verify-otp',
-    getVerifyLimiter(),
+    getVerifyLimiter(redis),
     verifyOtpCustomer(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -55,7 +61,7 @@ router.post(
 
 router.post(
     '/resend-otp',
-    getOtpLimiter(),
+    getOtpLimiter(redis),
     resendOtpCustomer(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -70,7 +76,7 @@ router.post(
 
 router.post(
     '/login',
-    getLoginLimiter(),
+    getLoginLimiter(redis),
     loginCustomer(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -88,7 +94,7 @@ router.post(
 
 router.post(
     '/forgot-password',
-    getForgorPasswordLimiter(),
+    getForgorPasswordLimiter(redis),
     forgotPasswordWithOtp(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -104,7 +110,7 @@ router.post(
 
 router.post(
     '/resend-reset-otp',
-    getResetOtpLimiter(),
+    getResetOtpLimiter(redis),
     resendResetOtp(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -119,7 +125,7 @@ router.post(
 
 router.post(
     '/verify-reset-otp',
-    getVerifyResetOtpLimiter(),
+    getVerifyResetOtpLimiter(redis),
     verifyResetOtp(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
@@ -148,4 +154,21 @@ router.post(
     }
 )
 
-export default router
+router.get(
+    '/profile',
+    authMiddlewareCustomer(),
+    getProfileData(),
+    (req: Request, res: Response, next: NextFunction) => {
+         res.locals.response = {
+            res_code: '1111',
+            res_desc: '',
+            data: {
+                customer: res.locals.customer
+            }
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+ return router
+}

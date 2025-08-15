@@ -1,7 +1,7 @@
 import './helpers/dotenv.helper'
 import app from './app'
 
-import { initializeRedisClient } from './helpers/redis'
+import { getRedisClient, initializeRedisClient } from './helpers/redis'
 import winston from './helpers/winston'
 import databaseConnect from './helpers/sequelize.helper'
 const PORT = Number(process.env.PORT)
@@ -36,7 +36,8 @@ async function init(): Promise<void> {
     const connectRedis = await retryConnection(initializeRedisClient)
 
     if (connectDatabase && connectRedis) {
-        const server = app().listen(PORT, () => {
+        const redis = getRedisClient()
+        const server = app({ redis }).listen(PORT, () => {
             winston.info(`Coffee Service listening at: http://localhost:${PORT}`)
         })
 

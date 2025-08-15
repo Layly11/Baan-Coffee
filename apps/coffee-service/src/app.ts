@@ -1,13 +1,14 @@
 import express, { NextFunction, Request, Response } from "express";
 import { urlencoded } from 'body-parser'
 import passport from "./helpers/passport";
-import routers from './routers'
+import createRouters from './routers'
 import { createRequestLog, createResponseLog, createErrorLog } from './controller/logController'
 import cookieParser from 'cookie-parser';
 import cors from 'cors'
+import { RedisClientType } from "redis";
 
 
-const APP = () => {
+const APP = ({ redis }: { redis: RedisClientType }) => {
 const app = express()
 app.use(cors());
 
@@ -32,7 +33,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 app.use(createRequestLog())
 
 
-app.use(routers)
+app.use(createRouters({redis}))
 
 app.use(createResponseLog())
 app.use(createErrorLog())

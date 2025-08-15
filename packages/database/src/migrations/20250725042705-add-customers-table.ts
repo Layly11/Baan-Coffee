@@ -28,6 +28,10 @@ export = {
          allowNull: false,
          unique: true
       },
+      image_url: {
+         type: Sequelize.STRING,
+         allowNull: true,
+      },
       verified: {
         type: Sequelize.BOOLEAN,
         defaultValue: false

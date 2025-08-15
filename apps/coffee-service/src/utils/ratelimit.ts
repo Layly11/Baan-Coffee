@@ -1,10 +1,10 @@
 import rateLimit,  { ipKeyGenerator } from 'express-rate-limit'
 import RedisStore from 'rate-limit-redis'
 import { getRedisClient } from '../helpers/redis'
+import { RedisClientType } from 'redis'
 
-export const getOtpLimiter = () => {
-  const redis = getRedisClient()
-  return rateLimit({
+export const getOtpLimiter = (redis: RedisClientType) => 
+  rateLimit({
     windowMs: 10 * 60 * 1000,
     max: 10,
     message: {
@@ -18,12 +18,11 @@ export const getOtpLimiter = () => {
       sendCommand: async (...args: string[]) => redis.sendCommand(args),
     })
   })
-}
 
 
-export const getVerifyLimiter = () => {
-  const redis = getRedisClient()
-  return rateLimit({
+
+export const getVerifyLimiter = (redis: RedisClientType) => 
+  rateLimit({
     windowMs: 10 * 60 * 1000,
     max: 10,
     message: {
@@ -37,13 +36,12 @@ export const getVerifyLimiter = () => {
       sendCommand: async (...args: string[]) => redis.sendCommand(args),
     })
   })
-}
 
 
 
-export const getLoginLimiter = () => {
-  const redis = getRedisClient()
-  return rateLimit({
+
+export const getLoginLimiter = (redis: RedisClientType) => 
+   rateLimit({
     windowMs: 10 * 60 * 1000,
     max: 10,
     message: {
@@ -57,12 +55,11 @@ export const getLoginLimiter = () => {
       sendCommand: async (...args: string[]) => redis.sendCommand(args),
     })
   })
-}
 
 
-export const getResetOtpLimiter = () => {
-  const redis = getRedisClient()
-  return rateLimit({
+
+export const getResetOtpLimiter = (redis: RedisClientType) => 
+   rateLimit({
     windowMs: 10 * 60 * 1000, // 10 นาที
     max: 5, // จำกัดได้สูงสุด 5 ครั้งในช่วงเวลานั้น
     message: {
@@ -77,11 +74,10 @@ export const getResetOtpLimiter = () => {
       sendCommand: async (...args: string[]) => redis.sendCommand(args),
     }),
   })
-}
 
-export const getForgorPasswordLimiter = () => {
-  const redis = getRedisClient()
-  return rateLimit({
+
+export const getForgorPasswordLimiter = (redis: RedisClientType) => 
+   rateLimit({
     windowMs: 10 * 60 * 1000, // 10 นาที
     max: 5, // จำกัดได้สูงสุด 5 ครั้งในช่วงเวลานั้น
     message: {
@@ -96,12 +92,11 @@ export const getForgorPasswordLimiter = () => {
       sendCommand: async (...args: string[]) => redis.sendCommand(args),
     }),
   })
-}
 
 
-export const getVerifyResetOtpLimiter = () => {
-  const redis = getRedisClient()
-  return rateLimit({
+
+export const getVerifyResetOtpLimiter = (redis: RedisClientType) => 
+   rateLimit({
     windowMs: 10 * 60 * 1000, // 10 นาที
     max: 5, // จำกัดได้สูงสุด 5 ครั้งในช่วงเวลานั้น
     message: {
@@ -116,4 +111,3 @@ export const getVerifyResetOtpLimiter = () => {
       sendCommand: async (...args: string[]) => redis.sendCommand(args),
     }),
   })
-}
