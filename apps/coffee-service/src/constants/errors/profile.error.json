@@ -14,5 +14,21 @@
       "en": "Customer not found.",
       "th": "ไม่เจอCustomer"
     }
+  },
+  "ERR_REQUIRE_FIELD_ADDRES": {
+    "statusCode": 400,
+    "resCode": "4003",
+    "resDesc": {
+      "en": "Missing required fields Address.",
+      "th": "ต้องการ field Address"
+    }
+  },
+  "ERR_ADDRESS_NOT_FOUND": {
+    "statusCode": 400,
+    "resCode": "4004",
+    "resDesc": {
+      "en": "Address not found",
+      "th": "ไม่เจอ Address"
+    }
   }
 }

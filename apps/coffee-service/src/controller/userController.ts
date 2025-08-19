@@ -42,7 +42,7 @@ export const authMiddlewareCustomer = () => async (req: Request, res: Response, 
         return res.status(401).json({ res_desc: 'Unauthorized' })
     }
     const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET_CUSTOMER)
-
+    
     try {
         const { payload } = await jwtVerify(token, jwtSecret) as any
         const exists = await CustomersModel.findByPk(payload.id)

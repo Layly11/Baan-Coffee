@@ -1,5 +1,5 @@
 import { ServiceError } from "@coffee/helpers";
-import { CustomersModel, sequelize } from "@coffee/models";
+import { AddressModel, CustomersModel, sequelize } from "@coffee/models";
 import { NextFunction, Request, Response } from "express";
 import ProfileMasterError from '../constants/errors/profile.error.json'
 import path from "path";
@@ -102,3 +102,101 @@ export const deleteAccount = () => async (req: Request, res: Response, next: Nex
         next(err)
     }
 }
+
+export const fetchAddressCustomer = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const customerId = (req.user as any).id
+        if (!customerId) {
+            return next(new ServiceError(ProfileMasterError.ERR_CUSTOMER_NOT_FOUND));
+        }
+
+        const addresses = await AddressModel.findAll({
+            where: { customer_id: customerId },
+            order: [["createdAt", "ASC"]],
+        })
+
+        console.log('Address: ', addresses)
+
+        res.locals.address = addresses
+
+        return next()
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+
+export const createAddressCustomer = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const customerId = (req.user as any).id
+        const {
+            type,
+            name,
+            house_no: houseNo,
+            village,
+            street,
+            city
+        } = req.body as any
+        if (!customerId) {
+            return next(new ServiceError(ProfileMasterError.ERR_CUSTOMER_NOT_FOUND));
+        }
+
+        if (!type || !name || !houseNo || !street || !city) {
+            return next(new ServiceError(ProfileMasterError.ERR_REQUIRE_FIELD_ADDRES));
+        }
+
+        const address = await AddressModel.create({
+            customer_id: customerId,
+            type,
+            name,
+            house_no: houseNo,
+            village,
+            street,
+            city
+        })
+        res.locals.address = address
+
+        return next()
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const deleteAddressCustomer = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params
+
+        const address = await AddressModel.findByPk(id)
+
+        if (!address) {
+            return next(new ServiceError(ProfileMasterError.ERR_ADDRESS_NOT_FOUND));
+        }
+
+        await address.destroy()
+
+        return next()
+    } catch (err) {
+        next(err)
+    }
+} 
+
+export const  updateAddressCustomer = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id } = req.params
+
+        const address = await AddressModel.findByPk(id)
+
+        if (!address) {
+            return next(new ServiceError(ProfileMasterError.ERR_ADDRESS_NOT_FOUND));
+        }
+
+        await address.update(req.body);
+
+        res.locals.address = address
+        
+        return next()
+    } catch (err) {
+        next(err)
+    }
+} 

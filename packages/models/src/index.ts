@@ -9,7 +9,8 @@ import { ShiftTodayModel } from './models/ShiftToday';
 import { TopProductModel } from './models/TopProduct';
 import { CategoriesModel } from './models/Categories';
 import { ProductModel } from './models/Product';
-
+import { CustomersModel } from './models/Customer';
+import { AddressModel } from './models/Address';
 
 UserModel.belongsTo(UserRoleModel,{
     foreignKey: 'role_id',
@@ -84,6 +85,17 @@ ProductModel.hasMany(TopProductModel, {
   as: 'topProducts'
 });
 
+CustomersModel.hasMany(AddressModel, {
+  foreignKey: 'customer_id',
+  as: 'address'  
+})
+
+AddressModel.belongsTo(CustomersModel, {
+  foreignKey: 'customer_id',
+  as: 'customers'
+})
+
+
 
 
 export * from './sequelize'
@@ -99,3 +111,4 @@ export * from './models/TopProduct';
 export * from './models/Categories'; 
 export * from './models/Product'; 
 export * from './models/Customer'
+export * from './models/Address'
