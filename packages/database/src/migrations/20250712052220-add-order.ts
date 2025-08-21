@@ -37,7 +37,7 @@ export = {
         allowNull: false,
       },
       channel: {
-        type: Sequelize.ENUM('in_store', 'delivery', 'grab', 'lineman'),
+        type: Sequelize.ENUM('Dine-In', 'Takeaway', 'Delivery'),
         allowNull: false,
       },
       status: {

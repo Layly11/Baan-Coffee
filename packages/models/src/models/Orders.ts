@@ -26,7 +26,7 @@ export class OrderModel extends Model<
     declare customer_name: string;
     declare payment_method: 'cash' | 'qr' | 'credit';
     declare total_price: number;
-    declare channel: 'in_store' | 'delivery' | 'grab' | 'lineman';
+    declare channel: 'Dine-In' | 'Takeaway' | 'Delivery';
     declare status: 'pending' | 'complete' | 'cancelled';
     declare items: OrderItem[];
 
@@ -67,7 +67,7 @@ OrderModel.init(
             allowNull: false,
         },
         channel: {
-            type: DataTypes.ENUM('in_store', 'delivery', 'grab', 'lineman'),
+            type: DataTypes.ENUM('Dine-In', 'Takeaway', 'Delivery'),
             allowNull: false,
         },
         status: {

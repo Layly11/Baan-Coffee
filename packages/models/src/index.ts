@@ -98,6 +98,7 @@ AddressModel.belongsTo(CustomersModel, {
 
 
 
+
 export * from './sequelize'
 export * from './models/User'
 export * from './models/UserRole'
