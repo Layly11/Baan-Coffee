@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { getProductData, getCategory, createProduct, updateProduct, deleteProduct, createCategory, updateCategory, deleteCategory, getBestSeller, getProductByCategory, getCategoryMobile, getProductSize } from '../controller/productController'
+import { getProductData, getCategory, createProduct, updateProduct, deleteProduct, createCategory, updateCategory, deleteCategory, getBestSeller, getProductByCategory, getCategoryMobile, getProductSize, getSizebyProduct } from '../controller/productController'
 import multer from 'multer'
 import { authMiddleware, authMiddlewareCustomer, findUserPermission, validateUserPermission } from '../controller/userController';
 
@@ -242,6 +242,23 @@ router.get(
             res_desc: '',
             data: {
                 productData: res.locals.productsData
+            }
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
+router.get(
+    '/sizes/:id',
+    authMiddlewareCustomer(),
+    getSizebyProduct(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '1111',
+            res_desc: '',
+            data: {
+                sizes: res.locals.sizes
             }
         }
         res.json(res.locals.response)

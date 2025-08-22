@@ -528,3 +528,37 @@ export const getProductByCategory = () => async (req: Request, res: Response, ne
         next(err)
     }
 }
+
+
+export const getSizebyProduct = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const productId = req.params.id
+
+        const sizes = await ProductSizeModel.findAll({ 
+            where: {product_id: productId},
+            include: [
+                {
+                    model: SizeModel,
+                    as: 'size',
+                }
+            ]
+        })
+
+        console.log("Sizes123: ", sizes)
+
+        const mappedSizeProduct = sizes.map((s:any) => (
+            {
+                id: s.size.id,
+                title: s.size.name,
+                Quntity: s.size.volume_ml,
+                extra_price: s.size.extra_price
+            }
+        ))
+
+        console.log("mappedSizeProduct",  mappedSizeProduct)
+        res.locals.sizes = mappedSizeProduct
+        return next()
+    } catch (err) {
+        next(err)
+    }
+}
