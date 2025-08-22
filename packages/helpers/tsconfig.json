@@ -4,6 +4,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "noImplicitReturns": false,
+    "esModuleInterop": true
   },
   "exclude": ["node_modules"]
 }
