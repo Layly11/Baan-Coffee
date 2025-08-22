@@ -8,7 +8,6 @@ import {
 } from 'sequelize';
 
 import { sequelize } from '../sequelize';
-import { ProductModel } from './Product';
 
 
 export class SizeModel extends Model<

@@ -11,6 +11,8 @@ import { CategoriesModel } from './models/Categories';
 import { ProductModel } from './models/Product';
 import { CustomersModel } from './models/Customer';
 import { AddressModel } from './models/Address';
+import { SizeModel } from './models/Size';
+import { ProductSizeModel } from './models/ProductSize';
 
 UserModel.belongsTo(UserRoleModel,{
     foreignKey: 'role_id',
@@ -95,6 +97,28 @@ AddressModel.belongsTo(CustomersModel, {
   as: 'customers'
 })
 
+ProductModel.belongsToMany(SizeModel, {
+  through: ProductSizeModel,
+  foreignKey: 'product_id',
+  otherKey: 'size_id',
+  as: 'sizes',
+});
+SizeModel.belongsToMany(ProductModel, {
+  through: ProductSizeModel,
+  foreignKey: 'size_id',
+  otherKey: 'product_id',
+  as: 'products',
+});
+
+ProductSizeModel.belongsTo(ProductModel, {
+  foreignKey: 'product_id',
+  as: 'product',
+});
+ProductSizeModel.belongsTo(SizeModel, {
+  foreignKey: 'size_id',
+  as: 'size',
+});
+
 
 
 
@@ -113,3 +137,5 @@ export * from './models/Categories';
 export * from './models/Product'; 
 export * from './models/Customer'
 export * from './models/Address'
+export * from './models/Size'
+export * from './models/ProductSize'

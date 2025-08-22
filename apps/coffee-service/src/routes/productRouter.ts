@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { getProductData, getCategory, createProduct, updateProduct, deleteProduct, createCategory, updateCategory, deleteCategory, getBestSeller, getProductByCategory, getCategoryMobile } from '../controller/productController'
+import { getProductData, getCategory, createProduct, updateProduct, deleteProduct, createCategory, updateCategory, deleteCategory, getBestSeller, getProductByCategory, getCategoryMobile, getProductSize } from '../controller/productController'
 import multer from 'multer'
 import { authMiddleware, authMiddlewareCustomer, findUserPermission, validateUserPermission } from '../controller/userController';
 
@@ -12,7 +12,7 @@ const upload = multer({
     limits: {
         fileSize: 2 * 1024 * 1024,
         files: 1,
-        fields: 6,
+        fields: 7,
         fieldNameSize: 100
     },
     fileFilter: (req, file, cb) => {
@@ -36,6 +36,25 @@ router.get(
             res_desc: '',
             data: {
                 products: res.locals.products,
+            }
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
+router.get(
+    '/sizes',
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(PRODUCT_MENU, VIEW),
+    getProductSize(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: {
+                size: res.locals.sizes,
             }
         }
         res.json(res.locals.response)

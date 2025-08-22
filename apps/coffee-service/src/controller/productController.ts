@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express"
-import { ProductModel, CategoriesModel, sequelize, TopProductModel } from '@coffee/models'
+import { ProductModel, CategoriesModel, sequelize, TopProductModel, SizeModel, ProductSizeModel } from '@coffee/models'
 import { getBlobSasToken, uploadToAzureBlob, getblobUrlSas, parseBlobUrl, deleteFromAzureImage } from '../utils/azureBlob'
 import { ServiceError } from "@coffee/helpers"
 import ProductMasterError from '../constants/errors/product.error.json'
@@ -29,12 +29,19 @@ export const getProductData = () => async (req: Request, res: Response, next: Ne
                             name: categoryArray
                         },
                     })
+                },
+                {
+                    model: SizeModel,
+                    as: 'sizes',
+                    attributes: ['id', 'name', 'volume_ml', 'extra_price'],
+                    through: { attributes: [] }
                 }
             ],
             limit: Number(limit) || 10,
             offset: Number(offset) || 0,
             order: [['createdAt', 'ASC']]
         })
+
 
         // for (const product of data) {
         //     if (product.image_url) {
@@ -53,14 +60,38 @@ export const getProductData = () => async (req: Request, res: Response, next: Ne
             image_url: product.image_url,
             description: product.description,
             category_id: product.category.id || null,
-            category_name: product.category?.name || null
+            category_name: product.category?.name || null,
+            sizes: product.sizes?.map((s: any) => (
+                {
+                    id: s.id,
+                    name: s.name,
+                    volume_ml: s.volume_ml,
+                    extra_price: s.extra_price
+                }
+            ))
         }));
+
         res.locals.products = products
         return next()
     } catch (err) {
         next(err)
     }
 }
+
+
+export const getProductSize = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const sizes = await SizeModel.findAll()
+        console.log("SizeModel: ", sizes)
+
+        res.locals.sizes = sizes
+
+        return next()
+    } catch (err) {
+        next(err)
+    }
+}
+
 
 
 export const createProduct = () => async (req: Request, res: Response, next: NextFunction) => {
@@ -73,6 +104,8 @@ export const createProduct = () => async (req: Request, res: Response, next: Nex
             description,
             is_active: isActive
         } = req.body
+
+        let { sizes } = req.body
 
         const file = (req.file!) || null
 
@@ -96,6 +129,9 @@ export const createProduct = () => async (req: Request, res: Response, next: Nex
         if (!categories) {
             return next(new ServiceError(ProductMasterError.CATEGOREIS_REQUIRE))
         }
+        if (!sizes) {
+            return next(new ServiceError(ProductMasterError.SIZE_REQUIRE))
+        }
         if (!price) {
             return next(new ServiceError(ProductMasterError.PRICE_REQUIRE))
         }
@@ -103,6 +139,9 @@ export const createProduct = () => async (req: Request, res: Response, next: Nex
             return next(new ServiceError(ProductMasterError.IS_ACTIVE_REQUIRE))
         }
 
+        if (typeof sizes === 'string') {
+            sizes = sizes.split(',').map((s: string) => parseInt(s.trim(), 10))
+        }
 
 
         let imageUrl
@@ -123,7 +162,6 @@ export const createProduct = () => async (req: Request, res: Response, next: Nex
                 next(err)
             }
         }
-
         const newProduct = await ProductModel.create(
             {
                 name: productName,
@@ -135,6 +173,17 @@ export const createProduct = () => async (req: Request, res: Response, next: Nex
             },
             { transaction }
         )
+        if (sizes && Array.isArray(sizes)) {
+            for (const sizeId of sizes) {
+                await ProductSizeModel.create(
+                    {
+                        product_id: newProduct.id,
+                        size_id: sizeId
+                    },
+                    { transaction }
+                )
+            }
+        }
 
         res.locals.newProduct = newProduct
 
@@ -163,6 +212,13 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
             is_active: isActive,
             is_remove_image: isRemoveImage
         } = req.body
+
+        let { sizes } = req.body
+
+        if (typeof sizes === 'string') {
+            sizes = sizes.split(',').map((s: string) => parseInt(s.trim(), 10))
+        }
+
 
         if (price !== undefined && (price > 200 || price < 1)) {
             return next(new ServiceError(ProductMasterError.ERR_PRICE_CONSTRAINT))
@@ -225,6 +281,18 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
         }
         await item.save()
 
+        if (sizes && Array.isArray(sizes)) {
+            // ลบ size เดิมทั้งหมด
+            await ProductSizeModel.destroy({ where: { product_id: item.id } })
+
+            // เพิ่ม size ใหม่
+            const sizeData = sizes.map((sizeId: number) => ({
+                product_id: item.id,
+                size_id: sizeId
+            }))
+            await ProductSizeModel.bulkCreate(sizeData)
+        }
+
         res.locals.item = item
 
         return next()
@@ -243,8 +311,9 @@ export const deleteProduct = () => async (req: Request, res: Response, next: Nex
             return next(new ServiceError(ProductMasterError.PRODUCT_NOT_FOUND))
         }
 
-        await TopProductModel.destroy({where: {product_id: id}})
+        await TopProductModel.destroy({ where: { product_id: id } })
 
+        await ProductSizeModel.destroy({ where: { product_id: id } })
         if (item.image_url) {
             try {
                 await deleteFromAzureImage({
@@ -369,7 +438,7 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
                     model: ProductModel,
                     as: 'product',
                     attributes: ['name', 'price', 'image_url', 'description'],
-                    where: { status: 1}
+                    where: { status: 1 }
                 },
             ],
             group: ['top_products.id', 'product_id', 'product.id'],
@@ -398,16 +467,16 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
 export const getCategoryMobile = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
 
-        const category = await CategoriesModel.findAll({ 
+        const category = await CategoriesModel.findAll({
             attributes: ['id', 'name'],
             include: [
                 {
                     model: ProductModel,
                     as: 'products',
                     required: true,
-                    where: { status: 1}
+                    where: { status: 1 }
                 }
-            ] 
+            ]
         })
 
         const categoryMapped = category.map((cat) => ({
@@ -432,14 +501,14 @@ export const getProductByCategory = () => async (req: Request, res: Response, ne
                     model: ProductModel,
                     as: 'products',
                     where: { status: 1 }
-                   
+
                 }
             ]
         })
 
         const mappedResult: Record<string, any[]> = {}
 
-        for(const categories of category) {
+        for (const categories of category) {
             const categoriesName = categories.name
             const products = (categories as any).products || []
 
@@ -449,7 +518,7 @@ export const getProductByCategory = () => async (req: Request, res: Response, ne
                 price: `${product.price} Bath`,
                 image: product.image_url,
                 desc: product.description,
-              }))
+            }))
         }
 
         res.locals.productsData = mappedResult

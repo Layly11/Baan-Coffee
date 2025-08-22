@@ -16,8 +16,9 @@ import { Header } from '../../components/pageComponents/productMenu/header'
 import Table from "@/components/commons/table"
 import { Columns } from "@/components/pageComponents/productMenu/column"
 import Swal, { Alert } from "@/helpers/sweetalert"
-import { createProductRequester, deleteProductRequester, fetchCategoryRequester, fetchProductsDetailRequester, updateProductRequester } from "@/utils/requestUtils"
+import { createProductRequester, deleteProductRequester, fetchCategoryRequester, fetchProductsDetailRequester, fetchSizeProductRequester, updateProductRequester } from "@/utils/requestUtils"
 import { AddProductModal, CategoryModal, DeleteProductModal } from "@/components/pageComponents/productMenu/modal"
+import { it } from "node:test"
 
 const pathname = '/productMenu'
 const ProductMenuPage = () => {
@@ -50,6 +51,8 @@ const ProductMenuPage = () => {
     const [deletingId, setDeletingId] = useState<number | null>(null)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [showCategoryModal, setShowCategoryModal] = useState(false)
+    const [size, setSize] = useState<string | string[]>()
+    const [sizeList, setSizeList] = useState([])
     const fetchProducts = async (page?: number) => {
         try {
             setIsFetching(true)
@@ -105,9 +108,27 @@ const ProductMenuPage = () => {
         }
     }
 
+    const fetchSize = async () => {
+        try {
+            setIsFetching(true)
+
+            const response = await fetchSizeProductRequester()
+             if(response.data !== null) {
+                const sizes = response.data.size
+                const formattedList = Array.from(sizes.map((c: any) => [c.id, { label: c.name }])) as any
+                setSizeList(formattedList)
+             }
+            
+        } catch (err) {
+            console.error(err)
+            Alert({data: err})
+        }
+    }
+
     useEffect(() => {
         fetchProducts()
         fetchCategories()
+        fetchSize()
         setIsClearSearch(false)
     }, [isClearSearch])
 
@@ -164,6 +185,7 @@ const ProductMenuPage = () => {
             setEditingItemId(item.id)
             setPreviewUrl(item.image_url)
             setNewDescription(item.description)
+            setSize(item.sizes.map((s:any) => String(s.id)))
             setIsActive(item.status)
             setUploadedFileName(item.image_url?.split('/').slice(-1)[0].split('?')[0] ?? null)
             setShowAddModal(true)
@@ -193,6 +215,9 @@ const ProductMenuPage = () => {
             }
             if (newDescription !== '') {
                 formData.append('description',newDescription)
+            }
+            if (size !== null && size !== undefined) {
+                formData.append('sizes', Array.isArray(size) ? size.join(',') : size);
             }
             formData.append('is_active', isActive ? '1' : '0')
 
@@ -230,6 +255,10 @@ const ProductMenuPage = () => {
             formData.append('description',newDescription)
 
             formData.append('is_active', isActive ? '1' : '0')
+            
+            if(size !== undefined){
+                formData.append('sizes', Array.isArray(size) ? size.join(',') : size);
+            }
 
             formData.append("is_remove_image", String(isRemoveImage))
 
@@ -254,6 +283,7 @@ const ProductMenuPage = () => {
         setPreviewUrl(null)
         setUploadedFileName(null)
         setIsActive(false)
+        setSize([])
         setNewDescription('')
     }
 
@@ -368,7 +398,9 @@ const ProductMenuPage = () => {
                         setRemoveImage={setIsRemoveImage}
                         newDescription= {newDescription}
                         setNewDescription= {setNewDescription}
-
+                        size={size}
+                        setSize={setSize}
+                        sizeList={sizeList}
                     />
                     <DeleteProductModal
                         visible={showDeleteModal}

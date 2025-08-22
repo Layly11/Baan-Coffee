@@ -60,6 +60,16 @@ export const Columns = (handleEditItem?: (id: number) => void,  handleDeleteItem
             width: '30%',
         },
         {
+            label: 'Sizes',
+            key: 'sizes',
+            width: '30%',
+            dataMutation: (row: any) => {
+                return(
+                     `${row.sizes.map(((s:any) => s.name))}`
+                )
+            }
+        },
+        {
             label: 'Status',
             key: 'status',
             width: '30%',

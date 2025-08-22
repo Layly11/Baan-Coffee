@@ -141,3 +141,16 @@ export const deleteCategoryRequester =  async (id: any): Promise<any> => {
     })
 }
 
+
+export const fetchSizeProductRequester = async (): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.get(`/api/products/sizes`)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+

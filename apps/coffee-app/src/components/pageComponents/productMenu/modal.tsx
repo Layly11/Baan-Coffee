@@ -38,7 +38,10 @@ interface AddProductModalProps {
     items: any
     setRemoveImage: React.Dispatch<React.SetStateAction<boolean>>
     newDescription: string
-    setNewDescription:  React.Dispatch<React.SetStateAction<string>>
+    setNewDescription: React.Dispatch<React.SetStateAction<string>>
+    size: any;
+    setSize: React.Dispatch<React.SetStateAction<string | string[] | undefined>>
+    sizeList: [string | number, { label: string }][];
 }
 
 export const AddProductModal = ({
@@ -65,7 +68,10 @@ export const AddProductModal = ({
     items,
     setRemoveImage,
     newDescription,
-    setNewDescription
+    setNewDescription,
+    size,
+    setSize,
+    sizeList
 }: AddProductModalProps): JSX.Element => {
     const fileTypes = ["JPG", "PNG", "JPEG"];
     const palette = {
@@ -88,17 +94,26 @@ export const AddProductModal = ({
             setPreviewUrl(null);
             setUploadedFileName(null);
         }
-    }, [visible]);
+    }, [visible, size]);
 
     useEffect(() => {
         if (!visible) return;
-
+        console.log(size)
         if (editingItemId !== null) {
             const item = items.find((i: any) => i.id === editingItemId)
             if (!item) {
                 setDisableConfirm(true)
                 return
             }
+            const normalize = (arr: string[]) => (arr || []).map(String).sort();
+
+            const originalSizes = normalize(item.sizes.map((s: any) => s.id));
+            const currentSizes = normalize(size || []);
+
+            const hasSizeChanged = JSON.stringify(originalSizes) !== JSON.stringify(currentSizes);
+
+            // ถ้า size เป็น [] ให้ถือว่าไม่ผ่าน validate
+            const isSizeValid = currentSizes.length > 0;
 
             const hasChanged =
                 productName.trim() !== (item.name ?? '') ||
@@ -106,21 +121,24 @@ export const AddProductModal = ({
                 price !== String(item.price ?? '') ||
                 isActive !== item.status ||
                 previewUrl !== item.image_url ||
-                newDescription !== item.description
+                newDescription !== item.description ||
+                hasSizeChanged
 
-            setDisableConfirm(!hasChanged)
+            setDisableConfirm(!hasChanged || !isSizeValid)
 
         } else {
-           const isCategoryValid = categoryList.some(([key]) => String(key) === String(categories));
+            const isCategoryValid = categoryList.some(([key]) => String(key) === String(categories));
             const isFilled =
                 productName.trim() !== '' &&
                 isCategoryValid &&
                 price !== undefined &&
-                price.trim() !== ''
+                price.trim() !== '' &&
+                Array.isArray(size) &&
+                size.length > 0
 
             setDisableConfirm(!isFilled)
         }
-    }, [visible, productName, categories, price, isActive, editingItemId, items, setDisableConfirm, previewUrl, newDescription])
+    }, [visible, productName, categories, price, isActive, editingItemId, items, setDisableConfirm, previewUrl, newDescription, size])
 
     useEffect(() => {
         return () => {
@@ -470,6 +488,26 @@ export const AddProductModal = ({
                                         type="text"
                                         value={newDescription}
                                         onChange={(e) => setNewDescription(e.target.value)}
+                                    />
+                                </Col>
+                            </Row>
+
+                            <Row style={{ marginTop: "12px", alignItems: "center" }}>
+                                <Col lg={2}>
+                                    <label style={{ fontWeight: 500, color: "#b3b3b3" }}>
+                                        Size
+                                    </label>
+                                </Col>
+                                <Col lg={7}>
+                                    <SelectData
+                                        placeholder="Size"
+                                        value={size}
+                                        setValue={setSize}
+                                        isMulti
+                                        jsonList={Object.fromEntries(sizeList)}
+                                        isSearchable={false}
+                                        isClearable={false}
+                                        hideSelectedOptions={false}
                                     />
                                 </Col>
                             </Row>

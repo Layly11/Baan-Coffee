@@ -102,6 +102,14 @@
       "en": "Category is Limit No more than 4 Items",
       "th": "Category เต็ม categoy ห้ามเกิน 4 item"
     }
+  },
+  "SIZE_REQUIRE": {
+    "statusCode": 400,
+    "resCode": "4014",
+    "resDesc": {
+      "en": "Size Required",
+      "th": "ต้องการ Size"
+    }
   }
   
 }
