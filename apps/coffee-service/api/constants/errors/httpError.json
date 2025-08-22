@@ -1,0 +1,34 @@
+{
+    "ERR_HTTP_401": {
+        "statusCode": 401,
+        "resCode": "0401",
+        "resDesc": {
+            "en": "Unauthorized",
+            "th": "Unauthorized"
+        }
+    },
+    "ERR_HTTP_403": {
+        "statusCode": 403,
+        "resCode": "0403",
+        "resDesc": {
+            "en": "Forbidden",
+            "th": "Forbidden"
+        }
+    },
+    "ERR_HTTP_404": {
+        "statusCode": 404,
+        "resCode": "0404",
+        "resDesc": {
+            "en": "Not Found",
+            "th": "Not Found"
+        }
+    },
+    "ERR_HTTP_500": {
+        "statusCode": 500,
+        "resCode": "0500",
+        "resDesc": {
+            "en": "Internal Server Error",
+            "th": "Internal Server Error"
+        }
+    }
+}

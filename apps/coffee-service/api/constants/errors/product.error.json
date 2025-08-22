@@ -1,0 +1,106 @@
+{
+    "ERR_PRICE_CONSTRAINT": {
+        "statusCode": 400,
+        "resCode": "4001",
+        "resDesc": {
+            "en": "Price invalid constraint shoud between 1 to 200",
+            "th": "ราคาควรอยู่ในช่วง 1 - 200"
+        }
+    },
+    "FILE_TYPE_REQUIRE_IMAGE": {
+        "statusCode": 400,
+        "resCode": "4002",
+        "resDesc": {
+            "en": "File type must be image.",
+            "th": "ประเภทไฟล์ต้องเป็นรูปภาพ"
+        }
+    },
+    "FILE_SIZE_LIMIT": {
+        "statusCode": 400,
+        "resCode": "4003",
+        "resDesc": {
+            "en": "Image file more than 2MB",
+            "th": "ไฟล์ภาพมากกว่า 2MB"
+        }
+    },
+    "PRODUCT_NAME_REQUIRE": {
+        "statusCode": 400,
+        "resCode": "4004",
+        "resDesc": {
+            "en": "ProductName Required",
+            "th": "ต้องการ ProductName"
+        }
+    },
+    "CATEGOREIS_REQUIRE": {
+        "statusCode": 400,
+        "resCode": "4005",
+        "resDesc": {
+            "en": "Categories Required",
+            "th": "ต้องการ Categories"
+        }
+    },
+    "PRICE_REQUIRE": {
+        "statusCode": 400,
+        "resCode": "4006",
+        "resDesc": {
+            "en": "Price Required",
+            "th": "ต้องการ Price"
+        }
+    },
+    "IS_ACTIVE_REQUIRE": {
+        "statusCode": 400,
+        "resCode": "4007",
+        "resDesc": {
+            "en": "IsActive Required",
+            "th": "ต้องการ IsActive"
+        }
+    },
+    "PRODUCT_NOT_FOUND": {
+        "statusCode": 400,
+        "resCode": "4008",
+        "resDesc": {
+            "en": "Product Not Found",
+            "th": "หาProductไม่เจอ"
+        }
+    },
+    "INVALID_CATEGORY_ID": {
+        "statusCode": 400,
+        "resCode": "4009",
+        "resDesc": {
+            "en": "Invalid category_id",
+            "th": "Category_id ผิด"
+        }
+    },
+    "CATEGORIES_NAME_NOT_FOUND": {
+        "statusCode": 400,
+        "resCode": "4010",
+        "resDesc": {
+            "en": "Categories Name Not Found",
+            "th": "หา Categories Name ไม่เจอ"
+        }
+    },
+    "CATEGORY_NOT_FOUND": {
+        "statusCode": 400,
+        "resCode": "4011",
+        "resDesc": {
+            "en": "Category Not Found Please Check your ID Category is Correct?",
+            "th": "ไม่เจอ Category โปรดเช็ค ID Category ว่าถูกต้องมั้ย"
+        }
+    },
+    "CATEGORY_IS_IN_USE_BY_SOME_PRODUCT": {
+        "statusCode": 400,
+        "resCode": "4012",
+        "resDesc": {
+            "en": "Category is in use by some products",
+            "th": "Category ถูกใช้อยู่ โดย Product"
+        }
+    },
+    "CATEGORY_LIMIT": {
+        "statusCode": 400,
+        "resCode": "4013",
+        "resDesc": {
+            "en": "Category is Limit No more than 4 Items",
+            "th": "Category เต็ม categoy ห้ามเกิน 4 item"
+        }
+    }
+}
