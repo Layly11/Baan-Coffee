@@ -32,6 +32,10 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 
 app.use(createRequestLog())
 
+app.get('/', (req:Request, res: Response, next: NextFunction) => {
+        res.send("Welcome to Server BaanCoffee!!!🛜")
+        next()
+    })
 
 app.use(createRouters({redis}))
 

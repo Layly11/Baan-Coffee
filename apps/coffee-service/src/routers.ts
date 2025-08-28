@@ -16,9 +16,6 @@ export default function createRouters({ redis }: { redis: RedisClientType }) {
     router.use('/customer', createCustomerRouter({ redis }))
     router.use('/profile', profileRouter)
     router.use('/cart', cartRouter)
-    router.use('/', (req:Request, res: Response, next: NextFunction) => {
-        res.send("Hello World")
-    })
     
 
     return router
