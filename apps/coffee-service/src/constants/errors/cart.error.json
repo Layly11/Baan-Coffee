@@ -1,0 +1,68 @@
+{
+    "ERR_PRODUCT_ID_REQUIRED": {
+    "statusCode": 401,
+    "resCode": "0401",
+    "resDesc": {
+      "en": "Product ID required",
+      "th": "ต้องการ Product ID"
+    }
+  },
+    "ERR_CUSTOMER_ID_REQUIRED": {
+    "statusCode": 401,
+    "resCode": "0402",
+    "resDesc": {
+      "en": "Customer ID required",
+      "th": "ต้องการ Customer ID"
+    }
+  },
+   "ERR_SIZE_ID_REQUIRED": {
+    "statusCode": 401,
+    "resCode": "0403",
+    "resDesc": {
+      "en": "Size ID required",
+      "th": "ต้องการ Customer Size"
+    }
+  },
+   "ERR_QUANTITY_REQUIRED": {
+    "statusCode": 401,
+    "resCode": "0404",
+    "resDesc": {
+      "en": "Quantity required",
+      "th": "ต้องการ Quantity"
+    }
+  },
+     "ERR_EXTRA_PRICE_REQUIRED": {
+    "statusCode": 401,
+    "resCode": "0405",
+    "resDesc": {
+      "en": "Extra Price required",
+      "th": "ต้องการ Extra Price"
+    }
+  },
+    "ERR_CART_ITEMS_FULL": {
+    "statusCode": 401,
+    "resCode": "0406",
+    "resDesc": {
+      "en": "Limit Cart Full. Maximum quantity is 50",
+      "th": "จำนวนของในตระกร้าไม่เกิน 50"
+    }
+  },
+   "ERR_LIMIT_QUANTITY_FULL": {
+    "statusCode": 401,
+    "resCode": "0407",
+    "resDesc": {
+      "en": "Limit Quantity Full. Maximum quantity is 10",
+      "th": "เลือกจำนวนสูงสุดได้ไม่เกิน10"
+    }
+  },
+    "ERR_CART_ITEM_NOT_FOUND": {
+    "statusCode": 401,
+    "resCode": "0408",
+    "resDesc": {
+      "en": "CartItem not found",
+      "th": "ไม่เจอ CartItem"
+    }
+  }
+
+  
+}

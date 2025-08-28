@@ -13,6 +13,7 @@ import { CustomersModel } from './models/Customer';
 import { AddressModel } from './models/Address';
 import { SizeModel } from './models/Size';
 import { ProductSizeModel } from './models/ProductSize';
+import { CartModel } from './models/Cart';
 
 UserModel.belongsTo(UserRoleModel,{
     foreignKey: 'role_id',
@@ -120,6 +121,15 @@ ProductSizeModel.belongsTo(SizeModel, {
 });
 
 
+CartModel.belongsTo(CustomersModel, { foreignKey: 'customer_id', as: 'customers' });
+CartModel.belongsTo(ProductModel, { foreignKey: 'product_id', as: 'product' });
+CartModel.belongsTo(SizeModel, { foreignKey: 'size_id', as: 'size' });
+
+ProductModel.hasMany(CartModel, { foreignKey: 'product_id' });
+SizeModel.hasMany(CartModel, { foreignKey: 'size_id' });
+CustomersModel.hasMany(CartModel, { foreignKey: 'customer_id' });
+
+
 
 
 
@@ -139,3 +149,4 @@ export * from './models/Customer'
 export * from './models/Address'
 export * from './models/Size'
 export * from './models/ProductSize'
+export * from './models/Cart'

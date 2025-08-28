@@ -28,7 +28,6 @@ export = {
       house_no: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true
       },
       village: {
         type: Sequelize.STRING,

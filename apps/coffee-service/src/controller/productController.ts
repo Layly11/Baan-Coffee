@@ -437,7 +437,7 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
                 {
                     model: ProductModel,
                     as: 'product',
-                    attributes: ['name', 'price', 'image_url', 'description'],
+                    attributes: ['id','name', 'price', 'image_url', 'description'],
                     where: { status: 1 }
                 },
             ],
@@ -448,6 +448,7 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
 
         const bestSellerMapping = bestSellers.map((value: any) => ({
             id: value.id,
+            product_id: value.product.id,
             name: value.product.name,
             Desc: value.product.description,
             price: value.product.price,
