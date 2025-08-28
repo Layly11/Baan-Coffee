@@ -126,6 +126,21 @@ export const fetchAddressCustomer = () => async (req: Request, res: Response, ne
 }
 
 
+export const fetchAddressBySelected = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const id = req.params.id
+
+        const addresses = await AddressModel.findByPk(id)
+
+        res.locals.address = addresses
+
+        return next()
+    } catch (err) {
+        next(err)
+    }
+}
+
+
 
 export const createAddressCustomer = () => async (req: Request, res: Response, next: NextFunction) => {
     try {

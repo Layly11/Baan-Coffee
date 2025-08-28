@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { createAddressCustomer, deleteAccount, deleteAddressCustomer, editProfileDetail, editProfileImage, fetchAddressCustomer, updateAddressCustomer } from '../controller/profileController';
+import { createAddressCustomer, deleteAccount, deleteAddressCustomer, editProfileDetail, editProfileImage, fetchAddressBySelected, fetchAddressCustomer, updateAddressCustomer } from '../controller/profileController';
 
 
 import multer from 'multer';
@@ -61,6 +61,23 @@ router.get(
     '/address',
     authMiddlewareCustomer(),
     fetchAddressCustomer(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '1111',
+            res_desc: '',
+            data: {
+                address: res.locals.address
+            }
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
+router.get(
+    '/address/:id',
+    authMiddlewareCustomer(),
+    fetchAddressBySelected(),
     (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
             res_code: '1111',
