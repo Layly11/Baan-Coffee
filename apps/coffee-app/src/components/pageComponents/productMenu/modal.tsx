@@ -162,7 +162,7 @@ export const AddProductModal = ({
         if (!file.type.startsWith("image/")) {
             return false;
         }
-        if (file.size > 2 * 1024 * 1024) {
+        if (file.size > 5 * 1024 * 1024) {
             return false;
         }
         return true;
@@ -209,12 +209,12 @@ export const AddProductModal = ({
                                         handleChange={handleFileUpload}
                                         name="file"
                                         types={fileTypes}
-                                        maxSize={2} // MB
+                                        maxSize={5} // MB
                                         onSizeError={() => {
                                             Swal.fire({
                                                 icon: "error",
-                                                title: "ขนาดไฟล์เกิน 2 MB",
-                                                text: "กรุณาเลือกไฟล์ที่มีขนาดไม่เกิน 2 MB",
+                                                title: "ขนาดไฟล์เกิน 5 MB",
+                                                text: "กรุณาเลือกไฟล์ที่มีขนาดไม่เกิน 5 MB",
                                                 showCloseButton: true,
                                                 showConfirmButton: false,
                                             });
@@ -267,7 +267,7 @@ export const AddProductModal = ({
                                                             style={{ fontSize: "14px", fontWeight: "400" }}
                                                         >
                                                             Recommended image size: 600 x 600 px Maximum file and without background
-                                                            size: 2 MB.
+                                                            size: 5 MB.
                                                         </div>
                                                         <div
                                                             className="sub-title"
@@ -487,6 +487,7 @@ export const AddProductModal = ({
                                     <Input
                                         type="text"
                                         value={newDescription}
+                                        maxLength={255}
                                         onChange={(e) => setNewDescription(e.target.value)}
                                     />
                                 </Col>

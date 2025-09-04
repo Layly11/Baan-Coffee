@@ -9,9 +9,10 @@ import {
 
 import { sequelize } from '../sequelize';
 import { DailySummaryModel } from './DailySummary';
+import { CustomersModel } from './Customer';
 
 interface OrderItem {
-    product: string;
+    name: string;
     qty: number;
 }
 
@@ -22,11 +23,10 @@ export class OrderModel extends Model<
     declare id: CreationOptional<number>;
     declare summary_id: ForeignKey<DailySummaryModel['id']>;
     declare order_id: string;
-    declare time: string;
-    declare customer_name: string;
-    declare payment_method: 'cash' | 'qr' | 'credit';
+    declare time: Date;
+    declare customer_id: ForeignKey<CustomersModel['id']>;;
+    declare payment_method: 'qr' | 'credit';
     declare total_price: number;
-    declare channel: 'Dine-In' | 'Takeaway' | 'Delivery';
     declare status: 'pending' | 'complete' | 'cancelled';
     declare items: OrderItem[];
 
@@ -51,23 +51,19 @@ OrderModel.init(
             allowNull: false,
         },
         time: {
-            type: DataTypes.STRING,
+            type: DataTypes.DATE,
             allowNull: false,
         },
-        customer_name: {
-            type: DataTypes.STRING,
+        customer_id: {
+            type: DataTypes.INTEGER,
             allowNull: false,
         },
         payment_method: {
-            type: DataTypes.ENUM('cash', 'qr', 'credit'),
+            type: DataTypes.ENUM('qr', 'credit'),
             allowNull: false,
         },
         total_price: {
             type: DataTypes.FLOAT,
-            allowNull: false,
-        },
-        channel: {
-            type: DataTypes.ENUM('Dine-In', 'Takeaway', 'Delivery'),
             allowNull: false,
         },
         status: {

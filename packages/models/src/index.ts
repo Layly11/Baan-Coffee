@@ -14,6 +14,7 @@ import { AddressModel } from './models/Address';
 import { SizeModel } from './models/Size';
 import { ProductSizeModel } from './models/ProductSize';
 import { CartModel } from './models/Cart';
+import { PaymentModel } from './models/Payment';
 
 UserModel.belongsTo(UserRoleModel,{
     foreignKey: 'role_id',
@@ -130,6 +131,9 @@ SizeModel.hasMany(CartModel, { foreignKey: 'size_id' });
 CustomersModel.hasMany(CartModel, { foreignKey: 'customer_id' });
 
 
+OrderModel.hasMany(PaymentModel, { foreignKey: 'order_id', as: 'payments' });
+PaymentModel.belongsTo(OrderModel, { foreignKey: 'order_id', as: 'order' });
+
 
 
 
@@ -150,3 +154,4 @@ export * from './models/Address'
 export * from './models/Size'
 export * from './models/ProductSize'
 export * from './models/Cart'
+export * from './models/Payment'

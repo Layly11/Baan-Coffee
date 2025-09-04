@@ -57,7 +57,7 @@ export const Columns = (handleEditItem?: (id: number) => void,  handleDeleteItem
         {
             label: 'Description',
             key: 'description',
-            width: '30%',
+            width: '50%',
         },
         {
             label: 'Sizes',
@@ -72,7 +72,7 @@ export const Columns = (handleEditItem?: (id: number) => void,  handleDeleteItem
         {
             label: 'Status',
             key: 'status',
-            width: '30%',
+            width: '40%',
             dataMutation: (row: any) => {
                 const statusKey = row.status === true ? 'ACTIVE' : 'INACTIVE'
                 const status = ProductStatusMaster[statusKey]
@@ -97,7 +97,7 @@ export const Columns = (handleEditItem?: (id: number) => void,  handleDeleteItem
         {
             label: '',
             key: 'actions',
-            width: '50%',
+            width: '20%',
             dataMutation: (row: any) => (
                 <div style={{ display: 'flex', gap: '30px', justifyContent: 'center' }}>
                     <i

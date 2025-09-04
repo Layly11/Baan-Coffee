@@ -28,11 +28,12 @@ export const getCartItems = () => async (req: Request, res: Response, next: Next
             }
         )
 
-
+        
 
         const mappedCartItems = cartItems.map((c: any) => (
             {
                 id: c.id,
+                product_id: c.product.id,
                 name: c.product.name,
                 size: c.size.name,
                 description: c.product.description,
@@ -44,7 +45,6 @@ export const getCartItems = () => async (req: Request, res: Response, next: Next
             }
         ))
 
-        console.log("cartItems: ", mappedCartItems)
         res.locals.cart = mappedCartItems
 
         return next()

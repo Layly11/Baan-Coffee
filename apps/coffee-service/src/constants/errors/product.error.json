@@ -19,8 +19,8 @@
     "statusCode": 400,
     "resCode": "4003",
     "resDesc": {
-      "en": "Image file more than 2MB",
-      "th": "ไฟล์ภาพมากกว่า 2MB"
+      "en": "Image file more than 5MB",
+      "th": "ไฟล์ภาพมากกว่า 5MB"
     }
   },
   "PRODUCT_NAME_REQUIRE": {

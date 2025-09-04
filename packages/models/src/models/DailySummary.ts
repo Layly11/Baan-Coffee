@@ -9,7 +9,6 @@ import {
 import { sequelize } from '../sequelize'
 
 interface Payments {
-    cash: number
     qr: number
     credit: number
 }
@@ -24,8 +23,8 @@ export class DailySummaryModel extends Model<
     declare total_orders: number
     declare total_items: number
     declare payments: Payments
-    declare first_order_time: string
-    declare last_order_time: string
+    declare first_order_time: CreationOptional<string | null>
+    declare last_order_time: CreationOptional<string | null>
     declare createdAt: CreationOptional<Date>
     declare updatedAt: CreationOptional<Date>
 }

@@ -1,0 +1,10 @@
+{
+  "ERR_PAYMENT_NOT_FOUND": {
+    "statusCode": 400,
+    "resCode": "0401",
+    "resDesc": {
+      "en": "Payment Not Found",
+      "th": "ไม่เจอ Payment"
+    }
+  }
+}

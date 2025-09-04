@@ -21,23 +21,23 @@ export = {
         allowNull: false,
       },
       time: {
-        type: Sequelize.STRING,
+        type: Sequelize.DATE,
         allowNull: false,
       },
-      customer_name: {
-        type: Sequelize.STRING,
+      customer_id: {
+        type: Sequelize.INTEGER,
         allowNull: false,
+        references: {
+          model: 'customers',
+          key: 'id',
+        },
       },
       payment_method: {
-        type: Sequelize.ENUM('cash', 'qr', 'credit'),
+        type: Sequelize.ENUM('qr', 'credit'),
         allowNull: false,
       },
       total_price: {
         type: Sequelize.FLOAT,
-        allowNull: false,
-      },
-      channel: {
-        type: Sequelize.ENUM('Dine-In', 'Takeaway', 'Delivery'),
         allowNull: false,
       },
       status: {

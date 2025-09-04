@@ -81,13 +81,13 @@ const ProductMenuPage = () => {
     }
 
     const fetchCategories = async () => {
-        try{
-             setIsFetching(true)
+        try {
+            setIsFetching(true)
 
-             const response = await fetchCategoryRequester()
+            const response = await fetchCategoryRequester()
 
-             if(response.data !== null) {
-                  const category = response.data.category
+            if (response.data !== null) {
+                const category = response.data.category
 
                 const uniqueCategoryNames: string[] = Array.from(
                     new Set(category.map((c: any) => c.name).filter(Boolean))
@@ -97,11 +97,11 @@ const ProductMenuPage = () => {
                 const formattedList = Array.from(category.map((c: any) => [c.id, { label: c.name }]))
                 setNewCategoryList(formattedList as any)
 
-             }
+            }
 
         } catch (err) {
             console.error(err)
-            Alert({data: err})
+            Alert({ data: err })
         }
         finally {
             setIsFetching(false)
@@ -113,15 +113,15 @@ const ProductMenuPage = () => {
             setIsFetching(true)
 
             const response = await fetchSizeProductRequester()
-             if(response.data !== null) {
+            if (response.data !== null) {
                 const sizes = response.data.size
                 const formattedList = Array.from(sizes.map((c: any) => [c.id, { label: c.name }])) as any
                 setSizeList(formattedList)
-             }
-            
+            }
+
         } catch (err) {
             console.error(err)
-            Alert({data: err})
+            Alert({ data: err })
         }
     }
 
@@ -184,8 +184,8 @@ const ProductMenuPage = () => {
             setNewPrice(item.price)
             setEditingItemId(item.id)
             setPreviewUrl(item.image_url)
-            setNewDescription(item.description)
-            setSize(item.sizes.map((s:any) => String(s.id)))
+            setNewDescription(item.description ?? '')
+            setSize(item.sizes.map((s: any) => String(s.id)))
             setIsActive(item.status)
             setUploadedFileName(item.image_url?.split('/').slice(-1)[0].split('?')[0] ?? null)
             setShowAddModal(true)
@@ -199,6 +199,8 @@ const ProductMenuPage = () => {
 
     const handleConfirmAdd = async (): Promise<void> => {
         try {
+            console.log("NewDescription (Add): ", newDescription)
+            console.log("ProductName (Add): ", newProductName)
             setShowAddModal(false)
             const formData = new FormData()
             if (newFile !== null && newFile !== undefined) formData.append('product_image', newFile)
@@ -214,7 +216,7 @@ const ProductMenuPage = () => {
                 formData.append('price', newPrice)
             }
             if (newDescription !== '') {
-                formData.append('description',newDescription)
+                formData.append('description', newDescription)
             }
             if (size !== null && size !== undefined) {
                 formData.append('sizes', Array.isArray(size) ? size.join(',') : size);
@@ -238,6 +240,7 @@ const ProductMenuPage = () => {
     const handleConfirmEdit = async (): Promise<void> => {
         try {
             setShowAddModal(false)
+
             const formData = new FormData()
             if (newFile !== null && newFile !== undefined) {
                 formData.append('product_image', newFile)
@@ -252,11 +255,12 @@ const ProductMenuPage = () => {
             }
             formData.append('price', newPrice)
 
-            formData.append('description',newDescription)
+            formData.append('description', newDescription)
+
 
             formData.append('is_active', isActive ? '1' : '0')
-            
-            if(size !== undefined){
+
+            if (size !== undefined) {
                 formData.append('sizes', Array.isArray(size) ? size.join(',') : size);
             }
 
@@ -396,8 +400,8 @@ const ProductMenuPage = () => {
                         setDisableConfirm={setDisableConfirm}
                         items={rows}
                         setRemoveImage={setIsRemoveImage}
-                        newDescription= {newDescription}
-                        setNewDescription= {setNewDescription}
+                        newDescription={newDescription}
+                        setNewDescription={setNewDescription}
                         size={size}
                         setSize={setSize}
                         sizeList={sizeList}
@@ -410,12 +414,12 @@ const ProductMenuPage = () => {
                         }}
                         onConfirm={confirmDelete}
                     />
-                    <CategoryModal 
-                    visible={showCategoryModal}
-                    onClose= {() => {
-                        setShowCategoryModal(false)
-                        fetchCategories()
-                    }}
+                    <CategoryModal
+                        visible={showCategoryModal}
+                        onClose={() => {
+                            setShowCategoryModal(false)
+                            fetchCategories()
+                        }}
                     />
                 </Container>
             </MainLayout >

@@ -9,40 +9,46 @@ import { RedisClientType } from "redis";
 
 
 const APP = ({ redis }: { redis: RedisClientType }) => {
-const app = express()
-app.use(cors());
+    const app = express()
+    app.use(cors());
 
-app.set('trust proxy', true)
-app.enable('trust proxy')
+    app.set('trust proxy', true)
+    app.enable('trust proxy')
 
-app.disable('x-powered-by')
+    app.disable('x-powered-by')
 
 
-app.use(express.json());
-app.use(urlencoded({ extended: true }))
+    app.use(express.json());
+    app.use(urlencoded({ extended: true }))
 
-app.use(cookieParser(process.env.COOKIE_SECRET))
+    app.use(cookieParser(process.env.COOKIE_SECRET))
 
-app.use(passport.initialize());
+    app.use(passport.initialize());
 
-app.use((req: Request, res: Response, next: NextFunction) => {
-    res.header('Cache-Control', 'no-store, no-cache, max-age=0, must-revalidate') 
-    next()
-})
+    app.use((req: Request, res: Response, next: NextFunction) => {
+        res.header('Cache-Control', 'no-store, no-cache, max-age=0, must-revalidate')
+        next()
+    })
 
-app.use(createRequestLog())
+    app.use(createRequestLog())
 
-app.get('/', (req:Request, res: Response, next: NextFunction) => {
+    app.get('/', (req: Request, res: Response, next: NextFunction) => {
         res.send("Welcome to Server BaanCoffee!!!🛜")
         next()
     })
 
-app.use(createRouters({redis}))
 
-app.use(createResponseLog())
-app.use(createErrorLog())
+    // app.get('/payment/result', (req: Request, res: Response, next: NextFunction) => {
+    //     res.redirect()
+    //     next()
+    // })
 
-return app
+    app.use(createRouters({ redis }))
+
+    app.use(createResponseLog())
+    app.use(createErrorLog())
+
+    return app
 
 }
 

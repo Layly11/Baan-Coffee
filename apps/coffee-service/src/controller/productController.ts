@@ -119,7 +119,7 @@ export const createProduct = () => async (req: Request, res: Response, next: Nex
             return next(new ServiceError(ProductMasterError.FILE_TYPE_REQUIRE_IMAGE))
         }
 
-        if (file !== null && file !== undefined && file.size > 2 * 1024 * 1024) {
+        if (file !== null && file !== undefined && file.size > 5 * 1024 * 1024) {
             await transaction.rollback()
             return next(new ServiceError(ProductMasterError.FILE_SIZE_LIMIT))
         }
@@ -230,7 +230,7 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
             return next(new ServiceError(ProductMasterError.FILE_TYPE_REQUIRE_IMAGE))
         }
 
-        if (file !== null && file !== undefined && file.size > 2 * 1024 * 1024) {
+        if (file !== null && file !== undefined && file.size > 5 * 1024 * 1024) {
             return next(new ServiceError(ProductMasterError.FILE_SIZE_LIMIT))
         }
 
@@ -273,7 +273,7 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
         if (price !== undefined) {
             item.price = price
         }
-        if (description !== undefined) {
+        if (description !== undefined || description !== null) {
             item.description = description
         }
         if (isActive !== undefined) {
@@ -428,7 +428,6 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
     try {
         const bestSellers = await TopProductModel.findAll({
             attributes: [
-                'id',
                 'product_id',
                 [Sequelize.fn('SUM', Sequelize.col('total_sold')), 'totalSold'],
                 [Sequelize.fn('SUM', Sequelize.col('total_sales')), 'totalSales'],
@@ -441,29 +440,30 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
                     where: { status: 1 }
                 },
             ],
-            group: ['top_products.id', 'product_id', 'product.id'],
+            group: ['product.id'],
             order: [[Sequelize.literal('totalSold'), 'DESC']],
+            limit: 3
         });
 
-
         const bestSellerMapping = bestSellers.map((value: any) => ({
-            id: value.id,
             product_id: value.product.id,
             name: value.product.name,
             Desc: value.product.description,
             price: value.product.price,
-            imageSource: value.product.image_url
-        }))
+            imageSource: value.product.image_url,
+            totalSold: value.getDataValue('totalSold'),
+            totalSales: value.getDataValue('totalSales')
+        }));
 
+        res.locals.bestSeller = bestSellerMapping;
 
-        res.locals.bestSeller = bestSellerMapping
-
-        return next()
+        return next();
 
     } catch (err) {
-        next(err)
+        next(err);
     }
 }
+
 
 export const getCategoryMobile = () => async (req: Request, res: Response, next: NextFunction) => {
     try {

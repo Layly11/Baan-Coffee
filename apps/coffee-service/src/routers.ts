@@ -4,6 +4,7 @@ import dashboardRoute from './routes/dashboardRouter'
 import productRoute from './routes/productRouter'
 import profileRouter from './routes/profileRouter'
 import cartRouter from './routes/cartRouter'
+import orderRouter from './routes/orderRouter'
 import { RedisClientType } from 'redis'
 import createCustomerRouter from './routes/customerRouter'
 
@@ -16,7 +17,7 @@ export default function createRouters({ redis }: { redis: RedisClientType }) {
     router.use('/customer', createCustomerRouter({ redis }))
     router.use('/profile', profileRouter)
     router.use('/cart', cartRouter)
-    
+    router.use('/order', orderRouter)
 
     return router
 
