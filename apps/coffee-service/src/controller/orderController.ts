@@ -1,8 +1,8 @@
 import { NextFunction, Request, Response } from "express";
 import crypto from 'crypto'
 import axios from 'axios'
-import { OrderModel, sequelize, DailySummaryModel, CartModel, TopProductModel, PaymentModel } from "@coffee/models";
-import { Op } from "sequelize";
+import { OrderModel, sequelize, DailySummaryModel, CartModel, TopProductModel, PaymentModel, TempOrderProductsModel, OrderItemModel, ProductModel, AddressModel } from "@coffee/models";
+import { Op, or } from "sequelize";
 import { ServiceError } from "@coffee/helpers";
 import OrderErrorMaster from '../constants/errors/oreder.error.json'
 import { v4 as uuidv4 } from "uuid";
@@ -17,13 +17,30 @@ function generateOrderId() {
 
 export const createPayment = () => async (req: Request, res: Response, next: NextFunction) => {
     const customerId = (req.user as any).id as any
-    const { amount, selectedMethod, product } = req.body
+    const { amount, selectedMethod, product, addressId } = req.body
     const t = await sequelize.transaction();
     console.log("Product: ", product)
 
     const descriptionProduct = product.map((p: any) => `${p.name} qty: ${p.amount}`).join(', ')
     try {
-        const signKey = process.env.SIGN_KEY!
+
+        await TempOrderProductsModel.destroy({
+            where: {
+                customer_id: customerId,
+                expire_at: { [Op.lt]: new Date() }
+            }
+        });
+        const token = uuidv4().replace(/-/g, '').slice(0, 12);
+
+        const expireAt = new Date(Date.now() + 10 * 60 * 1000);
+
+        await TempOrderProductsModel.create({
+            token,
+            customer_id: customerId,
+            products: JSON.stringify(product),
+            expire_at: expireAt
+        });
+
         const biller_reference_1 = uuidv4().replace(/\D/g, "").slice(0, 12);
         const payload = {
             mid: selectedMethod === 'credit' ? process.env.MERCHANT_MID : process.env.MERCHANT_MID_QR,
@@ -34,13 +51,14 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
             description: descriptionProduct,
             reference_1: String(customerId),
             reference_2: selectedMethod,
-            reference_3: JSON.stringify(product),
+            reference_3: token,
+            reference_4: String(addressId),
             qrcode: {
                 biller_reference_1: biller_reference_1
             }
         }
 
-
+        const signKey = process.env.SIGN_KEY!
         const hmac = crypto.createHmac('sha256', Buffer.from(signKey, 'base64'))
         const contentSignature = hmac.update(JSON.stringify(payload)).digest('base64')
 
@@ -80,12 +98,13 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
     }
 }
 
-export const paymentResult = () => async (req: Request, res: Response, next: NextFunction) => {
-    const { order_id, reference_1, reference_2, amount, reference_3, status, process_status, reference } = req.body
 
+export const paymentResult = () => async (req: Request, res: Response, next: NextFunction) => {
+    const { order_id, reference_1, reference_2, amount, reference_3, status, process_status, reference, reference_4} = req.body
+    console.log("HAS CALLED!!!!")
     if (status === "APPROVED" || process_status === 'true') {
         try {
-            const axiosRes = await axios.post('http://localhost:9302/order/create', { order_id, reference_1, reference_2, amount, reference_3, reference })
+            const axiosRes = await axios.post('http://localhost:9302/order/create', { order_id, reference_1, reference_2, amount, reference_3, reference, reference_4 })
         } catch (err) {
             next(err)
         }
@@ -130,10 +149,13 @@ export const getPaymentByRefercnce = () => async (req: Request, res: Response, n
 
 export const createOrder = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { order_id, reference_1, reference_2, amount, reference_3, status, reference } = req.body
+        const { order_id, reference_1, reference_2, amount, reference_3, status, reference, reference_4 } = req.body
 
-        const ref3 = JSON.parse(reference_3)
+        const temp = await TempOrderProductsModel.findOne({ where: { token: reference_3 } });
+        if (!temp) return next(new ServiceError(OrderErrorMaster.INVALID_TEMP_TOKEN));
 
+        const products = JSON.parse(temp.products);
+        console.log("Product Temp: ", products)
         const today = new Date()
         const startOfDay = new Date(today.setHours(0, 0, 0, 0))
         const endOfDay = new Date(today.setHours(23, 59, 59, 999));
@@ -172,6 +194,12 @@ export const createOrder = () => async (req: Request, res: Response, next: NextF
             return next(new ServiceError(OrderErrorMaster.ERR_PAYMENT_NOT_FOUND))
         }
 
+
+        const addresses = await AddressModel.findByPk(reference_4)
+
+        if(!addresses) {
+             return next(new ServiceError(OrderErrorMaster.ERR_PAYMENT_NOT_FOUND))
+        }
         const order = await OrderModel.create(
             {
                 summary_id: summary.id,
@@ -180,14 +208,27 @@ export const createOrder = () => async (req: Request, res: Response, next: NextF
                 payment_method: reference_2,
                 total_price: amount,
                 time: new Date(),
+                shipping_address:  addresses,
                 status: "pending",
-                items: ref3.map((p: any) => ({ name: p.name, qty: p.amount }))
             }
         )
 
+        if (products.length > 0) {
+            await OrderItemModel.bulkCreate(
+                products.map((product: any) => ({
+                    order_id: order.id,
+                    product_id: product.id,
+                    name: product.name,
+                    price: product.price,
+                    qty: product.amount,
+                    size: product.size
+                }))
+            );
+        }
+
         await payment.update({ order_id: order.id, status: 'APPROVED', reference })
 
-        const totalItems = ref3.reduce((acc: any, i: any) => acc + i.amount, 0);
+        const totalItems = products.reduce((acc: any, i: any) => acc + i.amount, 0);
         const now = new Date();
         const lastOrderTime = now.toLocaleTimeString("th-TH", {
             hour: "2-digit",
@@ -205,7 +246,7 @@ export const createOrder = () => async (req: Request, res: Response, next: NextF
         await summary.save();
 
 
-        for (const item of ref3) {
+        for (const item of products) {
             let topProduct = await TopProductModel.findOne({
                 where: { summary_id: summary.id, product_id: item.id }
             })
@@ -231,6 +272,8 @@ export const createOrder = () => async (req: Request, res: Response, next: NextF
         await CartModel.destroy({
             where: { customer_id: reference_1 }
         })
+
+        await temp.destroy();
 
         return next()
     } catch (err) {
@@ -270,8 +313,67 @@ export const payForQR = () => async (req: Request, res: Response, next: NextFunc
         const payment = await axios.post('http://127.0.0.1:4000/api/v1/notify/test/qr', payload, config)
 
         console.log("Payment", payment)
-        res.locals.payment= payment.data
+        res.locals.payment = payment.data
         return next()
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+
+export const getOrderHistorty = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const customerId = (req.user as any).id
+
+        const orders = await OrderModel.findAll({
+            where: { customer_id: customerId },
+            include: [
+                {
+                    model: OrderItemModel,
+                    as: "items",
+                    include: [
+                        {
+                            model: ProductModel,
+                            as: 'product'
+                        }
+                    ]
+                },
+            ],
+            order: [
+                ['createdAt', 'DESC'],
+                [{ model: OrderItemModel, as: 'items' }, 'id', 'ASC']
+            ],
+        });
+
+        console.log("Order: ", JSON.stringify(orders))
+
+        const orderHistory = orders.flatMap((o: any) =>
+            o.items.map((item: any) => ({
+                id: item.id,
+                orderID: o.order_id,
+                name: item.name,
+                size: item.size,
+                description: item.product?.description || "",
+                price: Number(item.price).toFixed(2),
+                time: new Date(o.createdAt).toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                }),
+                imageSource: item.product?.image_url
+
+            }))
+        );
+
+        console.log("OrderHistory: ", orderHistory)
+        orderHistory.sort((a, b) => b.id - a.id);
+
+        res.locals.orderHistory = orderHistory
+
+        return next()
+
+
     } catch (err) {
         next(err)
     }

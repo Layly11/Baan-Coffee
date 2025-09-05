@@ -15,6 +15,9 @@ import { SizeModel } from './models/Size';
 import { ProductSizeModel } from './models/ProductSize';
 import { CartModel } from './models/Cart';
 import { PaymentModel } from './models/Payment';
+import { OrderItemModel } from "./models/OrderItems";
+import { TempOrderProductsModel } from './models/TempOrderProducts';
+
 
 UserModel.belongsTo(UserRoleModel,{
     foreignKey: 'role_id',
@@ -135,6 +138,20 @@ OrderModel.hasMany(PaymentModel, { foreignKey: 'order_id', as: 'payments' });
 PaymentModel.belongsTo(OrderModel, { foreignKey: 'order_id', as: 'order' });
 
 
+OrderModel.hasMany(OrderItemModel, { foreignKey: "order_id", as: "items" });
+OrderItemModel.belongsTo(OrderModel, { foreignKey: "order_id", as: "order" });
+
+ProductModel.hasMany(OrderItemModel, {
+  foreignKey: "product_id",
+  as: "order_items",
+});
+OrderItemModel.belongsTo(ProductModel, {
+  foreignKey: "product_id",
+  as: "product",
+});
+
+TempOrderProductsModel.belongsTo(CustomersModel, { foreignKey: 'customer_id', as: 'customer' });
+CustomersModel.hasMany(TempOrderProductsModel, { foreignKey: 'customer_id', as: 'temp_orders' });
 
 
 export * from './sequelize'
@@ -155,3 +172,5 @@ export * from './models/Size'
 export * from './models/ProductSize'
 export * from './models/Cart'
 export * from './models/Payment'
+export * from './models/OrderItems'
+export * from './models/TempOrderProducts'

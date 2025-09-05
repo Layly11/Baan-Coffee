@@ -11,9 +11,12 @@ import { sequelize } from '../sequelize';
 import { DailySummaryModel } from './DailySummary';
 import { CustomersModel } from './Customer';
 
-interface OrderItem {
-    name: string;
-    qty: number;
+interface Addresss {
+    name: string,
+    house_no: string,
+    village: string,
+    street: string,
+    city: string,
 }
 
 export class OrderModel extends Model<
@@ -27,9 +30,8 @@ export class OrderModel extends Model<
     declare customer_id: ForeignKey<CustomersModel['id']>;;
     declare payment_method: 'qr' | 'credit';
     declare total_price: number;
+    declare shipping_address: Addresss
     declare status: 'pending' | 'complete' | 'cancelled';
-    declare items: OrderItem[];
-
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
 }
@@ -66,15 +68,15 @@ OrderModel.init(
             type: DataTypes.FLOAT,
             allowNull: false,
         },
+        shipping_address: {
+            type: DataTypes.JSON,
+            allowNull: true,
+        },
         status: {
             type: DataTypes.ENUM('pending', 'complete', 'cancelled'),
             allowNull: false,
         },
-        items: {
-            type: DataTypes.JSON,
-            allowNull: false,
-        },
-          createdAt: {
+        createdAt: {
             field: 'created_at',
             type: DataTypes.DATE,
             defaultValue: DataTypes.NOW,

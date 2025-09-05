@@ -545,7 +545,6 @@ export const getSizebyProduct = () => async (req: Request, res: Response, next: 
             ]
         })
 
-        console.log("Sizes123: ", sizes)
 
         const mappedSizeProduct = sizes.map((s:any) => (
             {

@@ -40,12 +40,12 @@ export = {
         type: Sequelize.FLOAT,
         allowNull: false,
       },
+      shipping_address: {
+        type: Sequelize.JSON,
+        allowNull: true,
+      },
       status: {
         type: Sequelize.ENUM('pending', 'complete', 'cancelled'),
-        allowNull: false,
-      },
-      items: {
-        type: Sequelize.JSON,
         allowNull: false,
       },
       created_at: {
