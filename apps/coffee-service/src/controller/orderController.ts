@@ -100,7 +100,7 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
 
 
 export const paymentResult = () => async (req: Request, res: Response, next: NextFunction) => {
-    const { order_id, reference_1, reference_2, amount, reference_3, status, process_status, reference, reference_4} = req.body
+    const { order_id, reference_1, reference_2, amount, reference_3, status, process_status, reference, reference_4 } = req.body
     console.log("HAS CALLED!!!!")
     if (status === "APPROVED" || process_status === 'true') {
         try {
@@ -197,8 +197,8 @@ export const createOrder = () => async (req: Request, res: Response, next: NextF
 
         const addresses = await AddressModel.findByPk(reference_4)
 
-        if(!addresses) {
-             return next(new ServiceError(OrderErrorMaster.ERR_PAYMENT_NOT_FOUND))
+        if (!addresses) {
+            return next(new ServiceError(OrderErrorMaster.ERR_PAYMENT_NOT_FOUND))
         }
         const order = await OrderModel.create(
             {
@@ -208,7 +208,7 @@ export const createOrder = () => async (req: Request, res: Response, next: NextF
                 payment_method: reference_2,
                 total_price: amount,
                 time: new Date(),
-                shipping_address:  addresses,
+                shipping_address: addresses,
                 status: "pending",
             }
         )
@@ -374,6 +374,62 @@ export const getOrderHistorty = () => async (req: Request, res: Response, next: 
         return next()
 
 
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+export const getTrackOrder = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const customerId = (req.user as any).id
+        const { orderId } = req.query;
+
+        const whereCondition: any = { customer_id: customerId };
+        if (orderId && orderId !== "undefined" && orderId !== "null") {
+            whereCondition.order_id = orderId;
+        }
+
+
+        const latestOrder = await OrderModel.findOne({
+            where: whereCondition,
+            order: [['created_at', 'DESC']],
+            include: [
+                {
+                    model: OrderItemModel,
+                    as: 'items',
+                    include: [
+                        {
+                            model: ProductModel,
+                            as: 'product'
+                        }
+                    ]
+                }
+            ]
+        })
+
+        if (!latestOrder) {
+            res.locals.latestOrder = null;
+            return next();
+        }
+
+        const orderPlain = latestOrder.get({ plain: true });
+
+        const mappedLastOrder = {
+            ...orderPlain,
+            time: latestOrder?.time
+                ? new Date(latestOrder.time).toLocaleTimeString("en-US", {
+                    hour: "numeric",
+                    minute: "2-digit",
+                    hour12: true,
+                })
+                : undefined,
+        }
+
+
+        res.locals.latestOrder = mappedLastOrder;
+
+        return next();
     } catch (err) {
         next(err)
     }

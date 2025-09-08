@@ -45,7 +45,7 @@ export = {
         allowNull: true,
       },
       status: {
-        type: Sequelize.ENUM('pending', 'complete', 'cancelled'),
+        type: Sequelize.ENUM('pending', 'preparing', 'out_for_delivery' ,'complete'),
         allowNull: false,
       },
       created_at: {

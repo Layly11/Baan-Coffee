@@ -31,7 +31,7 @@ export class OrderModel extends Model<
     declare payment_method: 'qr' | 'credit';
     declare total_price: number;
     declare shipping_address: Addresss
-    declare status: 'pending' | 'complete' | 'cancelled';
+    declare status: 'pending' | 'preparing' | 'out_for_delivery' |'complete';
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
 }
@@ -73,7 +73,7 @@ OrderModel.init(
             allowNull: true,
         },
         status: {
-            type: DataTypes.ENUM('pending', 'complete', 'cancelled'),
+            type: DataTypes.ENUM('pending', 'preparing', 'out_for_delivery' ,'complete'),
             allowNull: false,
         },
         createdAt: {

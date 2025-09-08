@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 
-import { createOrder, createPayment, getOrderHistorty, getPaymentByRefercnce, payForQR, paymentResult} from '../controller/orderController';
+import { createOrder, createPayment, getOrderHistorty, getPaymentByRefercnce, getTrackOrder, payForQR, paymentResult} from '../controller/orderController';
 import { authMiddlewareCustomer } from '../controller/userController';
 import axios from 'axios'
 const router = express.Router()
@@ -86,6 +86,23 @@ router.get(
             res_desc: '',
             data: {
               orderHistory: res.locals.orderHistory
+            }
+        }
+        res.json(res.locals.response)
+        next()
+  }
+)
+
+router.get(
+  '/trackOrder', 
+  authMiddlewareCustomer(),
+  getTrackOrder(),
+  (req: Request, res: Response, next:NextFunction) => {
+    res.locals.response = {
+            res_code: '1111',
+            res_desc: '',
+            data: {
+              order: res.locals.latestOrder
             }
         }
         res.json(res.locals.response)
