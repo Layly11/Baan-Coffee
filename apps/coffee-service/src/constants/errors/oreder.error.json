@@ -38,5 +38,14 @@
       "en": "Address not found",
       "th": "ไม่เจอ Address"
     }
+  },
+      "ORDER_NOT_FOUND": {
+    "statusCode": 400,
+    "resCode": "0406",
+    "resDesc": {
+      "en": "Order not found",
+      "th": "ไม่เจอ Order"
+    }
   }
+
 }

@@ -130,6 +130,8 @@ export const getDashBoardOverview = () => async (req: Request, res: Response, ne
                     attributes: ['name', 'price', 'image_url']
                 },
             ],
+            order: [['total_sold', 'DESC']],
+            limit: 3
         })
 
         const topProductMapping = topProduct.map((value: any) => ({

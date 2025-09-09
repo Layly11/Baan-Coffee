@@ -10,6 +10,7 @@ import {
 import { sequelize } from '../sequelize';
 import { DailySummaryModel } from './DailySummary';
 import { CustomersModel } from './Customer';
+import { OrderItemModel } from './OrderItems';
 
 interface Addresss {
     name: string,
@@ -31,7 +32,8 @@ export class OrderModel extends Model<
     declare payment_method: 'qr' | 'credit';
     declare total_price: number;
     declare shipping_address: Addresss
-    declare status: 'pending' | 'preparing' | 'out_for_delivery' |'complete';
+    declare status: 'pending' | 'preparing' | 'out_for_delivery' |'complete' | 'cancelled';
+    declare items?: OrderItemModel[];
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
 }
@@ -73,7 +75,7 @@ OrderModel.init(
             allowNull: true,
         },
         status: {
-            type: DataTypes.ENUM('pending', 'preparing', 'out_for_delivery' ,'complete'),
+            type: DataTypes.ENUM('pending', 'preparing', 'out_for_delivery' ,'complete', 'cancelled'),
             allowNull: false,
         },
         createdAt: {

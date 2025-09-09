@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 
-import { createOrder, createPayment, getOrderHistorty, getPaymentByRefercnce, getTrackOrder, payForQR, paymentResult} from '../controller/orderController';
+import { CancelOrder, createOrder, createPayment, getOrderHistorty, getPaymentByRefercnce, getTrackOrder, payForQR, paymentResult} from '../controller/orderController';
 import { authMiddlewareCustomer } from '../controller/userController';
 import axios from 'axios'
 const router = express.Router()
@@ -108,5 +108,21 @@ router.get(
         res.json(res.locals.response)
         next()
   }
+)
+
+
+router.post(
+  '/cancel',
+  authMiddlewareCustomer(),
+  CancelOrder(),
+    (req: Request, res: Response, next:NextFunction) => {
+       res.locals.response = {
+            res_code: '1111',
+            res_desc: '',
+            data: undefined
+        }
+        res.json(res.locals.response)
+        next()
+    }
 )
 export default router
