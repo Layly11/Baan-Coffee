@@ -218,8 +218,10 @@ export const createOrder = () => async (req: Request, res: Response, next: NextF
                 products.map((product: any) => ({
                     order_id: order.id,
                     product_id: product.id,
+                    image_url: product.image_url,
                     name: product.name,
                     price: product.price,
+                    description: product.description,
                     qty: product.amount,
                     size: product.size
                 }))
@@ -354,14 +356,14 @@ export const getOrderHistorty = () => async (req: Request, res: Response, next: 
                 orderID: o.order_id,
                 name: item.name,
                 size: item.size,
-                description: item.product?.description || "",
+                description: item.description || "",
                 price: Number(item.price).toFixed(2),
                 time: new Date(o.createdAt).toLocaleTimeString("en-US", {
                     hour: "numeric",
                     minute: "2-digit",
                     hour12: true,
                 }),
-                imageSource: item.product?.image_url
+                imageSource: item.image_url
 
             }))
         );
@@ -500,7 +502,6 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
                         (summary.payments[order.payment_method as keyof typeof summary.payments] || 0) - Number(order.total_price)
                 };
 
-                console.log("TotalPrice: ",Number(order.total_price))
 
                 if (summary.payments[order.payment_method as keyof typeof summary.payments] < 0) {
                     summary.payments[order.payment_method as keyof typeof summary.payments] = 0;

@@ -1,5 +1,6 @@
 import './helpers/dotenv.helper'
 import app from './app'
+import { scheduleCleanupJob } from "./jobs/cleanupBlobs";
 
 import { getRedisClient, initializeRedisClient } from './helpers/redis'
 import winston from './helpers/winston'
@@ -39,6 +40,7 @@ async function init(): Promise<void> {
         const redis = getRedisClient()
         const server = app({ redis }).listen(PORT, () => {
             winston.info(`Coffee Service listening at: http://localhost:${PORT}`)
+            scheduleCleanupJob()
         })
 
         function gracefulShutdown() {

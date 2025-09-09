@@ -24,6 +24,10 @@ export = {
           key: 'id',
         },
       },
+      image_url: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
       name: {
         type: Sequelize.STRING,
         allowNull: false,
@@ -32,11 +36,15 @@ export = {
         type: Sequelize.FLOAT,
         allowNull: false,
       },
+      description: {
+        type: Sequelize.STRING,
+        allowNull: true,
+      },
       qty: {
         type: Sequelize.INTEGER,
         allowNull: false,
       },
-       size: {
+      size: {
         type: Sequelize.STRING,
         allowNull: false,
       },

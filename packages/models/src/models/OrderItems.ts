@@ -18,8 +18,10 @@ export class OrderItemModel extends Model<
   declare id: CreationOptional<number>;
   declare order_id: ForeignKey<OrderModel["id"]>;
   declare product_id: ForeignKey<ProductModel["id"]>;
-  declare name: string; 
-  declare price: number; 
+  declare image_url: CreationOptional<string | null> 
+  declare name: string;
+  declare price: number;
+  declare description: CreationOptional<string | null> 
   declare qty: number;
   declare size: string
 
@@ -42,6 +44,10 @@ OrderItemModel.init(
       type: DataTypes.INTEGER,
       allowNull: false,
     },
+    image_url: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
     name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -49,6 +55,10 @@ OrderItemModel.init(
     price: {
       type: DataTypes.FLOAT,
       allowNull: false,
+    },
+    description: {
+      type: DataTypes.STRING,
+      allowNull: true,
     },
     qty: {
       type: DataTypes.INTEGER,
