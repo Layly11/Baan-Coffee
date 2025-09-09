@@ -251,10 +251,10 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
 
         if (isRemoveImage === 'true') {
             if (item.image_url) {
-                await deleteFromAzureImage({
-                    containerName: process.env.AZURE_STORAGE_CONTAINER_NAME!,
-                    blobPath: parseBlobUrl(item.image_url).blobName
-                })
+                // await deleteFromAzureImage({
+                //     containerName: process.env.AZURE_STORAGE_CONTAINER_NAME!,
+                //     blobPath: parseBlobUrl(item.image_url).blobName
+                // })
                 item.image_url = null
             }
         }
@@ -314,16 +314,16 @@ export const deleteProduct = () => async (req: Request, res: Response, next: Nex
         await TopProductModel.destroy({ where: { product_id: id } })
 
         await ProductSizeModel.destroy({ where: { product_id: id } })
-        if (item.image_url) {
-            try {
-                await deleteFromAzureImage({
-                    containerName: process.env.AZURE_STORAGE_CONTAINER_NAME!,
-                    blobPath: parseBlobUrl(item.image_url).blobName
-                })
-            } catch (err) {
-                return next(err)
-            }
-        }
+        // if (item.image_url) {
+        //     try {
+        //         await deleteFromAzureImage({
+        //             containerName: process.env.AZURE_STORAGE_CONTAINER_NAME!,
+        //             blobPath: parseBlobUrl(item.image_url).blobName
+        //         })
+        //     } catch (err) {
+        //         return next(err)
+        //     }
+        // }
 
         await item.destroy()
 
