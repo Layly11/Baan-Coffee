@@ -51,7 +51,7 @@ export const cleanUnusedBlobs = async (): Promise<void> => {
     });
 
     orderImages.forEach((o: any) => {
-      const blob = extractBlobName(o.product_image_url);
+      const blob = extractBlobName(o.image_url);
       if (blob) usedFiles.add(blob);
     });
 

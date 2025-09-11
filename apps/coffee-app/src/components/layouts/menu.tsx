@@ -131,11 +131,17 @@ const Menu = ({ user }: User): JSX.Element => {
       permission: PermissionMenuMaster.DASHBOARD,
       icon: 'dashboard'
     },
-        {
-      path: '/productMenu',
-      name: 'ProductMenu',
+    {
+      path: '/product',
+      name: 'Products',
       permission: PermissionMenuMaster.PRODUCT_MENU,
-      icon: 'dashboard'
+      icon: 'products'
+    },
+    {
+      path: '/orders',
+      name: 'Orders',
+      permission: PermissionMenuMaster.ORDER_MANAGEMENT,
+      icon: 'orders'
     }
   ]
 

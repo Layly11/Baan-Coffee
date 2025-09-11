@@ -33,7 +33,7 @@ export = {
       },
       {
         id: 2,
-        name: 'MANAGE_USER',
+        name: 'PRODUCT_MENU',
         created_at: now,
         updated_at: now
       },
@@ -44,44 +44,17 @@ export = {
         updated_at: now
       },
       {
-        id: 4,
-        name: 'SALES',
+        id:4,
+        name: 'MANAGE_CUSTOMER',
         created_at: now,
         updated_at: now
       },
       {
-        id:5,
-        name: 'PRODUCT_MENU',
+        id: 5,
+        name: 'MANAGE_USER',
         created_at: now,
         updated_at: now
       },
-      {
-        id: 6,
-        name: 'INVENTORY',
-        created_at: now,
-        updated_at: now
-      },
-      {
-        id: 7,
-        name: 'SHIFT_SCHEDULE',
-        created_at: now,
-        updated_at: now
-      },
-      {
-        id: 8,
-        name: 'REPORTS',
-        created_at: now,
-        updated_at: now
-      },
-      {
-        id: 9,
-        name: 'PROFILE_SETTINGS',
-        created_at: now,
-        updated_at: now
-      },
-
-
-
     ]);
 
   },

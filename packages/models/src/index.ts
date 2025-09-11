@@ -141,6 +141,18 @@ PaymentModel.belongsTo(OrderModel, { foreignKey: 'order_id', as: 'order' });
 OrderModel.hasMany(OrderItemModel, { foreignKey: "order_id", as: "items" });
 OrderItemModel.belongsTo(OrderModel, { foreignKey: "order_id", as: "order" });
 
+
+OrderModel.belongsTo(CustomersModel, {
+  foreignKey: 'customer_id',
+  as: 'customer',
+});
+
+CustomersModel.hasMany(OrderModel, {
+  foreignKey: 'customer_id',
+  as: 'orders',
+});
+
+
 ProductModel.hasMany(OrderItemModel, {
   foreignKey: "product_id",
   as: "order_items",

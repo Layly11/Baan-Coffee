@@ -1,0 +1,7 @@
+{
+     "pending": { "label": "Pending", "color": "#FFA500", "backgroundColor": "#FFF5E6" },
+  "preparing": { "label": "Preparing", "color": "#0000FF", "backgroundColor": "#E6F0FF" },
+  "out_for_delivery": { "label": "Out", "color": "#008000", "backgroundColor": "#E6FFE6" },
+  "complete": { "label": "Complete", "color": "#FFFFFF", "backgroundColor": "#28A745" },
+  "cancelled": { "label": "Cancelled", "color": "#FFFFFF", "backgroundColor": "#DC3545" }
+}

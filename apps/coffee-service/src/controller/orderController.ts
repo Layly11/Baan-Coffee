@@ -1,11 +1,53 @@
 import { NextFunction, Request, Response } from "express";
 import crypto from 'crypto'
 import axios from 'axios'
-import { OrderModel, sequelize, DailySummaryModel, CartModel, TopProductModel, PaymentModel, TempOrderProductsModel, OrderItemModel, ProductModel, AddressModel } from "@coffee/models";
+import { OrderModel, sequelize, DailySummaryModel, CartModel, TopProductModel, PaymentModel, TempOrderProductsModel, OrderItemModel, ProductModel, AddressModel, CustomersModel } from "@coffee/models";
 import { Op, or } from "sequelize";
 import { ServiceError } from "@coffee/helpers";
 import OrderErrorMaster from '../constants/errors/oreder.error.json'
 import { v4 as uuidv4 } from "uuid";
+import { dayjs } from "@coffee/helpers";
+
+export const getOrderData = () => async (req: Request, res: Response, next:NextFunction) => {
+    try {
+
+        const response = await OrderModel.findAll({
+            include: [
+                {
+                    model: CustomersModel,
+                    as: 'customer'
+                }
+            ]
+        })
+
+        
+        console.log("Orders: ", response)
+
+        const orders = response.map((o:any) => (
+            {
+                order_id: o.order_id,
+                time: dayjs(o.time).format('DD/MM/YYYY HH:MM:SS'),
+                customer_name: o.customer.name,
+                method: o.payment_method,
+                total_price: o.total_price,
+                status: o.status
+            }
+        ))
+
+        res.locals.orders = orders
+        return next()
+    } catch(err) {
+         next(err)
+    }
+}
+
+
+
+
+
+
+
+///////////////////////Mobile/////////////////////////////
 
 
 function generateOrderId() {

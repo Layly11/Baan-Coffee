@@ -32,22 +32,22 @@ export = {
       },
       {
         id: 2,
-        name: 'MANAGER',
+        name: 'ADMIN',
         created_at: now,
         updated_at: now
       },
       {
         id: 3,
-        name: 'BARISTA',
+        name: 'MANAGER',
         created_at: now,
         updated_at: now
       },
-      {
+        {
         id: 4,
-        name: 'CASHIER',
+        name: 'SUPPORT',
         created_at: now,
         updated_at: now
-      }
+      },
     ]);
 
     

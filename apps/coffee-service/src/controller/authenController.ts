@@ -40,7 +40,7 @@ export const register = () => async (req: Request, res: Response, next: NextFunc
       return next(new ServiceError(AuthenMasterError.ERR_REGISTER_PASSWORD_WEAK))
     }
 
-    const newUser = await UserModel.create({ username, email, password, role_id: USER_ROLE.CASHIER.id })
+    const newUser = await UserModel.create({ username, email, password, role_id: USER_ROLE.SUPPORT.id })
 
     res.locals.newUser = newUser
     next()

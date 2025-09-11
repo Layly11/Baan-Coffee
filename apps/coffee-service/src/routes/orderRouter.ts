@@ -1,10 +1,37 @@
 import express, { Request, Response, NextFunction } from 'express';
 
-import { CancelOrder, createOrder, createPayment, getOrderHistorty, getPaymentByRefercnce, getTrackOrder, payForQR, paymentResult} from '../controller/orderController';
-import { authMiddlewareCustomer } from '../controller/userController';
-import axios from 'axios'
+import { CancelOrder, createOrder, createPayment, getOrderData, getOrderHistorty, getPaymentByRefercnce, getTrackOrder, payForQR, paymentResult} from '../controller/orderController';
+import { authMiddleware, authMiddlewareCustomer, findUserPermission, validateUserPermission } from '../controller/userController';
+import { ORDER_MANAGEMENT } from '../constants/masters/portalPermissionMaster.json'
+import { VIEW, CREATE, EDIT, DELETE } from '../constants/masters/portalPermissionActionMaster.json'
+
 const router = express.Router()
 
+
+router.get(
+    '/',
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(ORDER_MANAGEMENT, VIEW),
+    getOrderData(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: {
+                orders: res.locals.orders,
+            }
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
+
+
+
+
+////////////Mobile//////////////////////////
 
 router.post(
     "/create/payment", 
