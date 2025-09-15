@@ -4,7 +4,7 @@ import { rejects } from 'assert'
 
 export const fetchDashboardSummaryRequester = async (config: any): Promise<any> => {
  return await new Promise((resolve, rejects) => {
-    axios.get('/api/dashboard/summary-list', config)
+    axios.get('/api/dashboardpageSize', config)
     .then((res) => {
         resolve(res.data)
     })
@@ -171,6 +171,18 @@ export const fetchOrderRequester = async (config:any): Promise<any> => {
 export const updateOrderStatusRequester = async (id:any ,data: any ): Promise<any> => {
     return await new Promise((resolve, rejects) => {
         axios.post(`/api/order/status/${id}`, data)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+
+export const updateCanceledOrderRequester = async (body:any ): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.post(`/api/order/status/cancel`,body)
         .then((res) => {
             resolve(res.data)
         })

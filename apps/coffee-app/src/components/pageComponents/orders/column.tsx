@@ -6,7 +6,7 @@ import Badge from '@/components/commons/Badge'
 import { Hidden } from 'react-grid-system'
 import OrderStatusMaster from '../../../constants/masters/OrderStatusMaster.json'
 import { SelectData } from '@/components/header/selectData'
-import { updateOrderStatusRequester } from '@/utils/requestUtils'
+import { updateCanceledOrderRequester, updateOrderStatusRequester } from '@/utils/requestUtils'
 
 export const Columns = (setRows: any): any[] => {
     const router = useRouter()
@@ -66,12 +66,19 @@ export const Columns = (setRows: any): any[] => {
             key: 'actions',
             width: '40%',
             dataMutation: (row: any) => {
+                const options = row.status === 'cancelled'
+                    ? { [row.status]: OrderStatusMaster[row.status as keyof typeof OrderStatusMaster] }
+                    : OrderStatusMaster;
                 return (
                     <div style={{ width: '130px' }}>
                         <SelectData
                             value={row.status}
                             setValue={async (newVal: string) => {
-                                await updateOrderStatusRequester(row.order_id,{new_status: newVal})
+                                const orderId = row.order_id;
+                                await updateOrderStatusRequester(orderId, { new_status: newVal })
+                                if (newVal === 'cancelled') {
+                                    await updateCanceledOrderRequester({ order_id: orderId })
+                                }
                                 setRows((prev: any[]) =>
                                     prev.map((r) =>
                                         r.order_id === row.order_id ? { ...r, status: newVal } : r
@@ -79,7 +86,7 @@ export const Columns = (setRows: any): any[] => {
                                 )
                             }}
                             placeholder='Select order'
-                            jsonList={OrderStatusMaster}
+                            jsonList={options}
                             isSearchable={false}
                             isMulti={false}
                             isClearable={false}
@@ -96,13 +103,13 @@ export const Columns = (setRows: any): any[] => {
             dataMutation: (row: any) => {
                 return (
                     <div
-                     style={{
-                cursor: 'pointer',
-                color: '#1477F8'
-              }}
-              onClick={() => {
-                router.push(`/orders/${row.order_id}`)
-              }}
+                        style={{
+                            cursor: 'pointer',
+                            color: '#1477F8'
+                        }}
+                        onClick={() => {
+                            router.push(`/orders/${row.order_id}`)
+                        }}
                     >
                         <FontAwesomeIcon icon={faMagnifyingGlass} color="#3B5475" size='lg' />
                     </div>

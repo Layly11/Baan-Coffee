@@ -44,7 +44,7 @@ const DashBoardPage = () => {
       : dayjs().toDate()
   )
 
-  const fetchDashboardSummaryList = async (page?: number): Promise<void> => {
+  const fetchDashboardSummaryList = async (): Promise<void> => {
     try {
       setIsFetching(true)
       setIsSearch(false)
@@ -97,7 +97,7 @@ const DashBoardPage = () => {
       pathname,
       query: { ...router.query, page }
     })
-    await fetchDashboardSummaryList(page)
+    await fetchDashboardSummaryList()
   }
 
   useEffect(() => {

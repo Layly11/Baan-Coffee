@@ -30,7 +30,8 @@ export const getOrderData = () => async (req: Request, res: Response, next: Next
             ...(method && { payment_method: method }),
         }
 
-        const response = await OrderModel.findAll({
+        console.log("OffSet: ",offset)
+        const {count, rows} = await OrderModel.findAndCountAll({
             where,
             include: [
                 {
@@ -42,14 +43,14 @@ export const getOrderData = () => async (req: Request, res: Response, next: Next
                     )
                 }
             ],
+            order: [['createdAt', 'DESC']],
             limit: Number(limit) || 10,
             offset: Number(offset) || 0,
-            order: [['createdAt', 'DESC']],
         })
 
 
 
-        const orders = response.map((o: any) => (
+        const orders = rows.map((o: any) => (
             {
                 order_id: o.order_id,
                 time: dayjs(o.time).format('DD/MM/YYYY HH:MM'),
@@ -61,6 +62,7 @@ export const getOrderData = () => async (req: Request, res: Response, next: Next
         ))
 
         res.locals.orders = orders
+        res.locals.total = count
         return next()
     } catch (err) {
         next(err)
@@ -73,7 +75,7 @@ export const updateOrderStatus = () => async (req: Request, res: Response, next:
     try {
         const orderId = req.params.id
         const { new_status: newStatus } = req.body
-
+        console.log("Body: " ,req.body)
         const order = await OrderModel.findOne({ where: { order_id: orderId } })
 
         if (!order) {
@@ -84,6 +86,9 @@ export const updateOrderStatus = () => async (req: Request, res: Response, next:
         }
         await order.update({ status: newStatus })
 
+        if(newStatus === 'cancelled') {
+            
+        }
         if (["complete", "cancelled"].includes(newStatus.toLowerCase())) {
             try {
                 await axios.post('http://localhost:9302/order/notification', { orderId, newStatus })
@@ -665,8 +670,107 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
     try {
         const { order_id } = req.body
 
+        console.log("Body: ", req.body)
         const payment = await PaymentModel.findOne({ where: { order_code: order_id }, transaction: t })
+        const order = await OrderModel.findOne({ where: { order_id }, include: [{ model: OrderItemModel, as: 'items' }], transaction: t })
 
+        if (!payment) {
+            await t.rollback();
+            return next(new ServiceError(OrderErrorMaster.ERR_PAYMENT_NOT_FOUND))
+        }
+        if (!order) {
+            await t.rollback();
+            return next(new ServiceError(OrderErrorMaster.ORDER_NOT_FOUND))
+        }
+
+        const config = {
+            headers: {
+                'X-API-ID': process.env.X_API_ID,
+                'X-API-KEY': process.env.X_API_KEY,
+                'X-Partner-ID': process.env.X_PARTNER_ID
+            }
+        }
+
+        const paymentInquiry = await axios.get(`http://127.0.0.1:4002/transaction/${payment.reference}`, config)
+
+        if (paymentInquiry.data.transaction.status === 'APPROVED') {
+            await axios.post(`http://127.0.0.1:4002/transaction/${payment.reference}/void`, {
+                reason: "Return an item"
+            }, config)
+
+            await payment.update({ status: 'VOIDED' }, { transaction: t })
+
+        } else if (paymentInquiry.data.transaction.status === 'SETTLED' || paymentInquiry.data.transaction.status === 'PRE-SETTLED') {
+            await axios.post(`http://127.0.0.1:4002/transaction/${payment.reference}/refund`, {
+                reason: "Return an item",
+                refund_id: uuidv4()
+            }, config)
+            await payment.update({ status: 'REFUNDED' }, { transaction: t })
+        }
+
+        if (order.summary_id) {
+            const summary = await DailySummaryModel.findByPk(order.summary_id, { transaction: t })
+
+            if (summary && order.items) {
+                const totalItems = order.items.reduce((acc: number, i: any) => acc + i.qty, 0)
+
+                summary.total_sales -= Number(order.total_price)
+                summary.total_orders -= 1;
+                summary.total_items -= Number(totalItems)
+
+                if (summary.total_sales < 0) summary.total_sales = 0;
+                if (summary.total_orders < 0) summary.total_orders = 0;
+                if (summary.total_items < 0) summary.total_items = 0;
+
+                summary.payments = {
+                    ...summary.payments,
+                    [order.payment_method as keyof typeof summary.payments]:
+                        (summary.payments[order.payment_method as keyof typeof summary.payments] || 0) - Number(order.total_price)
+                };
+
+
+                if (summary.payments[order.payment_method as keyof typeof summary.payments] < 0) {
+                    summary.payments[order.payment_method as keyof typeof summary.payments] = 0;
+                }
+
+                await summary.save({ transaction: t });
+
+                for (const item of order.items) {
+                    const topProduct = await TopProductModel.findOne({
+                        where: { summary_id: summary.id, product_id: item.product_id },
+                        transaction: t
+                    });
+
+                    if (topProduct) {
+                        topProduct.total_sold -= Number(item.qty);
+                        topProduct.total_sales -= Number(item.price);
+                        if (topProduct.total_sold < 0) topProduct.total_sold = 0;
+                        if (topProduct.total_sales < 0) topProduct.total_sales = 0;
+
+                        await topProduct.save({ transaction: t });
+                    }
+                }
+            }
+        }
+
+        await order.update({ status: 'cancelled' }, { transaction: t })
+
+        await t.commit();
+        return next()
+    } catch (err) {
+        await t.rollback();
+        next(err)
+    }
+}
+
+
+export const CancelOrderStatus = () => async (req: Request, res: Response, next: NextFunction) => {
+    const t = await sequelize.transaction();
+    try {
+        const { order_id } = req.body
+
+        console.log("Body: ", req.body)
+        const payment = await PaymentModel.findOne({ where: { order_code: order_id }, transaction: t })
         const order = await OrderModel.findOne({ where: { order_id }, include: [{ model: OrderItemModel, as: 'items' }], transaction: t })
 
         if (!payment) {
