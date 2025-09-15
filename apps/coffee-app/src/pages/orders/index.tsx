@@ -14,6 +14,10 @@ import { useRouter } from "next/router"
 import { dayjs } from '../../helpers/dayjs'
 import { Alert } from "@/helpers/sweetalert"
 import { fetchOrderRequester } from "@/utils/requestUtils"
+import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.json'
+import PermissionActionMaster from '../../constants/masters/PermissionActionMaster.json'
+import { checkPermission } from "@/helpers/checkPermission"
+import { checkNullUndefiendEmptyString, checkRouterQueryAndAutoFetchData, parseToArrayAndRemoveSelectAllValue } from "@/utils/parseUtils"
 
 const pathname = '/orders'
 
@@ -34,20 +38,35 @@ const OrdersPage = () => {
     )
 
     const [isFetching, setIsFetching] = useState(false)
-    const [isSearch, setIsSearch] = useState(false)
+    const [isSearch, setIsSearch] = useState(true)
     const [page, setPage] = useState(!isNaN(Number(router.query.page)) ? Number(router.query.page) : 0)
     const [pageSize, setPageSize] = useState(!isNaN(Number(router.query.limit)) ? Number(router.query.limit) : 10)
     const [total, setTotal] = useState(0)
     const [rows, setRows] = useState<any>([])
+    const [status, setStatus] = useState(router.query.status ?? '')
+    const [method, setMethod] = useState(router.query.method ?? '')
+    const [customerName, setCustomerName] = useState(router.query.customerName ?? '')
 
 
     const fetchOrderData = async () => {
         setIsFetching(true)
         try {
-            const res = await fetchOrderRequester() 
+            const config = {
+                params: {
+                    start_date: dayjs(startDate).format('YYYY-MM-DD'),
+                    end_date: dayjs(endDate).format('YYYY-MM-DD'),
+                    status: parseToArrayAndRemoveSelectAllValue(checkNullUndefiendEmptyString(status)),
+                    method: parseToArrayAndRemoveSelectAllValue(checkNullUndefiendEmptyString(method)),
+                    customer_name: parseToArrayAndRemoveSelectAllValue(checkNullUndefiendEmptyString(customerName)),
+                    limit: (pageSize),
+                    offset: (pageSize * (page ?? 0))
+                }
+            }
+            const res = await fetchOrderRequester(config)
             const orders = res.data.orders
             setRows(orders)
             setTotal(orders.length)
+
         } catch (err) {
             console.error(err)
             Alert({ data: err })
@@ -56,16 +75,33 @@ const OrdersPage = () => {
         }
     }
 
-    useEffect(() => {
-        fetchOrderData()
-    },[])
 
-    const handleOnClearSearch = () => {
-
+    const handleOnClearSearch = async () => {
+        setStartDate(dayjs().endOf('day').subtract(30, 'day').startOf('day').toDate())
+        setEndDate(dayjs().toDate())
+        setRows([])
+        setTotal(0)
+        setStatus('')
+        setMethod('')
+        setCustomerName('')
+        setIsSearch(true)
+        router.push({
+            pathname,
+            query: {}
+        })
     }
 
     const handleOnClickSearch = async () => {
-
+        setIsSearch(false)
+        setPage(0)
+        router.push({
+            pathname,
+            query: {
+                startDate: dayjs(startDate).format('YYYY-MM-DD'),
+                endDate: dayjs(endDate).format('YYYY-MM-DD'),
+            }
+        })
+        await fetchOrderData()
     }
 
     const handleOnChangePage = async (page: number): Promise<void> => {
@@ -75,9 +111,48 @@ const OrdersPage = () => {
             query: { ...router.query, page }
         })
 
-        // fetchProducts(page)
     }
 
+
+    useEffect(() => {
+    if (!router.isReady) return
+
+    const defaultEnd = dayjs().endOf('day')
+    const defaultStart = defaultEnd.subtract(30, 'day').startOf('day')
+    if (router.query.startDate && dayjs(router.query.startDate as string).isValid()) {
+      setStartDate(dayjs(router.query.startDate as string).toDate())
+    } else {
+      setStartDate(defaultStart.toDate())
+    }
+
+
+    if (router.query.endDate && dayjs(router.query.endDate as string).isValid()) {
+      setEndDate(dayjs(router.query.endDate as string).toDate())
+    } else {
+      setEndDate(defaultEnd.toDate())
+    }
+
+    if (typeof router.query.page === 'string' && !isNaN(Number(router.query.page))) {
+      setPage(Number(router.query.page))
+    }
+    if (typeof router.query.limit === 'string' && !isNaN(Number(router.query.limit))) {
+      setPageSize(Number(router.query.limit))
+    }
+  }, [router.isReady, router.query])
+    useEffect(() => {
+        const page = PermissionMenuMaster.ORDER_MANAGEMENT
+        const action = PermissionActionMaster.VIEW
+        checkPermission({ user, page, action }, router)
+    }, [user])
+
+
+
+    useEffect(() => {
+        checkRouterQueryAndAutoFetchData({
+            query: router.query,
+            fetchData: fetchOrderData
+        })
+    }, [])
 
 
     return (
@@ -100,6 +175,12 @@ const OrdersPage = () => {
                         setEndDate={setEndDate}
                         handleOnClearSearch={handleOnClearSearch}
                         handleOnClickSearch={handleOnClickSearch}
+                        status={status}
+                        setStatus={setStatus}
+                        method={method}
+                        setMethod={setMethod}
+                        customerName={customerName}
+                        setCustomerName={setCustomerName}
                     />
 
                     <Row style={{ margin: '20px -10px 0px -10px' }}>
@@ -111,7 +192,7 @@ const OrdersPage = () => {
                                 setPageSize={setPageSize}
                                 setPage={handleOnChangePage}
                                 page={page}
-                                columns={Columns()}
+                                columns={Columns(setRows)}
                                 rows={rows}
                                 isSearch={isSearch}
                             />

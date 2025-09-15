@@ -34,6 +34,7 @@ export class OrderModel extends Model<
     declare shipping_address: Addresss
     declare status: 'pending' | 'preparing' | 'out_for_delivery' |'complete' | 'cancelled';
     declare items?: OrderItemModel[];
+    declare customer?: CustomersModel;
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
 }

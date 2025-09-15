@@ -17,6 +17,7 @@ import { CartModel } from './models/Cart';
 import { PaymentModel } from './models/Payment';
 import { OrderItemModel } from "./models/OrderItems";
 import { TempOrderProductsModel } from './models/TempOrderProducts';
+import { NotificationModel } from './models/Notification';
 
 
 UserModel.belongsTo(UserRoleModel,{
@@ -152,6 +153,20 @@ CustomersModel.hasMany(OrderModel, {
   as: 'orders',
 });
 
+CustomersModel.hasMany(NotificationModel, {
+    foreignKey: 'customer_id',
+    as: 'notifications',
+});
+
+OrderModel.hasMany(NotificationModel, {
+    foreignKey: 'order_id',
+    as: 'notifications',
+});
+
+NotificationModel.belongsTo(OrderModel, {
+    foreignKey: 'order_id',
+    as: 'order',
+});
 
 ProductModel.hasMany(OrderItemModel, {
   foreignKey: "product_id",
@@ -186,3 +201,4 @@ export * from './models/Cart'
 export * from './models/Payment'
 export * from './models/OrderItems'
 export * from './models/TempOrderProducts'
+export * from './models/Notification'

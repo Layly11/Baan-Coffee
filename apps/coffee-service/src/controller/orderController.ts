@@ -1,32 +1,58 @@
 import { NextFunction, Request, Response } from "express";
 import crypto from 'crypto'
 import axios from 'axios'
-import { OrderModel, sequelize, DailySummaryModel, CartModel, TopProductModel, PaymentModel, TempOrderProductsModel, OrderItemModel, ProductModel, AddressModel, CustomersModel } from "@coffee/models";
+import { OrderModel, sequelize, DailySummaryModel, CartModel, TopProductModel, PaymentModel, TempOrderProductsModel, OrderItemModel, ProductModel, AddressModel, CustomersModel, NotificationModel } from "@coffee/models";
 import { Op, or } from "sequelize";
-import { ServiceError } from "@coffee/helpers";
-import OrderErrorMaster from '../constants/errors/oreder.error.json'
+import { momentAsiaBangkok, ServiceError } from "@coffee/helpers";
+import OrderErrorMaster from '../constants/errors/order.error.json'
 import { v4 as uuidv4 } from "uuid";
 import { dayjs } from "@coffee/helpers";
+import { error } from "console";
 
-export const getOrderData = () => async (req: Request, res: Response, next:NextFunction) => {
+export const getOrderData = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
+        const { start_date: startDate, end_date: endDate, status, method, customer_name: customerName, limit, offset } = req.query as any
+
+        if ((startDate && isNaN(Date.parse(startDate))) || (endDate && isNaN(Date.parse(endDate)))) {
+            return next(new ServiceError(OrderErrorMaster.ERR_DATE_INVALID_FORMAT))
+        }
+
+        const where = {
+            ...(startDate && endDate && {
+                time: {
+                    [Op.between]: [
+                        momentAsiaBangkok(startDate).startOf('day').toISOString(),
+                        momentAsiaBangkok(endDate).endOf('day').toISOString()
+                    ]
+                }
+            }),
+            ...(status && { status }),
+            ...(method && { payment_method: method }),
+        }
 
         const response = await OrderModel.findAll({
+            where,
             include: [
                 {
                     model: CustomersModel,
-                    as: 'customer'
+                    as: 'customer',
+                    ...(customerName
+                        ? { where: { name: { [Op.like]: `%${customerName}%` } } }
+                        : {}
+                    )
                 }
-            ]
+            ],
+            limit: Number(limit) || 10,
+            offset: Number(offset) || 0,
+            order: [['createdAt', 'DESC']],
         })
 
-        
-        console.log("Orders: ", response)
 
-        const orders = response.map((o:any) => (
+
+        const orders = response.map((o: any) => (
             {
                 order_id: o.order_id,
-                time: dayjs(o.time).format('DD/MM/YYYY HH:MM:SS'),
+                time: dayjs(o.time).format('DD/MM/YYYY HH:MM'),
                 customer_name: o.customer.name,
                 method: o.payment_method,
                 total_price: o.total_price,
@@ -36,12 +62,173 @@ export const getOrderData = () => async (req: Request, res: Response, next:NextF
 
         res.locals.orders = orders
         return next()
-    } catch(err) {
-         next(err)
+    } catch (err) {
+        next(err)
     }
 }
 
 
+
+export const updateOrderStatus = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const orderId = req.params.id
+        const { new_status: newStatus } = req.body
+
+        const order = await OrderModel.findOne({ where: { order_id: orderId } })
+
+        if (!order) {
+            return next(new ServiceError(OrderErrorMaster.ORDER_NOT_FOUND))
+        }
+        if (!["pending", "preparing", "out_for_delivery", "complete", "cancelled"].includes(newStatus)) {
+            return next(new ServiceError(OrderErrorMaster.STATUS_NOT_FOUND))
+        }
+        await order.update({ status: newStatus })
+
+        if (["complete", "cancelled"].includes(newStatus.toLowerCase())) {
+            try {
+                await axios.post('http://localhost:9302/order/notification', { orderId, newStatus })
+            } catch (err) {
+                next(err)
+            }
+        }
+
+        return next()
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+export const getInvoiceData = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const orderId = req.params.id
+
+        const order = await OrderModel.findOne({
+            where: { order_id: orderId },
+            include: [
+                {
+                    model: CustomersModel,
+                    as: 'customer',
+                },
+                {
+                    model: OrderItemModel,
+                    as: 'items'
+                }
+            ],
+        },)
+
+        if (!order) {
+            return next(new ServiceError(OrderErrorMaster.ORDER_NOT_FOUND))
+        }
+
+        const invoice = {
+            id: order.order_id,
+            status: order.status,
+            date: order.time,
+            customer: {
+                name: order.customer?.name,
+                email: order.customer?.email,
+                phone: order.customer?.phone,
+                address: order.shipping_address
+            },
+            products: order.items?.map((o: any) => ({
+                title: o.name,
+                quantity: o.qty,
+                price: o.price
+            })),
+            payment_method: order.payment_method,
+            amount: order.total_price,
+            shipping_cost: 60.0,
+            discount: 0,
+        }
+
+        console.log("Invoice: ", invoice)
+
+        res.locals.invoice = invoice
+        return next()
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const createNotifyOrder = () => async (req: Request, res: Response, next: NextFunction) => {
+    const { orderId, newStatus } = req.body;
+
+    try {
+        const validStatuses = ["pending", "preparing", "out_for_delivery", "complete", "cancelled"];
+        if (!validStatuses.includes(newStatus)) {
+            return next(new ServiceError(OrderErrorMaster.STATUS_NOT_FOUND));
+        }
+
+        if (["complete", "cancelled"].includes(newStatus)) {
+            const order = await OrderModel.findOne({ where: { order_id: orderId } });
+            if (!order) {
+                return next(new ServiceError(OrderErrorMaster.ORDER_NOT_FOUND));
+            }
+
+            const customer = await CustomersModel.findByPk(order.customer_id);
+            if (!customer) {
+                return next(new ServiceError(OrderErrorMaster.CUSTOMER_NOT_FOUND));
+            }
+
+            await NotificationModel.create({
+                customer_id: customer.id,
+                order_id: order.id,
+                title: newStatus === 'complete' ? 'Order Complete' : 'Order Cancelled',
+                description:
+                    newStatus === 'complete'
+                        ? `Your order #${orderId} has been completed successfully.`
+                        : `Your order #${orderId} has been cancelled.`,
+            });
+        }
+
+        return next();
+    } catch (error) {
+        next(error);
+    }
+};
+
+export const getNotifyOrder = () => async (req: Request, res: Response, next: NextFunction) => {
+    const customerId = (req.user as any).id
+    try {
+        const notify = await NotificationModel.findAll({
+            where: {customer_id: customerId},
+            order: [['createdAt', 'DESC']],
+        })
+
+        const now = new Date();
+
+        const notification = notify.map((n: any) => {
+            const created = new Date(n.createdAt);
+            const diffMs = now.getTime() - created.getTime();
+            const diffMinutes = Math.floor(diffMs / 1000 / 60);
+
+            let timeStr = '';
+            if (diffMinutes < 60) {
+                timeStr = `${diffMinutes}m`;
+            } else if (diffMinutes < 60 * 24) {
+                const hours = Math.floor(diffMinutes / 60);
+                timeStr = `${hours}h`;
+            } else {
+                const days = Math.floor(diffMinutes / 60 / 24);
+                timeStr = `${days}d`;
+            }
+
+            return {
+                id: n.id,
+                title: n.title,
+                desc: n.description,
+                time: timeStr,
+            };
+        });
+
+        res.locals.notification = notification
+
+        return next()
+    } catch(err) {
+
+    }
+}
 
 
 
@@ -61,7 +248,6 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
     const customerId = (req.user as any).id as any
     const { amount, selectedMethod, product, addressId } = req.body
     const t = await sequelize.transaction();
-    console.log("Product: ", product)
 
     const descriptionProduct = product.map((p: any) => `${p.name} qty: ${p.amount}`).join(', ')
     try {
@@ -143,7 +329,6 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
 
 export const paymentResult = () => async (req: Request, res: Response, next: NextFunction) => {
     const { order_id, reference_1, reference_2, amount, reference_3, status, process_status, reference, reference_4 } = req.body
-    console.log("HAS CALLED!!!!")
     if (status === "APPROVED" || process_status === 'true') {
         try {
             const axiosRes = await axios.post('http://localhost:9302/order/create', { order_id, reference_1, reference_2, amount, reference_3, reference, reference_4 })
@@ -178,7 +363,6 @@ export const getPaymentByRefercnce = () => async (req: Request, res: Response, n
     try {
         const { reference } = req.params
 
-        console.log("Reference: ", reference)
         const payment = await PaymentModel.findOne({ where: { reference } })
 
         res.locals.payment = payment
@@ -197,7 +381,6 @@ export const createOrder = () => async (req: Request, res: Response, next: NextF
         if (!temp) return next(new ServiceError(OrderErrorMaster.INVALID_TEMP_TOKEN));
 
         const products = JSON.parse(temp.products);
-        console.log("Product Temp: ", products)
         const today = new Date()
         const startOfDay = new Date(today.setHours(0, 0, 0, 0))
         const endOfDay = new Date(today.setHours(23, 59, 59, 999));
@@ -356,7 +539,6 @@ export const payForQR = () => async (req: Request, res: Response, next: NextFunc
 
         const payment = await axios.post('http://127.0.0.1:4000/api/v1/notify/test/qr', payload, config)
 
-        console.log("Payment", payment)
         res.locals.payment = payment.data
         return next()
     } catch (err) {
@@ -390,7 +572,6 @@ export const getOrderHistorty = () => async (req: Request, res: Response, next: 
             ],
         });
 
-        console.log("Order: ", JSON.stringify(orders))
 
         const orderHistory = orders.flatMap((o: any) =>
             o.items.map((item: any) => ({
@@ -410,7 +591,6 @@ export const getOrderHistorty = () => async (req: Request, res: Response, next: 
             }))
         );
 
-        console.log("OrderHistory: ", orderHistory)
         orderHistory.sort((a, b) => b.id - a.id);
 
         res.locals.orderHistory = orderHistory
@@ -485,16 +665,15 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
     try {
         const { order_id } = req.body
 
-        console.log("OrderId: ", order_id)
         const payment = await PaymentModel.findOne({ where: { order_code: order_id }, transaction: t })
-        
-        const order = await OrderModel.findOne({where: {order_id},include: [{model: OrderItemModel, as: 'items'}] , transaction: t})
+
+        const order = await OrderModel.findOne({ where: { order_id }, include: [{ model: OrderItemModel, as: 'items' }], transaction: t })
 
         if (!payment) {
             await t.rollback();
             return next(new ServiceError(OrderErrorMaster.ERR_PAYMENT_NOT_FOUND))
         }
-          if (!order) {
+        if (!order) {
             await t.rollback();
             return next(new ServiceError(OrderErrorMaster.ORDER_NOT_FOUND))
         }
@@ -506,7 +685,7 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
                 'X-Partner-ID': process.env.X_PARTNER_ID
             }
         }
-        
+
         const paymentInquiry = await axios.get(`http://127.0.0.1:4002/transaction/${payment.reference}`, config)
 
         if (paymentInquiry.data.transaction.status === 'APPROVED') {
@@ -514,26 +693,26 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
                 reason: "Return an item"
             }, config)
 
-            await payment.update({status: 'VOIDED'}, { transaction: t })
-            
+            await payment.update({ status: 'VOIDED' }, { transaction: t })
+
         } else if (paymentInquiry.data.transaction.status === 'SETTLED' || paymentInquiry.data.transaction.status === 'PRE-SETTLED') {
             await axios.post(`http://127.0.0.1:4002/transaction/${payment.reference}/refund`, {
                 reason: "Return an item",
                 refund_id: uuidv4()
             }, config)
-            await payment.update({status: 'REFUNDED'}, { transaction: t })
+            await payment.update({ status: 'REFUNDED' }, { transaction: t })
         }
 
-        if(order.summary_id) {
-            const summary = await DailySummaryModel.findByPk(order.summary_id, {transaction: t})
+        if (order.summary_id) {
+            const summary = await DailySummaryModel.findByPk(order.summary_id, { transaction: t })
 
-            if(summary && order.items) {
-                const totalItems = order.items.reduce((acc: number, i:any) => acc + i.qty,0)
+            if (summary && order.items) {
+                const totalItems = order.items.reduce((acc: number, i: any) => acc + i.qty, 0)
 
                 summary.total_sales -= Number(order.total_price)
                 summary.total_orders -= 1;
                 summary.total_items -= Number(totalItems)
-                
+
                 if (summary.total_sales < 0) summary.total_sales = 0;
                 if (summary.total_orders < 0) summary.total_orders = 0;
                 if (summary.total_items < 0) summary.total_items = 0;
@@ -549,9 +728,9 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
                     summary.payments[order.payment_method as keyof typeof summary.payments] = 0;
                 }
 
-                 await summary.save({ transaction: t });
+                await summary.save({ transaction: t });
 
-                  for (const item of order.items) {
+                for (const item of order.items) {
                     const topProduct = await TopProductModel.findOne({
                         where: { summary_id: summary.id, product_id: item.product_id },
                         transaction: t
@@ -569,7 +748,7 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
             }
         }
 
-        await order.update({status: 'cancelled'}, { transaction: t })
+        await order.update({ status: 'cancelled' }, { transaction: t })
 
         await t.commit();
         return next()
@@ -578,4 +757,3 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
         next(err)
     }
 }
-

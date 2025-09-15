@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 
-import { CancelOrder, createOrder, createPayment, getOrderData, getOrderHistorty, getPaymentByRefercnce, getTrackOrder, payForQR, paymentResult} from '../controller/orderController';
+import { CancelOrder, createNotifyOrder, createOrder, createPayment, getInvoiceData, getNotifyOrder, getOrderData, getOrderHistorty, getPaymentByRefercnce, getTrackOrder, payForQR, paymentResult, updateOrderStatus} from '../controller/orderController';
 import { authMiddleware, authMiddlewareCustomer, findUserPermission, validateUserPermission } from '../controller/userController';
 import { ORDER_MANAGEMENT } from '../constants/masters/portalPermissionMaster.json'
 import { VIEW, CREATE, EDIT, DELETE } from '../constants/masters/portalPermissionActionMaster.json'
@@ -26,6 +26,57 @@ router.get(
         next()
     }
 )
+
+router.post(
+    '/status/:id',
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(ORDER_MANAGEMENT, VIEW),
+    updateOrderStatus(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: undefined
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
+router.get(
+    '/invoice/:id',
+    authMiddleware(),
+    findUserPermission(),
+    validateUserPermission(ORDER_MANAGEMENT, VIEW),
+    getInvoiceData(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: {
+              invoice: res.locals.invoice
+            }
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
+router.post(
+    '/notification',
+    createNotifyOrder(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: undefined
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
 
 
 
@@ -152,4 +203,22 @@ router.post(
         next()
     }
 )
+
+router.get(
+    '/notification',
+    authMiddlewareCustomer(),
+    getNotifyOrder(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: {
+              notification:  res.locals.notification
+            }
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+
 export default router

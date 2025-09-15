@@ -155,9 +155,33 @@ export const fetchSizeProductRequester = async (): Promise<any> => {
 }
 
 
-export const fetchOrderRequester = async (): Promise<any> => {
+export const fetchOrderRequester = async (config:any): Promise<any> => {
     return await new Promise((resolve, rejects) => {
-        axios.get(`/api/order`)
+        axios.get(`/api/order`,config)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+
+
+export const updateOrderStatusRequester = async (id:any ,data: any ): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.post(`/api/order/status/${id}`, data)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+export const fetchInvoiceRequester = async (id:any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.get(`/api/order/invoice/${id}`)
         .then((res) => {
             resolve(res.data)
         })

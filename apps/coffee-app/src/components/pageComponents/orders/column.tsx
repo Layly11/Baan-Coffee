@@ -5,23 +5,26 @@ import DataMutation from '@/utils/dataMutation'
 import Badge from '@/components/commons/Badge'
 import { Hidden } from 'react-grid-system'
 import OrderStatusMaster from '../../../constants/masters/OrderStatusMaster.json'
+import { SelectData } from '@/components/header/selectData'
+import { updateOrderStatusRequester } from '@/utils/requestUtils'
 
-export const Columns = (): any[] => {
+export const Columns = (setRows: any): any[] => {
+    const router = useRouter()
     return [
         {
             label: 'ID',
             key: 'order_id',
-            width: '50%',
+            width: '40%',
         },
         {
             label: 'Order Time',
             key: 'time',
-            width: '50%',
+            width: '30%',
         },
         {
             label: 'Customer Name',
             key: 'customer_name',
-            width: '50%',
+            width: '30%',
         },
         {
             label: 'Method',
@@ -29,18 +32,18 @@ export const Columns = (): any[] => {
             width: '30%',
         },
         {
-            label: 'Amount',
+            label: 'Amount (bath)',
             key: 'total_price',
             width: '30%',
         },
         {
             label: 'Status',
             key: 'status',
-            width: '40%',
+            width: '30%',
             dataMutation: (row: any) => {
                 const statusKey = row.status as keyof typeof OrderStatusMaster
                 const status = OrderStatusMaster[statusKey]
-                
+
                 return (
                     <DataMutation
                         value={statusKey}
@@ -61,12 +64,50 @@ export const Columns = (): any[] => {
         {
             label: 'Action',
             key: 'actions',
-            width: '20%',
+            width: '40%',
+            dataMutation: (row: any) => {
+                return (
+                    <div style={{ width: '130px' }}>
+                        <SelectData
+                            value={row.status}
+                            setValue={async (newVal: string) => {
+                                await updateOrderStatusRequester(row.order_id,{new_status: newVal})
+                                setRows((prev: any[]) =>
+                                    prev.map((r) =>
+                                        r.order_id === row.order_id ? { ...r, status: newVal } : r
+                                    )
+                                )
+                            }}
+                            placeholder='Select order'
+                            jsonList={OrderStatusMaster}
+                            isSearchable={false}
+                            isMulti={false}
+                            isClearable={false}
+                        />
+                    </div>
+
+                )
+            }
         },
         {
             label: 'Invoice',
             key: 'actions',
             width: '20%',
+            dataMutation: (row: any) => {
+                return (
+                    <div
+                     style={{
+                cursor: 'pointer',
+                color: '#1477F8'
+              }}
+              onClick={() => {
+                router.push(`/orders/${row.order_id}`)
+              }}
+                    >
+                        <FontAwesomeIcon icon={faMagnifyingGlass} color="#3B5475" size='lg' />
+                    </div>
+                )
+            }
         },
     ]
 }
