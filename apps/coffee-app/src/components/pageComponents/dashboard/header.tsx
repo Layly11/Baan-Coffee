@@ -1,7 +1,8 @@
 import { DateRange } from "@/components/header/dateRange";
 import { SearchButton } from "@/components/header/searchBtn";
 import { JSX } from "react";
-import { Col, Container, Row } from "react-grid-system";
+import { Col, Container, Hidden, Row } from "react-grid-system";
+import { ClearFilterButton } from "../productMenu/clearFilter";
 
 interface HeaderProps {
     startDate: Date | null
@@ -9,6 +10,7 @@ interface HeaderProps {
     endDate: Date | null
     setEndDate: (endDate: Date | null) => void,
     handleOnClickSearch: () => Promise<void>
+    handleOnClearSearch: () => void
 }
 
 export const Header = ({
@@ -16,7 +18,8 @@ export const Header = ({
     setStartDate,
     endDate,
     setEndDate,
-    handleOnClickSearch
+    handleOnClickSearch,
+    handleOnClearSearch
 }: Readonly<HeaderProps>): JSX.Element => {
     return (
         <Row style={{ margin: '0px -10px' }}>
@@ -31,7 +34,7 @@ export const Header = ({
                                 setEndDate={setEndDate}
                             />
                         </Col>
-                        <Col lg={7}>
+                        <Col lg={5}>
                         </Col>
                         <Col lg={2} xs={12}>
                             <SearchButton
@@ -39,6 +42,11 @@ export const Header = ({
                                 isFetching={false}
                             />
                         </Col>
+                        <Hidden xs sm md>
+                            <Col lg={2}>
+                                <ClearFilterButton handleOnClearSearch={handleOnClearSearch} />
+                            </Col>
+                        </Hidden>
                     </Row>
                 </Container>
             </Col>

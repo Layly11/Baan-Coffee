@@ -124,31 +124,31 @@ const OrdersPage = () => {
     }
 
 
-//     useEffect(() => {
-//     if (!router.isReady) return
+    useEffect(() => {
+    if (!router.isReady) return
 
-//     const defaultEnd = dayjs().endOf('day')
-//     const defaultStart = defaultEnd.subtract(30, 'day').startOf('day')
-//     if (router.query.startDate && dayjs(router.query.startDate as string).isValid()) {
-//       setStartDate(dayjs(router.query.startDate as string).toDate())
-//     } else {
-//       setStartDate(defaultStart.toDate())
-//     }
+    const defaultEnd = dayjs().endOf('day')
+    const defaultStart = defaultEnd.subtract(30, 'day').startOf('day')
+    if (router.query.startDate && dayjs(router.query.startDate as string).isValid()) {
+      setStartDate(dayjs(router.query.startDate as string).toDate())
+    } else {
+      setStartDate(defaultStart.toDate())
+    }
 
 
-//     if (router.query.endDate && dayjs(router.query.endDate as string).isValid()) {
-//       setEndDate(dayjs(router.query.endDate as string).toDate())
-//     } else {
-//       setEndDate(defaultEnd.toDate())
-//     }
+    if (router.query.endDate && dayjs(router.query.endDate as string).isValid()) {
+      setEndDate(dayjs(router.query.endDate as string).toDate())
+    } else {
+      setEndDate(defaultEnd.toDate())
+    }
 
-//     if (typeof router.query.page === 'string' && !isNaN(Number(router.query.page))) {
-//       setPage(Number(router.query.page))
-//     }
-//     if (typeof router.query.limit === 'string' && !isNaN(Number(router.query.limit))) {
-//       setPageSize(Number(router.query.limit))
-//     }
-//   }, [router.isReady, router.query])
+    if (typeof router.query.page === 'string' && !isNaN(Number(router.query.page))) {
+      setPage(Number(router.query.page))
+    }
+    if (typeof router.query.limit === 'string' && !isNaN(Number(router.query.limit))) {
+      setPageSize(Number(router.query.limit))
+    }
+  }, [router.isReady, router.query])
 
     useEffect(() => {
         const page = PermissionMenuMaster.ORDER_MANAGEMENT

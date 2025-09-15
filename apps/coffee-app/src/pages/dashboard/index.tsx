@@ -71,12 +71,12 @@ const DashBoardPage = () => {
     }
   }
 
-  useEffect(() => {
-    const fetchData = async (): Promise<void> => {
-      await fetchDashboardSummaryList()
-    }
-    fetchData()
-  }, [])
+  // useEffect(() => {
+  //   const fetchData = async (): Promise<void> => {
+  //     await fetchDashboardSummaryList()
+  //   }
+  //   fetchData()
+  // }, [])
 
   const handleOnClickSearch = async (): Promise<void> => {
     setIsSearch(false)
@@ -90,6 +90,19 @@ const DashBoardPage = () => {
     })
     await fetchDashboardSummaryList()
   }
+
+   const handleOnClearSearch = async () => {
+        setStartDate(dayjs().endOf('day').subtract(30, 'day').startOf('day').toDate())
+        setEndDate(dayjs().toDate())
+        setRows([])
+        setTotal(0)
+        setIsSearch(true)
+        router.push({
+            pathname,
+            query: {}
+        })
+    }
+
 
   const handleOnChangePage = async (page: number): Promise<void> => {
     setPage(page)
@@ -162,6 +175,7 @@ const DashBoardPage = () => {
             endDate={endDate}
             setEndDate={setEndDate}
             handleOnClickSearch={handleOnClickSearch}
+            handleOnClearSearch={handleOnClearSearch}
           />
           <Row style={{ margin: '20px -10px 0px -10px' }}>
             <Col xs={12}>

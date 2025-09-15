@@ -4,7 +4,7 @@ import { rejects } from 'assert'
 
 export const fetchDashboardSummaryRequester = async (config: any): Promise<any> => {
  return await new Promise((resolve, rejects) => {
-    axios.get('/api/dashboardpageSize', config)
+    axios.get('/api/dashboard/summary-list', config)
     .then((res) => {
         resolve(res.data)
     })
