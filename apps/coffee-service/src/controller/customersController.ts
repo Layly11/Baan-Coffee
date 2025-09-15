@@ -5,6 +5,55 @@ import CustomerMasterError from '../constants/errors/customer.error.json'
 import * as jose from 'jose'
 import { sendOtpEmail, sendResetPasswordEmail } from '../utils/emailUtils';
 import { getRedisClient } from '../helpers/redis';
+import { Op, or,  } from "sequelize";
+
+export const getCustomerData = () => async (req: Request, res: Response, next: NextFunction) => {
+    const { information, limit, offset } = req.query;
+
+    try {
+        const infoStr = typeof information === 'string' ? information : undefined;
+
+       const where = infoStr
+            ? {
+                  [Op.or]: [
+                      { name: { [Op.like]: `%${infoStr}%` } },
+                      { email: { [Op.like]: `%${infoStr}%` } },
+                      { phone: { [Op.like]: `%${infoStr}%` } },
+                  ],
+              }
+            : {};
+
+        const { count, rows } = await CustomersModel.findAndCountAll({
+            where,
+            limit: Number(limit) || 10,
+            offset: Number(offset) || 0,
+            order: [['createdAt', 'ASC']],
+        })
+
+        res.locals.total = count
+        res.locals.customers = rows
+
+        return next()
+
+    } catch(err){
+        next(err)
+    }
+}
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////Mobile/////////////////////////////////////////////////
+
+
+
+
 
 export const registerCustomer = () => async (req: Request, res: Response, next: NextFunction) => {
     const redis = getRedisClient()

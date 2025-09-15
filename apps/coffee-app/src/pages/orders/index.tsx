@@ -50,6 +50,7 @@ const OrdersPage = () => {
 
     const fetchOrderData = async (page?: any) => {
         setIsFetching(true)
+        setIsSearch(false)
         console.log("Page:",page)
         try {
             const config = {
@@ -85,6 +86,7 @@ const OrdersPage = () => {
         setEndDate(dayjs().toDate())
         setRows([])
         setTotal(0)
+        setPage(0)
         setStatus('')
         setMethod('')
         setCustomerName('')
@@ -109,7 +111,7 @@ const OrdersPage = () => {
                 limit: pageSize
             }
         })
-        await fetchOrderData(page)
+        await fetchOrderData(0)
     }
 
     const handleOnChangePage = async (page: number): Promise<void> => {

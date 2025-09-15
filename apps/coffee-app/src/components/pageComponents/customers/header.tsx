@@ -4,12 +4,14 @@ import { Col, Container, Hidden, Row } from "react-grid-system";
 import { ClearFilterButton } from "@/components/pageComponents/productMenu/clearFilter";
 import Input from '../../commons/input'
 interface HeaderProps {
+    information: string | string[]
+    setInformation: React.Dispatch<React.SetStateAction<string | string[]>>
     handleOnClearSearch: () => void
     handleOnClickSearch: () => Promise<void>
 }
 
 
-export const Header = ({ handleOnClearSearch, handleOnClickSearch,}: HeaderProps): JSX.Element => {
+export const Header = ({ handleOnClearSearch, handleOnClickSearch, information, setInformation}: HeaderProps): JSX.Element => {
     return (
         <Row style={{ margin: '0px -10px' }}>
             <Col lg={12}>
@@ -20,8 +22,8 @@ export const Header = ({ handleOnClearSearch, handleOnClickSearch,}: HeaderProps
                                 typeof='text'
                                 icon='fas fa-search'
                                 placeholder='Search by name/email/phone'
-                                value={""}
-                                onChange={(e) => { }}
+                                value={information}
+                                onChange={(e) => { setInformation(e.target.value)}}
                             />
                         </Col>
                         <Col lg={2} xs={12}>

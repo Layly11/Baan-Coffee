@@ -96,6 +96,7 @@ const DashBoardPage = () => {
         setEndDate(dayjs().toDate())
         setRows([])
         setTotal(0)
+        setPage(0)
         setIsSearch(true)
         router.push({
             pathname,
