@@ -4,19 +4,19 @@
     "label": "Super Admin",
     "value": "SUPER_ADMIN"
   },
-  "MANAGER": {
+  "ADMIN": {
     "id": 2,
+    "label": "Admin",
+    "value": "ADMIN"
+  },
+  "MANAGER": {
+    "id": 3,
     "label": "Manager",
     "value": "MANAGER"
   },
-  "BARISTA": {
-    "id": 3,
-    "label": "Barista",
-    "value": "BARISTA"
-  },
-  "CASHIER": {
+  "SUPPORT": {
     "id": 4,
-    "label": "Cashier",
-    "value": "CASHIER"
+    "label": "Support",
+    "value": "SUPPORT"
   }
 }

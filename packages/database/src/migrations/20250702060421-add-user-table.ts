@@ -33,6 +33,11 @@ export = {
         type: DataTypes.STRING,
         allowNull: false,
       },
+       status: {
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
+    },
       recent_login: {
         type: Sequelize.DATE,
       },

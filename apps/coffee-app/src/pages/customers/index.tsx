@@ -17,6 +17,7 @@ import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.j
 import PermissionActionMaster from '../../constants/masters/PermissionActionMaster.json'
 import { checkPermission } from "@/helpers/checkPermission"
 import { DeleteCustomerModal, EditCustomerModal } from "@/components/pageComponents/customers/modal"
+import { checkRouterQueryAndAutoFetchData } from "@/utils/parseUtils"
 const pathname = '/customers'
 
 const CustomersPage = () => {
@@ -110,7 +111,7 @@ const CustomersPage = () => {
         setSelectedCustomer(null)
     }
 
-     const confirmDelete = async (): Promise<void> => {
+    const confirmDelete = async (): Promise<void> => {
         if (deletingId == null) return
         setShowDeleteModal(false)
         try {
@@ -138,6 +139,15 @@ const CustomersPage = () => {
         const action = PermissionActionMaster.VIEW
         checkPermission({ user, page, action }, router)
     }, [user])
+
+    useEffect(() => {
+        if (!router.isReady) return
+        checkRouterQueryAndAutoFetchData({
+            query: router.query,
+            fetchData: fetchCustomerData
+        })
+    }, [router.isReady, router.query])
+
 
 
     return (

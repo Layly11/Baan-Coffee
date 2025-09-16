@@ -18,6 +18,7 @@ export class UserModel extends Model<InferAttributes<UserModel>, InferCreationAt
     declare username: string
     declare email: string
     declare password: string
+    declare status: CreationOptional<boolean>
     declare recent_login: CreationOptional<Date>
     declare last_login: CreationOptional<Date>
     declare createdAt: CreationOptional<Date>
@@ -66,6 +67,12 @@ UserModel.init({
         field: 'password',
         type: DataTypes.STRING,
         allowNull: false,
+    },
+    status: {
+        field: 'status',
+        type: DataTypes.BOOLEAN,
+        allowNull: false,
+        defaultValue: true,
     },
     recent_login: {
         type: DataTypes.DATE(),

@@ -1,6 +1,6 @@
 import { UseSelectorProps } from "@/props/useSelectorProps";
 import { useRouter } from "next/router";
-import { JSX, useMemo } from "react";
+import { JSX, useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Swal from '../../helpers/sweetalert'
 import axios, { setAccessToken } from '../../helpers/axios'
@@ -235,6 +235,9 @@ export default function MainLayout({ isFetching, children }: { isFetching: boole
     }
   }
 
+  useEffect(() => {
+    console.log("User Recent Login: ",user)
+  },[user])
     const profileName = useMemo(
     () => (
       <ProfileName>
@@ -246,7 +249,7 @@ export default function MainLayout({ isFetching, children }: { isFetching: boole
           {(user !== null || user !== undefined) && UserRole[user?.role as keyof typeof UserRole]?.label}
         </span>
         <br />
-        <span>{DateFormat(user?.last_login)} {TimeFormat(user?.last_login)}</span>
+        <span>{DateFormat(user?.recent_login)} {TimeFormat(user?.recent_login)}</span>
       </ProfileName>
     ),
     [user]

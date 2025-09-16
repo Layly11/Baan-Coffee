@@ -246,6 +246,17 @@ export const deleteCustomerRequester = async (id: any): Promise<any> => {
         })
     })
 }
+export const fetchUserDataRequester = async (config:any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.get(`/api/user/`,config)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
 
 
 

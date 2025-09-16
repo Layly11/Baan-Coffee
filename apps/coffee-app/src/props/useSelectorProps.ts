@@ -4,6 +4,7 @@ user: {
     username: string,
     email: string,
     last_login: string
+    recent_login: string
     permissions: Permission[],
     role: string
 

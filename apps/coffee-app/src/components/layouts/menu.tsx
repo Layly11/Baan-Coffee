@@ -147,7 +147,13 @@ const Menu = ({ user }: User): JSX.Element => {
       path: '/customers',
       name: 'Customers',
       permission: PermissionMenuMaster.MANAGE_CUSTOMER,
-      icon: 'orders'
+      icon: 'customer'
+    },
+        {
+      path: '/users',
+      name: 'Our Staff',
+      permission: PermissionMenuMaster.MANAGE_USER,
+      icon: 'user'
     }
   ]
 

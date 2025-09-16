@@ -18,7 +18,7 @@ export const authMiddleware = () => async (req: Request, res: Response, next: Ne
     try {
         const { payload } = await jwtVerify(token, jwtSecret) as any
         const user = await UserModel.findByPk(payload.id, {
-            attributes: ['id', 'username', 'email', 'role_id', 'last_login'],
+            attributes: ['id', 'username', 'email', 'role_id', 'last_login', 'recent_login'],
             include: [
                 {
                     model: UserRoleModel,
@@ -112,6 +112,7 @@ export const findUserPermission = () => async (req: Request, res: Response, next
             username: user.username,
             email: user.email,
             last_login: user.last_login,
+            recent_login: user.recent_login,
             permissions: res.locals.permissions
         }
 

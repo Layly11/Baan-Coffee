@@ -10,7 +10,6 @@ import { VIEW, CREATE, EDIT, DELETE } from '../constants/masters/portalPermissio
 export default function createCustomerRouter({ redis }: { redis: RedisClientType }) {
     const router = express.Router()
 
-
     router.get(
         '/',
         authMiddleware(),
@@ -50,30 +49,30 @@ export default function createCustomerRouter({ redis }: { redis: RedisClientType
             next()
         }
     )
-    router.get(
-        '/',
-        authMiddleware(),
-        findUserPermission(),
-        validateUserPermission(MANAGE_CUSTOMER, VIEW),
-        getCustomerData(),
-        (req: Request, res: Response, next: NextFunction) => {
-            res.locals.response = {
-                res_code: '0000',
-                res_desc: '',
-                data: {
-                    total: res.locals.total,
-                    customers: res.locals.customers
-                }
-            }
-            res.json(res.locals.response)
-            next()
-        }
-    )
+    // router.get(
+    //     '/',
+    //     authMiddleware(),
+    //     findUserPermission(),
+    //     validateUserPermission(MANAGE_CUSTOMER, VIEW),
+    //     getCustomerData(),
+    //     (req: Request, res: Response, next: NextFunction) => {
+    //         res.locals.response = {
+    //             res_code: '0000',
+    //             res_desc: '',
+    //             data: {
+    //                 total: res.locals.total,
+    //                 customers: res.locals.customers
+    //             }
+    //         }
+    //         res.json(res.locals.response)
+    //         next()
+    //     }
+    // )
     router.patch(
         '/update/:id',
         authMiddleware(),
         findUserPermission(),
-        validateUserPermission(MANAGE_CUSTOMER, VIEW),
+        validateUserPermission(MANAGE_CUSTOMER, EDIT),
         updateCustomerData(),
         (req: Request, res: Response, next: NextFunction) => {
             res.locals.response = {
@@ -91,7 +90,7 @@ export default function createCustomerRouter({ redis }: { redis: RedisClientType
         '/delete/:id',
         authMiddleware(),
         findUserPermission(),
-        validateUserPermission(MANAGE_CUSTOMER, VIEW),
+        validateUserPermission(MANAGE_CUSTOMER, DELETE),
         deleteCustomer(),
         (req: Request, res: Response, next: NextFunction) => {
             res.locals.response = {

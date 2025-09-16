@@ -5,8 +5,9 @@ import productRoute from './routes/productRouter'
 import profileRouter from './routes/profileRouter'
 import cartRouter from './routes/cartRouter'
 import orderRouter from './routes/orderRouter'
-import { RedisClientType } from 'redis'
 import createCustomerRouter from './routes/customerRouter'
+import userRouter from './routes/userRouter'
+import { RedisClientType } from 'redis'
 
 export default function createRouters({ redis }: { redis: RedisClientType }) {
     const router = Router()
@@ -18,6 +19,7 @@ export default function createRouters({ redis }: { redis: RedisClientType }) {
     router.use('/profile', profileRouter)
     router.use('/cart', cartRouter)
     router.use('/order', orderRouter)
+    router.use('/user', userRouter)
 
     return router
 

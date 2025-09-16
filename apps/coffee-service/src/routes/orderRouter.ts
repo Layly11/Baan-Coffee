@@ -32,7 +32,7 @@ router.post(
   '/status/cancel',
   authMiddleware(),
   findUserPermission(),
-  validateUserPermission(ORDER_MANAGEMENT, VIEW),
+  validateUserPermission(ORDER_MANAGEMENT, EDIT),
   CancelOrderStatus(),
   (req: Request, res: Response, next: NextFunction) => {
     res.locals.response = {

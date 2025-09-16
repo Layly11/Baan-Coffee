@@ -1,0 +1,22 @@
+{
+  "1": {
+    "id": 1,
+    "label": "Super Admin",
+    "value": "SUPER_ADMIN"
+  },
+  "2": {
+    "id": 2,
+    "label": "Admin",
+    "value": "ADMIN"
+  },
+  "3": {
+    "id": 3,
+    "label": "Manager",
+    "value": "MANAGER"
+  },
+  "4": {
+    "id": 4,
+    "label": "Support",
+    "value": "SUPPORT"
+  }
+}
