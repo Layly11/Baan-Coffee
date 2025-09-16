@@ -1,5 +1,5 @@
 import express, { Request, Response, NextFunction } from 'express';
-import { registerCustomer, loginCustomer, verifyOtpCustomer, resendOtpCustomer, checkCustomerExist, forgotPasswordWithOtp, verifyResetOtp, resendResetOtp, requireResetVerified, resetPassword, getCustomerData } from '../controller/customersController';
+import { registerCustomer, loginCustomer, verifyOtpCustomer, resendOtpCustomer, checkCustomerExist, forgotPasswordWithOtp, verifyResetOtp, resendResetOtp, requireResetVerified, resetPassword, getCustomerData, getCustomerOrderData, updateCustomerData, deleteCustomer } from '../controller/customersController';
 import { getOtpLimiter, getLoginLimiter, getResetOtpLimiter, getForgorPasswordLimiter, getVerifyResetOtpLimiter, getVerifyLimiter } from '../utils/ratelimit';
 import { authMiddleware, authMiddlewareCustomer, findUserPermission, validateUserPermission } from '../controller/userController';
 import { getProfileData } from '../controller/customersController';
@@ -25,6 +25,79 @@ export default function createCustomerRouter({ redis }: { redis: RedisClientType
                     total: res.locals.total,
                     customers: res.locals.customers
                 }
+            }
+            res.json(res.locals.response)
+            next()
+        }
+    )
+
+    router.get(
+        '/order/:id',
+        authMiddleware(),
+        findUserPermission(),
+        validateUserPermission(MANAGE_CUSTOMER, VIEW),
+        getCustomerOrderData(),
+        (req: Request, res: Response, next: NextFunction) => {
+            res.locals.response = {
+                res_code: '0000',
+                res_desc: '',
+                data: {
+                    total: res.locals.total,
+                    orders: res.locals.orders
+                }
+            }
+            res.json(res.locals.response)
+            next()
+        }
+    )
+    router.get(
+        '/',
+        authMiddleware(),
+        findUserPermission(),
+        validateUserPermission(MANAGE_CUSTOMER, VIEW),
+        getCustomerData(),
+        (req: Request, res: Response, next: NextFunction) => {
+            res.locals.response = {
+                res_code: '0000',
+                res_desc: '',
+                data: {
+                    total: res.locals.total,
+                    customers: res.locals.customers
+                }
+            }
+            res.json(res.locals.response)
+            next()
+        }
+    )
+    router.patch(
+        '/update/:id',
+        authMiddleware(),
+        findUserPermission(),
+        validateUserPermission(MANAGE_CUSTOMER, VIEW),
+        updateCustomerData(),
+        (req: Request, res: Response, next: NextFunction) => {
+            res.locals.response = {
+                res_code: '0000',
+                res_desc: '',
+                data: undefined
+            }
+            res.json(res.locals.response)
+            next()
+        }
+    )
+
+
+    router.delete(
+        '/delete/:id',
+        authMiddleware(),
+        findUserPermission(),
+        validateUserPermission(MANAGE_CUSTOMER, VIEW),
+        deleteCustomer(),
+        (req: Request, res: Response, next: NextFunction) => {
+            res.locals.response = {
+                res_code: '0000',
+                res_desc: '',
+                data: undefined
             }
             res.json(res.locals.response)
             next()

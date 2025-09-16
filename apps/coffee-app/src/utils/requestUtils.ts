@@ -213,6 +213,39 @@ export const fetchCustomerDataRequester = async (config: any): Promise<any> => {
         })
     })
 }
+export const fetchCustomerOrderRequester = async (id: any,config: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.get(`/api/customer/order/${id}`,config)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+export const updateCustomerRequester = async (id: any,data: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.patch(`/api/customer/update/${id}`,data)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+export const deleteCustomerRequester = async (id: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.delete(`/api/customer/delete/${id}`)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
 
 
 

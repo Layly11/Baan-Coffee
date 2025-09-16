@@ -3,14 +3,16 @@ import DataMutation from '@/utils/dataMutation'
 import Badge from '@/components/commons/Badge'
 import { Hidden } from 'react-grid-system'
 import CustomerStatusMaster from '../../../constants/masters/CustomerStatus.Master.json'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 
-export const Columns = (setRows: any): any[] => {
+export const Columns = (setRows: any,  handleOpenEdit: any, setShowDeleteModal: any, setDeletingId: any): any[] => {
     const router = useRouter()
     return [
         {
             label: 'ID',
             key: 'id',
-            width: '40%',
+            width: '10%',
         },
         {
             label: 'Name',
@@ -54,7 +56,25 @@ export const Columns = (setRows: any): any[] => {
         {
             label: 'Action',
             key: 'actions',
-            width: '40%',
+            width: '30%',
+            dataMutation: (row:any) => (
+                  <div style={{ display: 'flex', gap: '30px', justifyContent: 'center' }}>
+                    <FontAwesomeIcon icon={faMagnifyingGlass} color="#3B5475" size='lg' onClick={() => { router.push(`/customers/${row.id}`)}}/>
+                    <i
+                        className='fas fa-pen'
+                        style={{ color: '#374151', cursor: 'pointer' }}
+                        onClick={() => { handleOpenEdit(row)}}
+                    />
+                    <i
+                        className='fas fa-ban'
+                        style={{ color: '#EF4444', cursor: 'pointer' }}
+                         onClick={() => {
+                            setShowDeleteModal(true)
+                            setDeletingId(row.id)
+                        }}
+                    />
+                </div>
+            )
         }
     ]
 }

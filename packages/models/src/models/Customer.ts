@@ -21,6 +21,7 @@ export class CustomersModel extends Model<
     declare phone: string
     declare image_url:  CreationOptional<string | null>
     declare verified: boolean
+    declare isDeleted: boolean
     declare createdAt: CreationOptional<Date>
     declare updatedAt: CreationOptional<Date>
 
@@ -50,7 +51,6 @@ CustomersModel.init(
             field: 'email',
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true,
             validate: {
                 isEmail: true,
             },
@@ -64,7 +64,6 @@ CustomersModel.init(
         phone: {
             field: 'phone',
             type: DataTypes.STRING,
-            unique: true,
             allowNull: false,
         },
          image_url: {
@@ -74,6 +73,11 @@ CustomersModel.init(
         },
         verified: {
             field: 'verified',
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+        isDeleted: {
+            field: 'is_deleted',
             type: DataTypes.BOOLEAN,
             defaultValue: false,
         },

@@ -26,7 +26,7 @@ export const editProfileImage = () => async (req: Request, res: Response, next: 
         })
 
 
-        await CustomersModel.update({ image_url: imageUrl }, { where: { id: userId } })
+        await CustomersModel.update({ image_url: imageUrl }, { where: { id: userId, isDeleted: false } })
 
         res.locals.imageUrl = imageUrl
         return next()
@@ -40,7 +40,12 @@ export const editProfileDetail = () => async (req: Request, res: Response, next:
     try {
         const { id, name, email, phone } = req.body
 
-        const customer = await CustomersModel.findByPk(id)
+        const customer = await CustomersModel.findOne({
+            where: {
+                id: id,
+                isDeleted: false
+            }
+        })
 
 
         if (!customer) {
@@ -81,19 +86,7 @@ export const deleteAccount = () => async (req: Request, res: Response, next: Nex
             return next(new ServiceError(ProfileMasterError.ERR_CUSTOMER_NOT_FOUND));
         }
 
-        const profileImg = customer.image_url
-
-        console.log("ProfileIMAGE: ", profileImg)
-        await customer.destroy({ force: true, transaction: t })
-
-        if (profileImg) {
-            const prefix = `profile-images/user_${customerId}/`;
-            await deleteFolderPrefix({
-                containerName: process.env.AZURE_STORAGE_PROFILE_CONTAINER_NAME!,
-                prefix
-
-            })
-        }
+        await customer.update({ isDeleted: true }, { transaction: t });
 
         await t.commit();
         return next()

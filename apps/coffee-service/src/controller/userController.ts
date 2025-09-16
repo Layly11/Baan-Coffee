@@ -45,7 +45,13 @@ export const authMiddlewareCustomer = () => async (req: Request, res: Response, 
     
     try {
         const { payload } = await jwtVerify(token, jwtSecret) as any
-        const exists = await CustomersModel.findByPk(payload.id)
+        const exists = await CustomersModel.findOne({
+            where: {
+                id: payload.id,
+                isDeleted: false
+            }
+        });
+
 
         if (!exists) {
             return next(new ServiceError(HTTP_ERROR.ERR_HTTP_401))

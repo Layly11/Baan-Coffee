@@ -11,11 +11,12 @@ import Title from "@/components/commons/title"
 import { Header } from "@/components/pageComponents/customers/header"
 import Table from "@/components/commons/table"
 import { Columns } from "@/components/pageComponents/customers/column"
-import { Alert } from "@/helpers/sweetalert"
-import { fetchCustomerDataRequester } from "@/utils/requestUtils"
+import swalInstance, { Alert } from "@/helpers/sweetalert"
+import { deleteCustomerRequester, fetchCustomerDataRequester } from "@/utils/requestUtils"
 import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.json'
 import PermissionActionMaster from '../../constants/masters/PermissionActionMaster.json'
 import { checkPermission } from "@/helpers/checkPermission"
+import { DeleteCustomerModal, EditCustomerModal } from "@/components/pageComponents/customers/modal"
 const pathname = '/customers'
 
 const CustomersPage = () => {
@@ -27,23 +28,27 @@ const CustomersPage = () => {
     const [pageSize, setPageSize] = useState(!isNaN(Number(router.query.limit)) ? Number(router.query.limit) : 10)
     const [total, setTotal] = useState(0)
     const [rows, setRows] = useState<any>([])
-    const [information, setInformation] =  useState(router.query.information ?? '')
+    const [information, setInformation] = useState(router.query.information ?? '')
+    const [isEditOpen, setIsEditOpen] = useState(false)
+    const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
+    const [showDeleteModal, setShowDeleteModal] = useState(false)
+    const [deletingId, setDeletingId] = useState<number | null>(null)
 
     const fetchCustomerData = async (page?: any) => {
         setIsFetching(true)
         setIsSearch(false)
         try {
-             const config = {
-                    params: {
-                      information,
-                      limit: (pageSize),
-                      offset: (pageSize * (page ?? 0))
-                    }
-                  }
+            const config = {
+                params: {
+                    information,
+                    limit: (pageSize),
+                    offset: (pageSize * (page ?? 0))
+                }
+            }
             const res = await fetchCustomerDataRequester(config)
 
-            console.log("res: ",res.data)
-            if(res.data !== null) {
+            console.log("res: ", res.data)
+            if (res.data !== null) {
                 const customers = res.data.customers
                 const total = res.data.total
 
@@ -58,9 +63,9 @@ const CustomersPage = () => {
         }
     }
 
-    useEffect(() => {
-        fetchCustomerData()
-    },[])
+    // useEffect(() => {
+    //     fetchCustomerData()
+    // }, [])
 
     const handleOnClearSearch = async () => {
         setRows([])
@@ -83,7 +88,7 @@ const CustomersPage = () => {
                 information
             }
         })
-         await fetchCustomerData()
+        await fetchCustomerData()
     }
 
     const handleOnChangePage = async (page: number): Promise<void> => {
@@ -92,7 +97,39 @@ const CustomersPage = () => {
             pathname,
             query: { ...router.query, page }
         })
-       await fetchCustomerData()
+        await fetchCustomerData()
+    }
+
+    const handleOpenEdit = (customer: any) => {
+        setSelectedCustomer(customer)
+        setIsEditOpen(true)
+    }
+
+    const handleCloseEdit = () => {
+        setIsEditOpen(false)
+        setSelectedCustomer(null)
+    }
+
+     const confirmDelete = async (): Promise<void> => {
+        if (deletingId == null) return
+        setShowDeleteModal(false)
+        try {
+            await deleteCustomerRequester(deletingId)
+            swalInstance.fire({
+                icon: 'success',
+                title: 'Success',
+                text: 'Customer deleted successfully',
+                showConfirmButton: false,
+                showCloseButton: true
+            })
+            fetchCustomerData()
+        } catch (error) {
+            console.error(error)
+            Alert({ data: error })
+        } finally {
+            setShowDeleteModal(false)
+            setDeletingId(null)
+        }
     }
 
 
@@ -106,7 +143,7 @@ const CustomersPage = () => {
     return (
         <>
             <Head>
-                <title>{title.ORDERS_TITLE}</title>
+                <title>{title.CUSTOMER_TITLE}</title>
             </Head>
 
             <MainLayout isFetching={user === null} >
@@ -133,12 +170,29 @@ const CustomersPage = () => {
                                 setPageSize={setPageSize}
                                 setPage={handleOnChangePage}
                                 page={page}
-                                columns={Columns(setRows)}
+                                columns={Columns(setRows, handleOpenEdit, setShowDeleteModal, setDeletingId)}
                                 rows={rows}
                                 isSearch={isSearch}
                             />
                         </Col>
                     </Row>
+
+                    <EditCustomerModal
+                        isOpen={isEditOpen}
+                        onClose={handleCloseEdit}
+                        customer={selectedCustomer}
+                        onUpdated={fetchCustomerData}
+                    />
+
+                    <DeleteCustomerModal
+                        visible={showDeleteModal}
+                        onCancel={() => {
+                            setShowDeleteModal(false)
+                            setDeletingId(null)
+                        }}
+                        onConfirm={confirmDelete}
+                    />
+
 
                 </Container>
             </MainLayout>

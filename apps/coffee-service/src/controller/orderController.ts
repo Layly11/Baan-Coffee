@@ -171,7 +171,12 @@ export const createNotifyOrder = () => async (req: Request, res: Response, next:
                 return next(new ServiceError(OrderErrorMaster.ORDER_NOT_FOUND));
             }
 
-            const customer = await CustomersModel.findByPk(order.customer_id);
+            const customer = await CustomersModel.findOne({
+                where: {
+                    id: order.customer_id,
+                    isDeleted: false
+                }
+            });
             if (!customer) {
                 return next(new ServiceError(OrderErrorMaster.CUSTOMER_NOT_FOUND));
             }

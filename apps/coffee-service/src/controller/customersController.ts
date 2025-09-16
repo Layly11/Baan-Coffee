@@ -1,11 +1,11 @@
-import { ServiceError } from '@coffee/helpers';
-import { CustomersModel } from '@coffee/models'
+import { dayjs, ServiceError } from '@coffee/helpers';
+import { CustomersModel, OrderModel } from '@coffee/models'
 import e, { NextFunction, Request, Response } from "express"
 import CustomerMasterError from '../constants/errors/customer.error.json'
 import * as jose from 'jose'
 import { sendOtpEmail, sendResetPasswordEmail } from '../utils/emailUtils';
 import { getRedisClient } from '../helpers/redis';
-import { Op, or,  } from "sequelize";
+import { Op, or, } from "sequelize";
 
 export const getCustomerData = () => async (req: Request, res: Response, next: NextFunction) => {
     const { information, limit, offset } = req.query;
@@ -13,15 +13,16 @@ export const getCustomerData = () => async (req: Request, res: Response, next: N
     try {
         const infoStr = typeof information === 'string' ? information : undefined;
 
-       const where = infoStr
+        const where = infoStr
             ? {
-                  [Op.or]: [
-                      { name: { [Op.like]: `%${infoStr}%` } },
-                      { email: { [Op.like]: `%${infoStr}%` } },
-                      { phone: { [Op.like]: `%${infoStr}%` } },
-                  ],
-              }
-            : {};
+                isDeleted: false,
+                [Op.or]: [
+                    { name: { [Op.like]: `%${infoStr}%` } },
+                    { email: { [Op.like]: `%${infoStr}%` } },
+                    { phone: { [Op.like]: `%${infoStr}%` } },
+                ],
+            }
+            : { isDeleted: false};
 
         const { count, rows } = await CustomersModel.findAndCountAll({
             where,
@@ -35,11 +36,127 @@ export const getCustomerData = () => async (req: Request, res: Response, next: N
 
         return next()
 
-    } catch(err){
+    } catch (err) {
+        next(err)
+    }
+}
+export const getCustomerOrderData = () => async (req: Request, res: Response, next: NextFunction) => {
+    const { limit, offset } = req.query;
+    const customerId = req.params.id
+
+    try {
+
+        const { count, rows } = await CustomersModel.findAndCountAll({
+            where: { id: customerId },
+            include: [
+                {
+                    model: OrderModel,
+                    as: 'orders',
+                    where: { customer_id: customerId }
+                }
+            ],
+            limit: Number(limit) || 10,
+            offset: Number(offset) || 0,
+        })
+
+   let orders = rows.flatMap((customer: any) =>
+    customer.orders.map((o: any) => {
+        const order = o.get({ plain: true });
+
+        let shippingAddress = order.shipping_address;
+        if (typeof shippingAddress === 'object' && shippingAddress !== null) {
+            shippingAddress = [
+                shippingAddress.street,
+                shippingAddress.city,
+                shippingAddress.zipcode
+            ]
+                .filter(Boolean)
+                .join(', ');
+        }
+
+        return {
+            ...order,
+            timeRaw: order.time,
+            time: dayjs(order.time).format('DD/MM/YYYY HH:MM'),
+            shipping_address: shippingAddress,
+            phone: customer.phone,
+        };
+    })
+);
+
+      orders = orders.sort(
+            (a, b) => new Date(b.timeRaw).getTime() - new Date(a.timeRaw).getTime()
+        );
+
+
+        res.locals.total = count
+        res.locals.orders = orders
+
+        console.log("Rows: ", orders)
+
+        return next()
+
+    } catch (err) {
         next(err)
     }
 }
 
+export const updateCustomerData = () => async (req: Request, res: Response, next: NextFunction) => {
+    
+    const id = req.params.id
+    const {name, email, phone, verified} = req.body
+
+    try {
+        
+        const customer = await CustomersModel.findByPk(id)
+        if (!customer) {
+            return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_NOT_FOUND))
+        }
+        if(name !== '' && name !== null && name !== undefined ) {
+            customer.name= name
+        }
+        if(email !== '' && email !== null && email !== undefined ) {
+            customer.email= email
+        }
+        if(phone !== '' && phone !== null && phone !== undefined ) {
+            customer.phone= phone
+        }
+
+        customer.verified = verified
+        await customer.save()
+        return next()
+
+    } catch (err) {
+        next(err)
+    }
+}
+
+
+
+
+export const deleteCustomer = () => async (req: Request, res: Response, next: NextFunction) => {
+    const id = req.params.id
+    try {
+        const customer = await CustomersModel.findOne({
+            where: {
+                id: id,
+                isDeleted: false
+            }
+        })
+
+         if (!customer) {
+            return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_NOT_FOUND))
+        }
+
+        await customer.update({ isDeleted: true });
+
+       
+        return next()
+
+    } catch (err) {
+        next(err)
+    }
+}
 
 
 
@@ -55,18 +172,24 @@ export const getCustomerData = () => async (req: Request, res: Response, next: N
 
 
 
+
+
+
+
+
+
 export const registerCustomer = () => async (req: Request, res: Response, next: NextFunction) => {
     const redis = getRedisClient()
     try {
         const { name, email, password, phone } = req.body
 
-        const existsEmail = await CustomersModel.findOne({ where: { email } });
+        const existsEmail = await CustomersModel.findOne({ where: { email, isDeleted: false } });
         if (existsEmail) {
             return next(new ServiceError(CustomerMasterError.ERR_REGISTER_EMAIL_EXIST))
 
         }
 
-        const existsPhone = await CustomersModel.findOne({ where: { phone } });
+        const existsPhone = await CustomersModel.findOne({ where: { phone , isDeleted: false} });
         if (existsPhone) {
             return next(new ServiceError(CustomerMasterError.ERR_REGISTER_PHONE_EXIST))
 
@@ -84,6 +207,7 @@ export const registerCustomer = () => async (req: Request, res: Response, next: 
                 phone,
                 image_url: null,
                 verified: false,
+                isDeleted: false,
             }
         )
         const otp = String(Math.floor(100000 + Math.random() * 900000).toString());
@@ -100,8 +224,8 @@ export const checkCustomerExist = () => async (req: Request, res: Response, next
     try {
         const { email, phone } = req.query as any;
 
-        const emailExists = await CustomersModel.findOne({ where: { email } })
-        const phoneExists = await CustomersModel.findOne({ where: { phone } });
+        const emailExists = await CustomersModel.findOne({ where: { email, isDeleted: false } })
+        const phoneExists = await CustomersModel.findOne({ where: { phone, isDeleted: false } });
 
         res.locals.emailExists = !!emailExists
         res.locals.phoneExists = !!phoneExists
@@ -123,7 +247,7 @@ export const verifyOtpCustomer = () => async (req: Request, res: Response, next:
             return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_OTP_REQUIRED));
         }
 
-        const customer = await CustomersModel.findOne({ where: { email } });
+        const customer = await CustomersModel.findOne({ where: { email, isDeleted: false } });
 
         if (!customer) {
             return next(
@@ -159,7 +283,7 @@ export const resendOtpCustomer = () => async (req: Request, res: Response, next:
             return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_REQUIRED));
         }
 
-        const customer = await CustomersModel.findOne({ where: { email } });
+        const customer = await CustomersModel.findOne({ where: { email, isDeleted: false } });
         if (!customer) {
             return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_NOT_FOUND));
         }
@@ -189,7 +313,7 @@ export const loginCustomer = () => async (req: Request, res: Response, next: Nex
             return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_LOGIN_REQUIRED))
         }
 
-        const customer = await CustomersModel.findOne({ where: { email } })
+        const customer = await CustomersModel.findOne({ where: { email, isDeleted: false } })
         if (!customer) {
             return next(new ServiceError(CustomerMasterError.ERR_LOGIN_CUSTOMER_INVALID))
         }
@@ -235,7 +359,7 @@ export const forgotPasswordWithOtp = () => async (req: Request, res: Response, n
             return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_REQUIRED));
         }
 
-        const customer = await CustomersModel.findOne({ where: { email } })
+        const customer = await CustomersModel.findOne({ where: { email, isDeleted: false } })
 
         if (!customer) {
             return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_NOT_FOUND));
@@ -262,7 +386,7 @@ export const resendResetOtp = () => async (req: Request, res: Response, next: Ne
             return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_REQUIRED));
         }
 
-        const customer = await CustomersModel.findOne({ where: { email } })
+        const customer = await CustomersModel.findOne({ where: { email, isDeleted: false } })
 
         if (!customer) {
             return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_NOT_FOUND));
@@ -356,7 +480,7 @@ export const resetPassword = () => async (req: Request, res: Response, next: Nex
             return next(new ServiceError(CustomerMasterError.ERR_PASSWORD_POLICY_INVALID));
         }
 
-        const customer = await CustomersModel.findOne({ where: { email } })
+        const customer = await CustomersModel.findOne({ where: { email, isDeleted: false } })
         if (!customer) {
             return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_NOT_FOUND));
         }
@@ -376,7 +500,12 @@ export const resetPassword = () => async (req: Request, res: Response, next: Nex
 export const getProfileData = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
         const user = req.user as any
-        const customer = await CustomersModel.findByPk(user.id)
+        const customer = await CustomersModel.findOne({
+            where: {
+                id: user.id,
+                isDeleted: false
+            }
+        })
 
         if (!customer) {
             return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_NOT_FOUND));

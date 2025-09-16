@@ -16,23 +16,25 @@ export = {
       email: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true
       },
       password: {
         type: Sequelize.STRING,
         allowNull: false,
-        unique: true
       },
       phone: {
          type: Sequelize.STRING,
          allowNull: false,
-         unique: true
       },
       image_url: {
          type: Sequelize.STRING,
          allowNull: true,
       },
       verified: {
+        type: Sequelize.BOOLEAN,
+        defaultValue: false
+      },
+      isDeleted: {
+        field: 'is_deleted',
         type: Sequelize.BOOLEAN,
         defaultValue: false
       },

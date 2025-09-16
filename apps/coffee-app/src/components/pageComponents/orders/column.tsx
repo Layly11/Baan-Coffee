@@ -66,9 +66,16 @@ export const Columns = (setRows: any): any[] => {
             key: 'actions',
             width: '40%',
             dataMutation: (row: any) => {
-                const options = row.status === 'cancelled'
-                    ? { [row.status]: OrderStatusMaster[row.status as keyof typeof OrderStatusMaster] }
-                    : OrderStatusMaster;
+                let options;
+
+                if (row.status === 'cancelled') {
+                    options = { [row.status]: OrderStatusMaster[row.status as keyof typeof OrderStatusMaster] };
+                } else if (row.status === 'complete') {
+                    options = { [row.status]: OrderStatusMaster[row.status as keyof typeof OrderStatusMaster] };
+                } else {
+                    options = OrderStatusMaster;
+                }
+
                 return (
                     <div style={{ width: '130px' }}>
                         <SelectData
