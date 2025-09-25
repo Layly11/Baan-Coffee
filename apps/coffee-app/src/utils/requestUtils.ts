@@ -293,6 +293,17 @@ export const createUserRequester = async (data: any): Promise<any> => {
         })
     })
 }
+export const resetPasswordRequester = async (id: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.post(`/api/user/reset-password/${id}`)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
 
 
 

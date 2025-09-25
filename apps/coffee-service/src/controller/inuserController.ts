@@ -2,7 +2,10 @@ import { dayjs, ServiceError } from "@coffee/helpers";
 import { UserModel, UserRoleModel } from "@coffee/models";
 import { NextFunction, Request, Response } from "express";
 import { Op } from "sequelize";
+import * as jose from 'jose'
 import UserErrorMaster from "../constants/errors/user.error.json";
+import { getRedisClient } from "../helpers/redis";
+import { sendResetPasswordAdmin } from "../utils/emailUtils";
 
 export const getUserData = () => async (req: Request, res: Response, next: NextFunction) => {
 
@@ -140,6 +143,40 @@ export const createUserData = () => async (req: Request, res: Response, next: Ne
             role_id: role,
             status
         })
+
+        return next()
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const resetPasswordUser = () => async (req: Request, res: Response, next: NextFunction) => {
+    const {id} = req.params
+    const redis = getRedisClient()
+    try {
+        const user = await UserModel.findOne({
+            where: {
+                id,
+                status: true
+            }
+        })
+
+        if(!user) {
+             return next(new ServiceError(UserErrorMaster.USER_NOT_FOUND))
+        }
+
+        const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET)
+
+        const token = await new jose.SignJWT({ userId: user.id })
+              .setProtectedHeader({ alg: "HS256" })
+              .setExpirationTime("15m")
+              .sign(jwtSecret);
+
+        await redis.set(`reset_token:${token}`, user.id, { EX: 15 * 60 });
+
+        const resetLink = `http://localhost:9301/reset-password?token=${token}`
+
+        await sendResetPasswordAdmin(user.email, resetLink)
 
         return next()
     } catch (err) {
