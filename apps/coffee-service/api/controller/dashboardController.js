@@ -113,6 +113,8 @@ const getDashBoardOverview = () => async (req, res, next) => {
                     attributes: ['name', 'price', 'image_url']
                 },
             ],
+            order: [['total_sold', 'DESC']],
+            limit: 3
         });
         const topProductMapping = topProduct.map((value) => ({
             name: value.product.name,

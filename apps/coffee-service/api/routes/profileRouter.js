@@ -51,6 +51,17 @@ router.get('/address', (0, userController_1.authMiddlewareCustomer)(), (0, profi
     res.json(res.locals.response);
     next();
 });
+router.get('/address/:id', (0, userController_1.authMiddlewareCustomer)(), (0, profileController_1.fetchAddressBySelected)(), (req, res, next) => {
+    res.locals.response = {
+        res_code: '1111',
+        res_desc: '',
+        data: {
+            address: res.locals.address
+        }
+    };
+    res.json(res.locals.response);
+    next();
+});
 router.post('/create/address', (0, userController_1.authMiddlewareCustomer)(), (0, profileController_1.createAddressCustomer)(), (req, res, next) => {
     res.locals.response = {
         res_code: '1111',

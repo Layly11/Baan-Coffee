@@ -19,8 +19,8 @@
         "statusCode": 400,
         "resCode": "4003",
         "resDesc": {
-            "en": "Image file more than 2MB",
-            "th": "ไฟล์ภาพมากกว่า 2MB"
+            "en": "Image file more than 5MB",
+            "th": "ไฟล์ภาพมากกว่า 5MB"
         }
     },
     "PRODUCT_NAME_REQUIRE": {
@@ -101,6 +101,14 @@
         "resDesc": {
             "en": "Category is Limit No more than 4 Items",
             "th": "Category เต็ม categoy ห้ามเกิน 4 item"
+        }
+    },
+    "SIZE_REQUIRE": {
+        "statusCode": 400,
+        "resCode": "4014",
+        "resDesc": {
+            "en": "Size Required",
+            "th": "ต้องการ Size"
         }
     }
 }

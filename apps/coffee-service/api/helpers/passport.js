@@ -13,7 +13,7 @@ const opts = {
 passport_1.default.use(new passport_jwt_1.Strategy(opts, async (jwt_payload, done) => {
     try {
         const user = await models_1.UserModel.findByPk(jwt_payload.id, {
-            attributes: ['id', 'username', 'email', 'role_id', 'last_login'],
+            attributes: ['id', 'username', 'email', 'role_id', 'last_login', 'recent_login'],
             include: [
                 {
                     model: models_1.UserRoleModel,

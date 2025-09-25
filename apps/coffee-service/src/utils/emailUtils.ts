@@ -1,17 +1,15 @@
 import nodemailer from "nodemailer";
+import sgMail from '@sendgrid/mail'
 
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.SMTP_EMAIL,
-    pass: process.env.SMTP_PASSWORD,
-  },
-});
+
+sgMail.setApiKey(process.env.API_KEY_SEND_GRID!);
+
+
 
 export const sendOtpEmail = async (email: string, otp: string) => {
 
   const mailOptions = {
-    from: '"Baan Coffee" <no-reply@baancoffee.com>',
+    from: 'yelaysong15@gmail.com',
     to: email,
     subject: "Your OTP Code - Baan Coffee",
     html: `
@@ -29,7 +27,12 @@ export const sendOtpEmail = async (email: string, otp: string) => {
     `
   };
 
-  await transporter.sendMail(mailOptions);
+  try {
+    await sgMail.send(mailOptions);
+    console.log("Email sent!");
+  } catch (err: any) {
+    console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));
+  }
 };
 
 
@@ -37,7 +40,7 @@ export const sendOtpEmail = async (email: string, otp: string) => {
 export const sendResetPasswordEmail = async (email: string, otp: string) => {
 
   const mailOptions = {
-    from: process.env.MAIL_USER,
+    from: 'yelaysong15@gmail.com',
     to: email,
     subject: "Reset your password",
     html: `
@@ -54,20 +57,29 @@ export const sendResetPasswordEmail = async (email: string, otp: string) => {
   </div>
 `,
   };
-
-  return transporter.sendMail(mailOptions);
+  try {
+    await sgMail.send(mailOptions);
+    console.log("Email sent!");
+  } catch (err: any) {
+    console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));
+  }
 };
 
-export const sendResetPasswordAdmin = async (email:any, resetLink: any) => {
+export const sendResetPasswordAdmin = async (email: any, resetLink: any) => {
   const mailOptions = {
-      from: `"Your App" <${process.env.EMAIL_USER}>`,
-      to: email,
-      subject: "Reset your password",
-      html: `<h3>Password Reset</h3>
+    from: `yelaysong15@gmail.com`,
+    to: email,
+    subject: "Reset your password",
+    html: `<h3>Password Reset</h3>
              <p>Click the link below to reset your password:</p>
              <a href="${resetLink}">${resetLink}</a>
              <p>This link will expire in 15 minutes.</p>`,
-    }
+  }
 
-    return transporter.sendMail(mailOptions);
+  try {
+    await sgMail.send(mailOptions);
+    console.log("Email sent!");
+  } catch (err: any) {
+    console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));
+  }
 }

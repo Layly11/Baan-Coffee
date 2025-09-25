@@ -36,7 +36,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.checkAvailability = exports.logout = exports.refreshToken = exports.login = exports.register = void 0;
+exports.checkExpireToken = exports.resetPassword = exports.forgotPassword = exports.checkAvailability = exports.logout = exports.refreshToken = exports.login = exports.register = void 0;
 const jose = __importStar(require("jose"));
 const models_1 = require("@coffee/models");
 const helpers_1 = require("@coffee/helpers");
@@ -46,6 +46,7 @@ const validator_1 = __importDefault(require("validator"));
 const userRole_json_1 = __importDefault(require("../constants/masters/userRole.json"));
 const redis_1 = require("../helpers/redis");
 const validator_2 = require("../utils/validator");
+const emailUtils_1 = require("../utils/emailUtils");
 const register = () => async (req, res, next) => {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
@@ -72,7 +73,7 @@ const register = () => async (req, res, next) => {
         })) {
             return next(new helpers_1.ServiceError(authen_error_json_1.default.ERR_REGISTER_PASSWORD_WEAK));
         }
-        const newUser = await models_1.UserModel.create({ username, email, password, role_id: userRole_json_1.default.CASHIER.id });
+        const newUser = await models_1.UserModel.create({ username, email, password, role_id: userRole_json_1.default.SUPPORT.id });
         res.locals.newUser = newUser;
         next();
     }
@@ -87,7 +88,7 @@ const login = () => async (req, res, next) => {
         return next(new helpers_1.ServiceError(authen_error_json_1.default.ERR_USER_LOGIN_REQUIRED));
     }
     try {
-        const user = await models_1.UserModel.findOne({ where: { email } });
+        const user = await models_1.UserModel.findOne({ where: { email, status: true } });
         const redis = (0, redis_1.getRedisClient)();
         if (!user) {
             return next(new helpers_1.ServiceError(authen_error_json_1.default.ERR_LOGIN_USER_INVALID));
@@ -226,4 +227,74 @@ const checkAvailability = () => async (req, res, next) => {
     }
 };
 exports.checkAvailability = checkAvailability;
+const forgotPassword = () => async (req, res, next) => {
+    const { email } = req.body;
+    const redis = (0, redis_1.getRedisClient)();
+    try {
+        const user = await models_1.UserModel.findOne({ where: { email, status: true } });
+        if (!user) {
+            return next(new helpers_1.ServiceError(authen_error_json_1.default.ERR_USER_NOT_EXIST));
+        }
+        const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET);
+        const token = await new jose.SignJWT({ userId: user.id })
+            .setProtectedHeader({ alg: "HS256" })
+            .setExpirationTime("15m")
+            .sign(jwtSecret);
+        await redis.set(`reset_token:${token}`, user.id, { EX: 15 * 60 });
+        const resetLink = `http://localhost:9301/reset-password?token=${token}`;
+        await (0, emailUtils_1.sendResetPasswordAdmin)(email, resetLink);
+        return next();
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.forgotPassword = forgotPassword;
+const resetPassword = () => async (req, res, next) => {
+    const { token, password } = req.body;
+    const redis = (0, redis_1.getRedisClient)();
+    try {
+        const userId = await redis.get(`reset_token:${token}`);
+        if (!userId) {
+            return next(new helpers_1.ServiceError(authen_error_json_1.default.ERR_USER_NOT_FOUND_ON_RESET_PASSWORD));
+        }
+        const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET);
+        console.log("userId: ", userId);
+        await jose.jwtVerify(token, jwtSecret);
+        const user = await models_1.UserModel.findOne({
+            where: { id: userId, status: true }
+        });
+        if (!user) {
+            return next(new helpers_1.ServiceError(authen_error_json_1.default.ERR_USER_NOT_FOUND_ON_RESET_PASSWORD));
+        }
+        user.password = password;
+        await user.save();
+        await redis.del(`reset_token:${token}`);
+        return next();
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.resetPassword = resetPassword;
+const checkExpireToken = () => async (req, res, next) => {
+    const { token } = req.body;
+    try {
+        if (!token) {
+            return next(new helpers_1.ServiceError(authen_error_json_1.default.ERR_TOKEN_NOT_FOUND));
+        }
+        const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET);
+        await jose.jwtVerify(token, jwtSecret);
+        res.locals.valid = true;
+        return next();
+    }
+    catch (err) {
+        if (err.code === "ERR_JWT_EXPIRED") {
+            res.locals.valid = false;
+            return next();
+        }
+        return next(err);
+    }
+};
+exports.checkExpireToken = checkExpireToken;
 //# sourceMappingURL=authenController.js.map

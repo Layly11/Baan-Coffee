@@ -3,15 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sendResetPasswordEmail = exports.sendOtpEmail = void 0;
-const nodemailer_1 = __importDefault(require("nodemailer"));
-const transporter = nodemailer_1.default.createTransport({
-    service: "gmail",
-    auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_PASSWORD,
-    },
-});
+exports.sendResetPasswordAdmin = exports.sendResetPasswordEmail = exports.sendOtpEmail = void 0;
+const mail_1 = __importDefault(require("@sendgrid/mail"));
+mail_1.default.setApiKey(process.env.API_KEY_SEND_GRID);
 const sendOtpEmail = async (email, otp) => {
     const mailOptions = {
         from: '"Baan Coffee" <no-reply@baancoffee.com>',
@@ -31,12 +25,12 @@ const sendOtpEmail = async (email, otp) => {
       </div>
     `
     };
-    await transporter.sendMail(mailOptions);
+    mail_1.default.send(mailOptions);
 };
 exports.sendOtpEmail = sendOtpEmail;
 const sendResetPasswordEmail = async (email, otp) => {
     const mailOptions = {
-        from: process.env.MAIL_USER,
+        from: '"Baan Coffee" <no-reply@baancoffee.com>',
         to: email,
         subject: "Reset your password",
         html: `
@@ -53,7 +47,20 @@ const sendResetPasswordEmail = async (email, otp) => {
   </div>
 `,
     };
-    return transporter.sendMail(mailOptions);
+    mail_1.default.send(mailOptions);
 };
 exports.sendResetPasswordEmail = sendResetPasswordEmail;
+const sendResetPasswordAdmin = async (email, resetLink) => {
+    const mailOptions = {
+        from: `yelaysong15@gmail.com`,
+        to: email,
+        subject: "Reset your password",
+        html: `<h3>Password Reset</h3>
+             <p>Click the link below to reset your password:</p>
+             <a href="${resetLink}">${resetLink}</a>
+             <p>This link will expire in 15 minutes.</p>`,
+    };
+    mail_1.default.send(mailOptions);
+};
+exports.sendResetPasswordAdmin = sendResetPasswordAdmin;
 //# sourceMappingURL=emailUtils.js.map

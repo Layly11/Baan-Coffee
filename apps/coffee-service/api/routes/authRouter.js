@@ -80,6 +80,35 @@ router.get('/check-availability', (0, authenController_1.checkAvailability)(), (
     res.json(res.locals.response);
     next();
 });
+router.post('/forgot-password', (0, authenController_1.forgotPassword)(), (req, res, next) => {
+    res.locals.response = {
+        res_code: '0000',
+        res_desc: '',
+        data: {}
+    };
+    res.json(res.locals.response);
+    next();
+});
+router.post('/reset-password', (0, authenController_1.resetPassword)(), (req, res, next) => {
+    res.locals.response = {
+        res_code: '0000',
+        res_desc: '',
+        data: undefined
+    };
+    res.json(res.locals.response);
+    next();
+});
+router.post('/check-expire-token', (0, authenController_1.checkExpireToken)(), (req, res, next) => {
+    res.locals.response = {
+        res_code: '0000',
+        res_desc: '',
+        data: {
+            valid: res.locals.valid
+        }
+    };
+    res.json(res.locals.response);
+    next();
+});
 router.get('/test', (req, res, next) => {
     res.json({ user: req.user });
     next();

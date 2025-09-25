@@ -5,6 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 require("./helpers/dotenv.helper");
 const app_1 = __importDefault(require("./app"));
+const cleanupBlobs_1 = require("./jobs/cleanupBlobs");
 const redis_1 = require("./helpers/redis");
 const winston_1 = __importDefault(require("./helpers/winston"));
 const sequelize_helper_1 = __importDefault(require("./helpers/sequelize.helper"));
@@ -40,6 +41,7 @@ async function init() {
         const redis = (0, redis_1.getRedisClient)();
         const server = (0, app_1.default)({ redis }).listen(PORT, () => {
             winston_1.default.info(`Coffee Service listening at: http://localhost:${PORT}`);
+            (0, cleanupBlobs_1.scheduleCleanupJob)();
         });
         function gracefulShutdown() {
             winston_1.default.info('Received kill signal, shutting down gracefully...');

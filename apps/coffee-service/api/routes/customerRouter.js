@@ -9,8 +9,52 @@ const customersController_1 = require("../controller/customersController");
 const ratelimit_1 = require("../utils/ratelimit");
 const userController_1 = require("../controller/userController");
 const customersController_2 = require("../controller/customersController");
+const portalPermissionMaster_json_1 = require("../constants/masters/portalPermissionMaster.json");
+const portalPermissionActionMaster_json_1 = require("../constants/masters/portalPermissionActionMaster.json");
 function createCustomerRouter({ redis }) {
     const router = express_1.default.Router();
+    router.get('/', (0, userController_1.authMiddleware)(), (0, userController_1.findUserPermission)(), (0, userController_1.validateUserPermission)(portalPermissionMaster_json_1.MANAGE_CUSTOMER, portalPermissionActionMaster_json_1.VIEW), (0, customersController_1.getCustomerData)(), (req, res, next) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: {
+                total: res.locals.total,
+                customers: res.locals.customers
+            }
+        };
+        res.json(res.locals.response);
+        next();
+    });
+    router.get('/order/:id', (0, userController_1.authMiddleware)(), (0, userController_1.findUserPermission)(), (0, userController_1.validateUserPermission)(portalPermissionMaster_json_1.MANAGE_CUSTOMER, portalPermissionActionMaster_json_1.VIEW), (0, customersController_1.getCustomerOrderData)(), (req, res, next) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: {
+                total: res.locals.total,
+                orders: res.locals.orders
+            }
+        };
+        res.json(res.locals.response);
+        next();
+    });
+    router.patch('/update/:id', (0, userController_1.authMiddleware)(), (0, userController_1.findUserPermission)(), (0, userController_1.validateUserPermission)(portalPermissionMaster_json_1.MANAGE_CUSTOMER, portalPermissionActionMaster_json_1.EDIT), (0, customersController_1.updateCustomerData)(), (req, res, next) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: undefined
+        };
+        res.json(res.locals.response);
+        next();
+    });
+    router.delete('/delete/:id', (0, userController_1.authMiddleware)(), (0, userController_1.findUserPermission)(), (0, userController_1.validateUserPermission)(portalPermissionMaster_json_1.MANAGE_CUSTOMER, portalPermissionActionMaster_json_1.DELETE), (0, customersController_1.deleteCustomer)(), (req, res, next) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: undefined
+        };
+        res.json(res.locals.response);
+        next();
+    });
     router.post('/register', (0, customersController_1.registerCustomer)(), (req, res, next) => {
         res.locals.response = {
             res_code: '1111',

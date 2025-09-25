@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProductByCategory = exports.getCategoryMobile = exports.getBestSeller = exports.deleteCategory = exports.updateCategory = exports.createCategory = exports.getCategory = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductData = void 0;
+exports.getSizebyProduct = exports.getProductByCategory = exports.getCategoryMobile = exports.getBestSeller = exports.deleteCategory = exports.updateCategory = exports.createCategory = exports.getCategory = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductSize = exports.getProductData = void 0;
 const models_1 = require("@coffee/models");
 const azureBlob_1 = require("../utils/azureBlob");
 const helpers_1 = require("@coffee/helpers");
@@ -30,6 +30,12 @@ const getProductData = () => async (req, res, next) => {
                             name: categoryArray
                         },
                     })
+                },
+                {
+                    model: models_1.SizeModel,
+                    as: 'sizes',
+                    attributes: ['id', 'name', 'volume_ml', 'extra_price'],
+                    through: { attributes: [] }
                 }
             ],
             limit: Number(limit) || 10,
@@ -44,7 +50,13 @@ const getProductData = () => async (req, res, next) => {
             image_url: product.image_url,
             description: product.description,
             category_id: product.category.id || null,
-            category_name: product.category?.name || null
+            category_name: product.category?.name || null,
+            sizes: product.sizes?.map((s) => ({
+                id: s.id,
+                name: s.name,
+                volume_ml: s.volume_ml,
+                extra_price: s.extra_price
+            }))
         }));
         res.locals.products = products;
         return next();
@@ -54,10 +66,23 @@ const getProductData = () => async (req, res, next) => {
     }
 };
 exports.getProductData = getProductData;
+const getProductSize = () => async (req, res, next) => {
+    try {
+        const sizes = await models_1.SizeModel.findAll();
+        console.log("SizeModel: ", sizes);
+        res.locals.sizes = sizes;
+        return next();
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.getProductSize = getProductSize;
 const createProduct = () => async (req, res, next) => {
     const transaction = await models_1.sequelize.transaction();
     try {
         const { product_name: productName, categories, price, description, is_active: isActive } = req.body;
+        let { sizes } = req.body;
         const file = (req.file) || null;
         if (price !== undefined && (price > 200 || price < 1)) {
             await transaction.rollback();
@@ -67,7 +92,7 @@ const createProduct = () => async (req, res, next) => {
             await transaction.rollback();
             return next(new helpers_1.ServiceError(product_error_json_1.default.FILE_TYPE_REQUIRE_IMAGE));
         }
-        if (file !== null && file !== undefined && file.size > 2 * 1024 * 1024) {
+        if (file !== null && file !== undefined && file.size > 5 * 1024 * 1024) {
             await transaction.rollback();
             return next(new helpers_1.ServiceError(product_error_json_1.default.FILE_SIZE_LIMIT));
         }
@@ -77,11 +102,17 @@ const createProduct = () => async (req, res, next) => {
         if (!categories) {
             return next(new helpers_1.ServiceError(product_error_json_1.default.CATEGOREIS_REQUIRE));
         }
+        if (!sizes) {
+            return next(new helpers_1.ServiceError(product_error_json_1.default.SIZE_REQUIRE));
+        }
         if (!price) {
             return next(new helpers_1.ServiceError(product_error_json_1.default.PRICE_REQUIRE));
         }
         if (!isActive) {
             return next(new helpers_1.ServiceError(product_error_json_1.default.IS_ACTIVE_REQUIRE));
+        }
+        if (typeof sizes === 'string') {
+            sizes = sizes.split(',').map((s) => parseInt(s.trim(), 10));
         }
         let imageUrl;
         if (file) {
@@ -109,6 +140,14 @@ const createProduct = () => async (req, res, next) => {
             image_url: imageUrl,
             description: description
         }, { transaction });
+        if (sizes && Array.isArray(sizes)) {
+            for (const sizeId of sizes) {
+                await models_1.ProductSizeModel.create({
+                    product_id: newProduct.id,
+                    size_id: sizeId
+                }, { transaction });
+            }
+        }
         res.locals.newProduct = newProduct;
         await transaction.commit();
         return next();
@@ -126,6 +165,10 @@ const updateProduct = () => async (req, res, next) => {
             return next(new helpers_1.ServiceError(product_error_json_1.default.PRODUCT_NOT_FOUND));
         }
         const { product_name: productName, categories, price, description, is_active: isActive, is_remove_image: isRemoveImage } = req.body;
+        let { sizes } = req.body;
+        if (typeof sizes === 'string') {
+            sizes = sizes.split(',').map((s) => parseInt(s.trim(), 10));
+        }
         if (price !== undefined && (price > 200 || price < 1)) {
             return next(new helpers_1.ServiceError(product_error_json_1.default.ERR_PRICE_CONSTRAINT));
         }
@@ -133,7 +176,7 @@ const updateProduct = () => async (req, res, next) => {
         if (file !== null && file !== undefined && !file.mimetype.startsWith('image/')) {
             return next(new helpers_1.ServiceError(product_error_json_1.default.FILE_TYPE_REQUIRE_IMAGE));
         }
-        if (file !== null && file !== undefined && file.size > 2 * 1024 * 1024) {
+        if (file !== null && file !== undefined && file.size > 5 * 1024 * 1024) {
             return next(new helpers_1.ServiceError(product_error_json_1.default.FILE_SIZE_LIMIT));
         }
         if (file) {
@@ -150,10 +193,6 @@ const updateProduct = () => async (req, res, next) => {
         }
         if (isRemoveImage === 'true') {
             if (item.image_url) {
-                await (0, azureBlob_1.deleteFromAzureImage)({
-                    containerName: process.env.AZURE_STORAGE_CONTAINER_NAME,
-                    blobPath: (0, azureBlob_1.parseBlobUrl)(item.image_url).blobName
-                });
                 item.image_url = null;
             }
         }
@@ -170,13 +209,21 @@ const updateProduct = () => async (req, res, next) => {
         if (price !== undefined) {
             item.price = price;
         }
-        if (description !== undefined) {
+        if (description !== undefined || description !== null) {
             item.description = description;
         }
         if (isActive !== undefined) {
             item.status = isActive;
         }
         await item.save();
+        if (sizes && Array.isArray(sizes)) {
+            await models_1.ProductSizeModel.destroy({ where: { product_id: item.id } });
+            const sizeData = sizes.map((sizeId) => ({
+                product_id: item.id,
+                size_id: sizeId
+            }));
+            await models_1.ProductSizeModel.bulkCreate(sizeData);
+        }
         res.locals.item = item;
         return next();
     }
@@ -193,17 +240,7 @@ const deleteProduct = () => async (req, res, next) => {
             return next(new helpers_1.ServiceError(product_error_json_1.default.PRODUCT_NOT_FOUND));
         }
         await models_1.TopProductModel.destroy({ where: { product_id: id } });
-        if (item.image_url) {
-            try {
-                await (0, azureBlob_1.deleteFromAzureImage)({
-                    containerName: process.env.AZURE_STORAGE_CONTAINER_NAME,
-                    blobPath: (0, azureBlob_1.parseBlobUrl)(item.image_url).blobName
-                });
-            }
-            catch (err) {
-                return next(err);
-            }
-        }
+        await models_1.ProductSizeModel.destroy({ where: { product_id: id } });
         await item.destroy();
         return next();
     }
@@ -285,7 +322,6 @@ const getBestSeller = () => async (req, res, next) => {
     try {
         const bestSellers = await models_1.TopProductModel.findAll({
             attributes: [
-                'id',
                 'product_id',
                 [sequelize_1.Sequelize.fn('SUM', sequelize_1.Sequelize.col('total_sold')), 'totalSold'],
                 [sequelize_1.Sequelize.fn('SUM', sequelize_1.Sequelize.col('total_sales')), 'totalSales'],
@@ -294,19 +330,22 @@ const getBestSeller = () => async (req, res, next) => {
                 {
                     model: models_1.ProductModel,
                     as: 'product',
-                    attributes: ['name', 'price', 'image_url', 'description'],
+                    attributes: ['id', 'name', 'price', 'image_url', 'description'],
                     where: { status: 1 }
                 },
             ],
-            group: ['top_products.id', 'product_id', 'product.id'],
+            group: ['product.id'],
             order: [[sequelize_1.Sequelize.literal('totalSold'), 'DESC']],
+            limit: 3
         });
         const bestSellerMapping = bestSellers.map((value) => ({
-            id: value.id,
+            product_id: value.product.id,
             name: value.product.name,
             Desc: value.product.description,
             price: value.product.price,
-            imageSource: value.product.image_url
+            imageSource: value.product.image_url,
+            totalSold: value.getDataValue('totalSold'),
+            totalSales: value.getDataValue('totalSales')
         }));
         res.locals.bestSeller = bestSellerMapping;
         return next();
@@ -373,4 +412,31 @@ const getProductByCategory = () => async (req, res, next) => {
     }
 };
 exports.getProductByCategory = getProductByCategory;
+const getSizebyProduct = () => async (req, res, next) => {
+    try {
+        const productId = req.params.id;
+        const sizes = await models_1.ProductSizeModel.findAll({
+            where: { product_id: productId },
+            include: [
+                {
+                    model: models_1.SizeModel,
+                    as: 'size',
+                }
+            ]
+        });
+        const mappedSizeProduct = sizes.map((s) => ({
+            id: s.size.id,
+            title: s.size.name,
+            Quntity: s.size.volume_ml,
+            extra_price: s.size.extra_price
+        }));
+        console.log("mappedSizeProduct", mappedSizeProduct);
+        res.locals.sizes = mappedSizeProduct;
+        return next();
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.getSizebyProduct = getSizebyProduct;
 //# sourceMappingURL=productController.js.map

@@ -17,8 +17,9 @@ const authMiddleware = () => async (req, res, next) => {
     const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET);
     try {
         const { payload } = await (0, jose_1.jwtVerify)(token, jwtSecret);
-        const user = await models_1.UserModel.findByPk(payload.id, {
-            attributes: ['id', 'username', 'email', 'role_id', 'last_login'],
+        const user = await models_1.UserModel.findOne({
+            where: { id: payload.id, status: true },
+            attributes: ['id', 'username', 'email', 'role_id', 'last_login', 'recent_login'],
             include: [
                 {
                     model: models_1.UserRoleModel,
@@ -44,7 +45,12 @@ const authMiddlewareCustomer = () => async (req, res, next) => {
     const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET_CUSTOMER);
     try {
         const { payload } = await (0, jose_1.jwtVerify)(token, jwtSecret);
-        const exists = await models_1.CustomersModel.findByPk(payload.id);
+        const exists = await models_1.CustomersModel.findOne({
+            where: {
+                id: payload.id,
+                isDeleted: false
+            }
+        });
         if (!exists) {
             return next(new helpers_1.ServiceError(httpError_json_1.default.ERR_HTTP_401));
         }
@@ -96,6 +102,7 @@ const findUserPermission = () => async (req, res, next) => {
             username: user.username,
             email: user.email,
             last_login: user.last_login,
+            recent_login: user.recent_login,
             permissions: res.locals.permissions
         };
         res.locals.user = formatUser;

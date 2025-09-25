@@ -118,5 +118,13 @@
             "en": "Password Policy Invalid",
             "th": "Password ผิด​ Policy"
         }
+    },
+    "ERR_CUSTOMER_NOT_FOUND": {
+        "statusCode": 401,
+        "resCode": "4001",
+        "resDesc": {
+            "en": "Customer Not Found",
+            "th": "ไม่พบ customer"
+        }
     }
 }

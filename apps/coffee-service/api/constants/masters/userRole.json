@@ -3,16 +3,16 @@
         "id": 1,
         "name": "SUPER_ADMID"
     },
-    "MANAGER": {
+    "ADMIN": {
         "id": 2,
+        "name": "ADMIN"
+    },
+    "MANAGER": {
+        "id": 3,
         "name": "MANAGER"
     },
-    "BARISTA": {
-        "id": 3,
-        "name": "BARISTA"
-    },
-    "CASHIER": {
+    "SUPPORT": {
         "id": 4,
-        "name": "CASHIER"
+        "name": "SUPPORT"
     }
 }

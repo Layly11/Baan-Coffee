@@ -25,6 +25,10 @@ const APP = ({ redis }) => {
         next();
     });
     app.use((0, logController_1.createRequestLog)());
+    app.get('/', (req, res, next) => {
+        res.send("Welcome to Server BaanCoffee!!!🛜");
+        next();
+    });
     app.use((0, routers_1.default)({ redis }));
     app.use((0, logController_1.createResponseLog)());
     app.use((0, logController_1.createErrorLog)());

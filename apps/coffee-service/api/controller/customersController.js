@@ -36,22 +36,145 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProfileData = exports.resetPassword = exports.requireResetVerified = exports.verifyResetOtp = exports.resendResetOtp = exports.forgotPasswordWithOtp = exports.loginCustomer = exports.resendOtpCustomer = exports.verifyOtpCustomer = exports.checkCustomerExist = exports.registerCustomer = void 0;
+exports.getProfileData = exports.resetPassword = exports.requireResetVerified = exports.verifyResetOtp = exports.resendResetOtp = exports.forgotPasswordWithOtp = exports.loginCustomer = exports.resendOtpCustomer = exports.verifyOtpCustomer = exports.checkCustomerExist = exports.registerCustomer = exports.deleteCustomer = exports.updateCustomerData = exports.getCustomerOrderData = exports.getCustomerData = void 0;
 const helpers_1 = require("@coffee/helpers");
 const models_1 = require("@coffee/models");
 const customer_error_json_1 = __importDefault(require("../constants/errors/customer.error.json"));
 const jose = __importStar(require("jose"));
 const emailUtils_1 = require("../utils/emailUtils");
 const redis_1 = require("../helpers/redis");
+const sequelize_1 = require("sequelize");
+const getCustomerData = () => async (req, res, next) => {
+    const { information, limit, offset } = req.query;
+    try {
+        const infoStr = typeof information === 'string' ? information : undefined;
+        const where = infoStr
+            ? {
+                isDeleted: false,
+                [sequelize_1.Op.or]: [
+                    { name: { [sequelize_1.Op.like]: `%${infoStr}%` } },
+                    { email: { [sequelize_1.Op.like]: `%${infoStr}%` } },
+                    { phone: { [sequelize_1.Op.like]: `%${infoStr}%` } },
+                ],
+            }
+            : { isDeleted: false };
+        const { count, rows } = await models_1.CustomersModel.findAndCountAll({
+            where,
+            limit: Number(limit) || 10,
+            offset: Number(offset) || 0,
+            order: [['createdAt', 'ASC']],
+        });
+        res.locals.total = count;
+        res.locals.customers = rows;
+        return next();
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.getCustomerData = getCustomerData;
+const getCustomerOrderData = () => async (req, res, next) => {
+    const { limit, offset } = req.query;
+    const customerId = req.params.id;
+    try {
+        const { count, rows } = await models_1.CustomersModel.findAndCountAll({
+            where: { id: customerId },
+            include: [
+                {
+                    model: models_1.OrderModel,
+                    as: 'orders',
+                    where: { customer_id: customerId }
+                }
+            ],
+            limit: Number(limit) || 10,
+            offset: Number(offset) || 0,
+        });
+        let orders = rows.flatMap((customer) => customer.orders.map((o) => {
+            const order = o.get({ plain: true });
+            let shippingAddress = order.shipping_address;
+            if (typeof shippingAddress === 'object' && shippingAddress !== null) {
+                shippingAddress = [
+                    shippingAddress.street,
+                    shippingAddress.city,
+                    shippingAddress.zipcode
+                ]
+                    .filter(Boolean)
+                    .join(', ');
+            }
+            return {
+                ...order,
+                timeRaw: order.time,
+                time: (0, helpers_1.dayjs)(order.time).format('DD/MM/YYYY HH:MM'),
+                shipping_address: shippingAddress,
+                phone: customer.phone,
+            };
+        }));
+        orders = orders.sort((a, b) => new Date(b.timeRaw).getTime() - new Date(a.timeRaw).getTime());
+        res.locals.total = count;
+        res.locals.orders = orders;
+        console.log("Rows: ", orders);
+        return next();
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.getCustomerOrderData = getCustomerOrderData;
+const updateCustomerData = () => async (req, res, next) => {
+    const id = req.params.id;
+    const { name, email, phone, verified } = req.body;
+    try {
+        const customer = await models_1.CustomersModel.findByPk(id);
+        if (!customer) {
+            return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_EMAIL_NOT_FOUND));
+        }
+        if (name !== '' && name !== null && name !== undefined) {
+            customer.name = name;
+        }
+        if (email !== '' && email !== null && email !== undefined) {
+            customer.email = email;
+        }
+        if (phone !== '' && phone !== null && phone !== undefined) {
+            customer.phone = phone;
+        }
+        customer.verified = verified;
+        await customer.save();
+        return next();
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.updateCustomerData = updateCustomerData;
+const deleteCustomer = () => async (req, res, next) => {
+    const id = req.params.id;
+    try {
+        const customer = await models_1.CustomersModel.findOne({
+            where: {
+                id: id,
+                isDeleted: false
+            }
+        });
+        if (!customer) {
+            return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_EMAIL_NOT_FOUND));
+        }
+        await customer.update({ isDeleted: true });
+        return next();
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.deleteCustomer = deleteCustomer;
 const registerCustomer = () => async (req, res, next) => {
     const redis = (0, redis_1.getRedisClient)();
     try {
         const { name, email, password, phone } = req.body;
-        const existsEmail = await models_1.CustomersModel.findOne({ where: { email } });
+        const existsEmail = await models_1.CustomersModel.findOne({ where: { email, isDeleted: false } });
         if (existsEmail) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_REGISTER_EMAIL_EXIST));
         }
-        const existsPhone = await models_1.CustomersModel.findOne({ where: { phone } });
+        const existsPhone = await models_1.CustomersModel.findOne({ where: { phone, isDeleted: false } });
         if (existsPhone) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_REGISTER_PHONE_EXIST));
         }
@@ -65,6 +188,7 @@ const registerCustomer = () => async (req, res, next) => {
             phone,
             image_url: null,
             verified: false,
+            isDeleted: false,
         });
         const otp = String(Math.floor(100000 + Math.random() * 900000).toString());
         await redis.set(`email_otp:${email}`, otp, { EX: 300 });
@@ -79,8 +203,8 @@ exports.registerCustomer = registerCustomer;
 const checkCustomerExist = () => async (req, res, next) => {
     try {
         const { email, phone } = req.query;
-        const emailExists = await models_1.CustomersModel.findOne({ where: { email } });
-        const phoneExists = await models_1.CustomersModel.findOne({ where: { phone } });
+        const emailExists = await models_1.CustomersModel.findOne({ where: { email, isDeleted: false } });
+        const phoneExists = await models_1.CustomersModel.findOne({ where: { phone, isDeleted: false } });
         res.locals.emailExists = !!emailExists;
         res.locals.phoneExists = !!phoneExists;
         return next();
@@ -98,7 +222,7 @@ const verifyOtpCustomer = () => async (req, res, next) => {
         if (!email || !otp) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_OTP_REQUIRED));
         }
-        const customer = await models_1.CustomersModel.findOne({ where: { email } });
+        const customer = await models_1.CustomersModel.findOne({ where: { email, isDeleted: false } });
         if (!customer) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_EMAIL_NOT_FOUND));
         }
@@ -125,7 +249,7 @@ const resendOtpCustomer = () => async (req, res, next) => {
         if (!email) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_EMAIL_REQUIRED));
         }
-        const customer = await models_1.CustomersModel.findOne({ where: { email } });
+        const customer = await models_1.CustomersModel.findOne({ where: { email, isDeleted: false } });
         if (!customer) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_EMAIL_NOT_FOUND));
         }
@@ -151,7 +275,7 @@ const loginCustomer = () => async (req, res, next) => {
         if (!email || !password) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_LOGIN_REQUIRED));
         }
-        const customer = await models_1.CustomersModel.findOne({ where: { email } });
+        const customer = await models_1.CustomersModel.findOne({ where: { email, isDeleted: false } });
         if (!customer) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_LOGIN_CUSTOMER_INVALID));
         }
@@ -189,7 +313,7 @@ const forgotPasswordWithOtp = () => async (req, res, next) => {
         if (!email) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_EMAIL_REQUIRED));
         }
-        const customer = await models_1.CustomersModel.findOne({ where: { email } });
+        const customer = await models_1.CustomersModel.findOne({ where: { email, isDeleted: false } });
         if (!customer) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_EMAIL_NOT_FOUND));
         }
@@ -211,7 +335,7 @@ const resendResetOtp = () => async (req, res, next) => {
         if (!email) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_EMAIL_REQUIRED));
         }
-        const customer = await models_1.CustomersModel.findOne({ where: { email } });
+        const customer = await models_1.CustomersModel.findOne({ where: { email, isDeleted: false } });
         if (!customer) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_EMAIL_NOT_FOUND));
         }
@@ -286,7 +410,7 @@ const resetPassword = () => async (req, res, next) => {
         if (!policy.test(newPassword)) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_PASSWORD_POLICY_INVALID));
         }
-        const customer = await models_1.CustomersModel.findOne({ where: { email } });
+        const customer = await models_1.CustomersModel.findOne({ where: { email, isDeleted: false } });
         if (!customer) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_EMAIL_NOT_FOUND));
         }
@@ -304,7 +428,12 @@ exports.resetPassword = resetPassword;
 const getProfileData = () => async (req, res, next) => {
     try {
         const user = req.user;
-        const customer = await models_1.CustomersModel.findByPk(user.id);
+        const customer = await models_1.CustomersModel.findOne({
+            where: {
+                id: user.id,
+                isDeleted: false
+            }
+        });
         if (!customer) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_EMAIL_NOT_FOUND));
         }

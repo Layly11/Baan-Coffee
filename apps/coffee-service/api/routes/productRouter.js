@@ -13,9 +13,9 @@ const router = express_1.default.Router();
 const upload = (0, multer_1.default)({
     storage: multer_1.default.memoryStorage(),
     limits: {
-        fileSize: 2 * 1024 * 1024,
+        fileSize: 5 * 1024 * 1024,
         files: 1,
-        fields: 6,
+        fields: 7,
         fieldNameSize: 100
     },
     fileFilter: (req, file, cb) => {
@@ -33,6 +33,17 @@ router.get('/', (0, userController_1.authMiddleware)(), (0, userController_1.fin
         res_desc: '',
         data: {
             products: res.locals.products,
+        }
+    };
+    res.json(res.locals.response);
+    next();
+});
+router.get('/sizes', (0, userController_1.authMiddleware)(), (0, userController_1.findUserPermission)(), (0, userController_1.validateUserPermission)(portalPermissionMaster_json_1.PRODUCT_MENU, portalPermissionActionMaster_json_1.VIEW), (0, productController_1.getProductSize)(), (req, res, next) => {
+    res.locals.response = {
+        res_code: '0000',
+        res_desc: '',
+        data: {
+            size: res.locals.sizes,
         }
     };
     res.json(res.locals.response);
@@ -139,6 +150,17 @@ router.get('/productData', (0, userController_1.authMiddlewareCustomer)(), (0, p
         res_desc: '',
         data: {
             productData: res.locals.productsData
+        }
+    };
+    res.json(res.locals.response);
+    next();
+});
+router.get('/sizes/:id', (0, userController_1.authMiddlewareCustomer)(), (0, productController_1.getSizebyProduct)(), (req, res, next) => {
+    res.locals.response = {
+        res_code: '1111',
+        res_desc: '',
+        data: {
+            sizes: res.locals.sizes
         }
     };
     res.json(res.locals.response);

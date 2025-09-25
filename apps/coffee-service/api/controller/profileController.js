@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateAddressCustomer = exports.deleteAddressCustomer = exports.createAddressCustomer = exports.fetchAddressCustomer = exports.deleteAccount = exports.editProfileDetail = exports.editProfileImage = void 0;
+exports.updateAddressCustomer = exports.deleteAddressCustomer = exports.createAddressCustomer = exports.fetchAddressBySelected = exports.fetchAddressCustomer = exports.deleteAccount = exports.editProfileDetail = exports.editProfileImage = void 0;
 const helpers_1 = require("@coffee/helpers");
 const models_1 = require("@coffee/models");
 const profile_error_json_1 = __importDefault(require("../constants/errors/profile.error.json"));
@@ -23,7 +23,7 @@ const editProfileImage = () => async (req, res, next) => {
             data: file.buffer,
             contentType: file.mimetype
         });
-        await models_1.CustomersModel.update({ image_url: imageUrl }, { where: { id: userId } });
+        await models_1.CustomersModel.update({ image_url: imageUrl }, { where: { id: userId, isDeleted: false } });
         res.locals.imageUrl = imageUrl;
         return next();
     }
@@ -35,7 +35,12 @@ exports.editProfileImage = editProfileImage;
 const editProfileDetail = () => async (req, res, next) => {
     try {
         const { id, name, email, phone } = req.body;
-        const customer = await models_1.CustomersModel.findByPk(id);
+        const customer = await models_1.CustomersModel.findOne({
+            where: {
+                id: id,
+                isDeleted: false
+            }
+        });
         if (!customer) {
             return next(new helpers_1.ServiceError(profile_error_json_1.default.ERR_CUSTOMER_NOT_FOUND));
         }
@@ -69,16 +74,7 @@ const deleteAccount = () => async (req, res, next) => {
             await t.rollback();
             return next(new helpers_1.ServiceError(profile_error_json_1.default.ERR_CUSTOMER_NOT_FOUND));
         }
-        const profileImg = customer.image_url;
-        console.log("ProfileIMAGE: ", profileImg);
-        await customer.destroy({ force: true, transaction: t });
-        if (profileImg) {
-            const prefix = `profile-images/user_${customerId}/`;
-            await (0, azureBlob_1.deleteFolderPrefix)({
-                containerName: process.env.AZURE_STORAGE_PROFILE_CONTAINER_NAME,
-                prefix
-            });
-        }
+        await customer.update({ isDeleted: true }, { transaction: t });
         await t.commit();
         return next();
     }
@@ -107,6 +103,18 @@ const fetchAddressCustomer = () => async (req, res, next) => {
     }
 };
 exports.fetchAddressCustomer = fetchAddressCustomer;
+const fetchAddressBySelected = () => async (req, res, next) => {
+    try {
+        const id = req.params.id;
+        const addresses = await models_1.AddressModel.findByPk(id);
+        res.locals.address = addresses;
+        return next();
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.fetchAddressBySelected = fetchAddressBySelected;
 const createAddressCustomer = () => async (req, res, next) => {
     try {
         const customerId = req.user.id;
