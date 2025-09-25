@@ -95,7 +95,7 @@ const CustomersPage = () => {
                 information
             }
         })
-        await fetchCustomerData()
+        await fetchCustomerData(0)
     }
 
     const handleOnChangePage = async (page: number): Promise<void> => {
@@ -104,7 +104,7 @@ const CustomersPage = () => {
             pathname,
             query: { ...router.query, page }
         })
-        await fetchCustomerData()
+        await fetchCustomerData(page)
     }
 
     const handleOpenEdit = (customer: any) => {
@@ -146,13 +146,13 @@ const CustomersPage = () => {
         checkPermission({ user, page, action }, router)
     }, [user])
 
-    useEffect(() => {
-        if (!router.isReady) return
+       useEffect(() => {
         checkRouterQueryAndAutoFetchData({
             query: router.query,
             fetchData: fetchCustomerData
         })
-    }, [router.isReady, router.query])
+    }, [])
+
 
 
 

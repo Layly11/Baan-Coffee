@@ -19,7 +19,6 @@ interface HeaderProps {
 
 
 export const Header = ({ handleOnClearSearch, handleOnClickSearch, information, setInformation, role, setRole, setIsAddOpen, canAddUser}: HeaderProps): JSX.Element => {
-    console.log('canAddUser: ',canAddUser)
     return (
         <Row style={{ margin: '0px -10px' }}>
             <Col lg={12}>

@@ -51,6 +51,7 @@ const UserPage = () => {
           permission.create
       )
     const fetchUserData = async (page?: any) => {
+        console.log("fetch page: ", page)
         setIsFetching(true)
         setIsSearch(false)
         try {
@@ -67,6 +68,7 @@ const UserPage = () => {
             if (res.data !== null) {
                 const users = res.data.users
                 const total = res.data.total
+                console.log('user: ', users)
                 setRows(users)
                 setTotal(total)
             }
@@ -100,16 +102,17 @@ const UserPage = () => {
                 information
             }
         })
-        await fetchUserData()
+        await fetchUserData(0)
     }
 
     const handleOnChangePage = async (page: number): Promise<void> => {
+        console.log("page: ",page)
         setPage(page)
         router.replace({
             pathname,
             query: { ...router.query, page }
         })
-        await fetchUserData()
+        await fetchUserData(page)
     }
 
     const handleOpenEdit = (user: any) => {
@@ -154,13 +157,13 @@ const UserPage = () => {
         checkPermission({ user, page, action }, router)
     }, [user])
 
+
     useEffect(() => {
-        if (!router.isReady) return
         checkRouterQueryAndAutoFetchData({
             query: router.query,
             fetchData: fetchUserData
         })
-    }, [router.isReady, router.query])
+    }, [])
 
 
     return (

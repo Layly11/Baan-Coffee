@@ -1,5 +1,5 @@
 import { ButtonContainer, ModalBackgroundContainer, ModalCard, ModalCardBody, ModalContainer } from "@/components/commons/modal"
-import { Alert } from "@/helpers/sweetalert"
+import swalInstance, { Alert } from "@/helpers/sweetalert"
 import { JSX, useEffect, useState } from "react"
 import { Col, Row } from "react-grid-system"
 import { SelectData } from "@/components/header/selectData"
@@ -17,7 +17,7 @@ type Props = {
 
 export const EditUserModal = ({ isOpen, onClose, user, onUpdated }: Props) => {
     const [form, setForm] = useState({ username: '', email: '', phone: '', role: '', status: false })
-
+    
 
     useEffect(() => {
         console.log('User: ', user)
@@ -39,10 +39,14 @@ export const EditUserModal = ({ isOpen, onClose, user, onUpdated }: Props) => {
 
 
 
-    const palette = {
+   const palette = {
         btnCancel: {
             color: "#d9d9d9",
             backgroundColor: "#ffffff",
+        },
+        btnConfirm: {
+            color: "#ffffff",
+            backgroundColor: "#d9d9d9",
         },
         btnConfirmActive: {
             color: "#ffffff",
@@ -66,6 +70,15 @@ export const EditUserModal = ({ isOpen, onClose, user, onUpdated }: Props) => {
         try {
             if (!user) return
 
+              if (!form.username.trim() || !form.email.trim() || !form.role) {
+            await swalInstance.fire({
+                icon: "warning",
+                title: "ข้อมูลไม่ครบ",
+                text: "กรุณากรอกชื่อ, อีเมล และเลือก Role",
+            })
+            return
+        }
+
             await updatUserRequester(user.id, form)
 
             onUpdated()
@@ -75,6 +88,14 @@ export const EditUserModal = ({ isOpen, onClose, user, onUpdated }: Props) => {
             Alert({ data: err })
         }
     }
+
+        const isFormChanged =
+        form.username !== (user?.username || "") ||
+        form.email !== (user?.email || "") ||
+        form.phone !== (user?.phone || "") ||
+        form.role !== String(user?.role_id || "") ||
+        form.status !== !!user?.status
+
 
 
     if (!isOpen) return null
@@ -166,11 +187,12 @@ export const EditUserModal = ({ isOpen, onClose, user, onUpdated }: Props) => {
                             </Col>
                             <Col md={6}>
                                 <div
-                                    onClick={handleSubmit}
+                                     onClick={isFormChanged ? handleSubmit : undefined}
                                 >
                                     <ButtonContainer
-                                        $backgroundColor={palette.btnConfirmActive.backgroundColor}
-                                        $color={palette.btnConfirmActive.color}
+                                        $backgroundColor={isFormChanged ? "#5D3A00" : "#ccc"}
+                                        $color={!isFormChanged ? palette.btnConfirmActive.color : palette.btnConfirm.color}
+                                        style={{ cursor: isFormChanged ? "pointer" : "not-allowed" }}
                                     >
                                         ยืนยัน
                                     </ButtonContainer>
@@ -186,11 +208,14 @@ export const EditUserModal = ({ isOpen, onClose, user, onUpdated }: Props) => {
 export const AddUserModal = ({ isOpen, onClose, onUpdated }: any) => {
     const [form, setForm] = useState({ username: '', email: '', password: '', phone: '', role: '', status: false })
 
-
-    const palette = {
+ const palette = {
         btnCancel: {
             color: "#d9d9d9",
             backgroundColor: "#ffffff",
+        },
+        btnConfirm: {
+            color: "#ffffff",
+            backgroundColor: "#d9d9d9",
         },
         btnConfirmActive: {
             color: "#ffffff",
@@ -224,18 +249,28 @@ export const AddUserModal = ({ isOpen, onClose, onUpdated }: any) => {
 
 
     const handleSubmit = async () => {
+      if (!form.username.trim() || !form.email.trim() || !form.password.trim() || !form.role) {
+        await swalInstance.fire({
+            icon: "warning",
+            title: "กรอกข้อมูลไม่ครบ",
+            text: "กรุณากรอกข้อมูลให้ครบถ้วน",
+        })
+        return
+    }
         try {
 
             await createUserRequester(form)
 
             onUpdated()
-            onClose()
+            handelCloseModal()
         } catch (err) {
             console.error(err)
             Alert({ data: err })
         }
     }
 
+
+        const isFormValid = !!form.username.trim() && !!form.email.trim() && !!form.password.trim() && !!form.role
 
     if (!isOpen) return null
 
@@ -342,11 +377,11 @@ export const AddUserModal = ({ isOpen, onClose, onUpdated }: any) => {
                             </Col>
                             <Col md={6}>
                                 <div
-                                    onClick={handleSubmit}
+                                    onClick={isFormValid ? handleSubmit : undefined}
                                 >
                                     <ButtonContainer
-                                        $backgroundColor={palette.btnConfirmActive.backgroundColor}
-                                        $color={palette.btnConfirmActive.color}
+                                        $backgroundColor={isFormValid ? "#5D3A00" : "#ccc"}
+                                        $color={!isFormValid ? palette.btnConfirmActive.color : palette.btnConfirm.color}
                                     >
                                         ยืนยัน
                                     </ButtonContainer>

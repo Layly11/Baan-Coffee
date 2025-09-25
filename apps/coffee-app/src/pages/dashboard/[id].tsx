@@ -57,12 +57,6 @@ const DashBoardPage = () => {
                         <Detail dashboardInfo={dashboardInfo} isFetching={isFetching} mode={'summary'} />
                     </Row>
                     <Row style={{ margin: '10px -10px 0px -40px' }}>
-                        <DetailsTable detailInfo={dashboardInfo.inventory_statuses} title={'Inventory Status'} type={'inventory'} />
-                    </Row>
-                    <Row style={{ margin: '10px -10px 0px -40px' }}>
-                        <DetailsTable detailInfo={dashboardInfo.shifts} title={'Shift Panel'} type={'shift'} />
-                    </Row>
-                    <Row style={{ margin: '10px -10px 0px -40px' }}>
                         <DetailsTable detailInfo={dashboardInfo.top_products} title={'Top Product'} type={'top_products'} />
                     </Row>
                 </Container>

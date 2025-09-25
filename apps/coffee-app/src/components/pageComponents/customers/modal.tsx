@@ -14,6 +14,7 @@ type Props = {
 
 export const EditCustomerModal = ({ isOpen, onClose, customer, onUpdated }: Props) => {
     const [form, setForm] = useState({ name: '', email: '', phone: '', verified: false })
+    const [isChanged, setIsChanged] = useState(false)
 
 
     useEffect(() => {
@@ -24,13 +25,31 @@ export const EditCustomerModal = ({ isOpen, onClose, customer, onUpdated }: Prop
                 phone: customer.phone || '',
                 verified: customer.verified || '',
             })
+            setIsChanged(false) 
         }
     }, [customer])
 
-    const palette = {
+
+    useEffect(() => {
+        if (!customer) return
+
+        const hasChanged =
+            form.name !== (customer.name || '') ||
+            form.email !== (customer.email || '') ||
+            form.phone !== (customer.phone || '') ||
+            form.verified !== (customer.verified || false)
+
+        setIsChanged(hasChanged)
+    }, [form, customer])
+
+   const palette = {
         btnCancel: {
             color: "#d9d9d9",
             backgroundColor: "#ffffff",
+        },
+        btnConfirm: {
+            color: "#ffffff",
+            backgroundColor: "#d9d9d9",
         },
         btnConfirmActive: {
             color: "#ffffff",
@@ -146,11 +165,11 @@ export const EditCustomerModal = ({ isOpen, onClose, customer, onUpdated }: Prop
                             </Col>
                             <Col md={6}>
                                 <div
-                                    onClick={handleSubmit}
+                                    onClick={isChanged ? handleSubmit : undefined}
                                 >
                                     <ButtonContainer
-                                        $backgroundColor={palette.btnConfirmActive.backgroundColor}
-                                        $color={palette.btnConfirmActive.color}
+                                        $backgroundColor={isChanged ? "#5D3A00" : "#ccc"}
+                                        $color={!isChanged ? palette.btnConfirmActive.color : palette.btnConfirm.color}
                                     >
                                         ยืนยัน
                                     </ButtonContainer>
