@@ -257,7 +257,42 @@ export const fetchUserDataRequester = async (config:any): Promise<any> => {
         })
     })
 }
+export const updatUserRequester = async (id:any, data: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.patch(`/api/user/update/${id}`,data)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
 
+
+export const deleteUserRequester = async (id: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.delete(`/api/user/delete/${id}`)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+
+export const createUserRequester = async (data: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.post(`/api/user/create`, data)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
 
 
 

@@ -98,7 +98,7 @@ export const AddProductModal = ({
 
     useEffect(() => {
         if (!visible) return;
-        console.log(size)
+        console.log("CategotyList: ",Object.fromEntries(categoryList))
         if (editingItemId !== null) {
             const item = items.find((i: any) => i.id === editingItemId)
             if (!item) {

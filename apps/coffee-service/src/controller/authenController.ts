@@ -7,7 +7,9 @@ import winston from '../helpers/winston'
 import validator from 'validator';
 import USER_ROLE from '../constants/masters/userRole.json'
 import { getRedisClient } from '../helpers/redis'
-import {isEnglishOnly} from '../utils/validator'
+import { isEnglishOnly } from '../utils/validator'
+import { sendResetPasswordAdmin } from '../utils/emailUtils';
+
 
 export const register = () => async (req: Request, res: Response, next: NextFunction) => {
   const { username, email, password } = req.body
@@ -22,12 +24,12 @@ export const register = () => async (req: Request, res: Response, next: NextFunc
       return next(new ServiceError(AuthenMasterError.ERR_REGISTER_USER_EXIST))
     }
 
-        if (!isEnglishOnly(username)) {
-    return next(new ServiceError(AuthenMasterError.ERR_REGISTER_USERNAME_INVALID))
-  }
-  if (!isEnglishOnly(email) || !validator.isEmail(email)) {
-    return next(new ServiceError(AuthenMasterError.ERR_REGISTER_USER_EMAIL_INVALID))
-  }
+    if (!isEnglishOnly(username)) {
+      return next(new ServiceError(AuthenMasterError.ERR_REGISTER_USERNAME_INVALID))
+    }
+    if (!isEnglishOnly(email) || !validator.isEmail(email)) {
+      return next(new ServiceError(AuthenMasterError.ERR_REGISTER_USER_EMAIL_INVALID))
+    }
 
 
     if (!validator.isStrongPassword(password, {
@@ -58,7 +60,7 @@ export const login = () => async (req: Request, res: Response, next: NextFunctio
 
   try {
 
-    const user = await UserModel.findOne({ where: { email } })
+    const user = await UserModel.findOne({ where: { email, status: true } })
     const redis = getRedisClient()
     if (!user) {
       return next(new ServiceError(AuthenMasterError.ERR_LOGIN_USER_INVALID))
@@ -186,7 +188,7 @@ export const logout = () => async (req: Request, res: Response, next: NextFuncti
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict'
     });
-    
+
     next()
 
   } catch (error) {
@@ -213,5 +215,91 @@ export const checkAvailability = () => async (req: Request, res: Response, next:
     next()
   } catch (err) {
     next(err)
+  }
+}
+
+
+export const forgotPassword = () => async (req: Request, res: Response, next: NextFunction) => {
+  const { email } = req.body
+  const redis = getRedisClient()
+  try {
+    const user = await UserModel.findOne({ where: { email, status: true } })
+
+    if (!user) {
+      return next(new ServiceError(AuthenMasterError.ERR_USER_NOT_EXIST))
+    }
+
+    const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET)
+
+    const token = await new jose.SignJWT({ userId: user.id })
+      .setProtectedHeader({ alg: "HS256" })
+      .setExpirationTime("15m")
+      .sign(jwtSecret);
+
+    await redis.set(`reset_token:${token}`, user.id, { EX: 15 * 60 });
+
+    const resetLink = `http://localhost:9301/reset-password?token=${token}`
+
+    await sendResetPasswordAdmin(email, resetLink)
+
+    return next()
+  } catch (err) {
+    next(err)
+  }
+}
+
+export const resetPassword = () => async (req: Request, res: Response, next: NextFunction) => {
+  const { token, password } = req.body
+  const redis = getRedisClient()
+  try {
+    const userId = await redis.get(`reset_token:${token}`);
+
+    if (!userId) {
+      return next(new ServiceError(AuthenMasterError.ERR_USER_NOT_FOUND_ON_RESET_PASSWORD))
+    }
+    const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET)
+
+    console.log("userId: ", userId)
+    await jose.jwtVerify(token, jwtSecret);
+
+    const user = await UserModel.findOne({
+      where: { id: userId, status: true }
+    });
+
+    if (!user) {
+      return next(new ServiceError(AuthenMasterError.ERR_USER_NOT_FOUND_ON_RESET_PASSWORD));
+    }
+
+    user.password = password;
+    await user.save();
+
+    await redis.del(`reset_token:${token}`);
+    return next()
+  } catch (err) {
+    next(err)
+  }
+}
+
+export const checkExpireToken = () => async (req: Request, res: Response, next: NextFunction) => {
+  const { token } = req.body;
+
+  try {
+    if (!token) {
+      return next(new ServiceError(AuthenMasterError.ERR_TOKEN_NOT_FOUND))
+    }
+
+    const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET);
+
+
+    await jose.jwtVerify(token, jwtSecret);
+    res.locals.valid = true
+    return next()
+  } catch (err: any) {
+    if (err.code === "ERR_JWT_EXPIRED") {
+      res.locals.valid = false
+      return next(); 
+    }
+
+    return next(err);
   }
 }

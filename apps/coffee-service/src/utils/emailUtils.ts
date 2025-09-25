@@ -57,3 +57,17 @@ export const sendResetPasswordEmail = async (email: string, otp: string) => {
 
   return transporter.sendMail(mailOptions);
 };
+
+export const sendResetPasswordAdmin = async (email:any, resetLink: any) => {
+  const mailOptions = {
+      from: `"Your App" <${process.env.EMAIL_USER}>`,
+      to: email,
+      subject: "Reset your password",
+      html: `<h3>Password Reset</h3>
+             <p>Click the link below to reset your password:</p>
+             <a href="${resetLink}">${resetLink}</a>
+             <p>This link will expire in 15 minutes.</p>`,
+    }
+
+    return transporter.sendMail(mailOptions);
+}

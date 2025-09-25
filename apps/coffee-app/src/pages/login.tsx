@@ -13,6 +13,7 @@ import swalInstance, { Alert } from '../helpers/sweetalert'
 import { setAccessToken } from '@/helpers/axios'
 import { useDispatch } from 'react-redux'
 import Link from 'next/link'
+import { useForm } from 'react-hook-form'
 
 const Title = styled.div`
   font-size: 3em;
@@ -81,13 +82,17 @@ const Button = styled.button`
 `
 
 
+type LoginForm = {
+  email: string;
+  password: string;
+};
+
 const LoginPage = (): JSX.Element => {
   const router = useRouter()
-  const [email, setEmail] = useState<string>('')
-  const [password, setPassword] = useState<string>('')
   const [loading, setLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const dispatch = useDispatch()
+  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>();
 
   useEffect(() => {
     axios.get('/api/authen/profile')
@@ -98,20 +103,20 @@ const LoginPage = (): JSX.Element => {
   }, [router])
 
 
-  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setEmail(e.target.value);
-  };
+  // const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  //   setEmail(e.target.value);
+  // };
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setPassword(e.target.value);
-  };
+  // const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+  //   setPassword(e.target.value);
+  // };
 
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>): Promise<void> => {
-    e.preventDefault()
+  const OnSubmit = async (data: LoginForm): Promise<void> => {
+    // e.preventDefault()
     setLoading(true);
     try {
-      const res = await axios.post('/api/authen/login/', { email, password })
+      const res = await axios.post('/api/authen/login/', { email: data.email, password: data.password })
 
       if (res.data?.res_code === '0000') {
         setErrorMessage(null)
@@ -121,15 +126,14 @@ const LoginPage = (): JSX.Element => {
         const profileRes = await axios.get('/api/authen/profile');
         if (profileRes.data.user) {
           redirectToDefaultPage(profileRes.data?.user?.permissions as Array<{ name: string, view: boolean }> | undefined, router)
-        } else {
-          swalInstance.fire({
+           swalInstance.fire({
             icon: 'success',
             title: 'Login Success',
             text: 'Redirecting...',
             timer: 1500,
             showConfirmButton: false
           });
-        }
+        } 
       }
     } catch (error) {
       setErrorMessage('Invalid email or password.') 
@@ -183,31 +187,25 @@ const LoginPage = (): JSX.Element => {
                   </Col>
                 </Row>
                 {/* Form สำหรับ Login */}
-                <LoginForm onSubmit={handleSubmit}>
+                <LoginForm onSubmit={handleSubmit(OnSubmit)}>
                   <InputGroup>
                     <Label htmlFor="email">Email</Label>
                     <Input
                       type="email"
-                      id="email"
-                      name="email"
                       placeholder="Enter your email"
-                      value={email}
-                      onChange={handleEmailChange}
-                      required
+                       {...register("email", { required: "Email is required" })}
                     />
                   </InputGroup>
+                    {errors.email && <span style={{ color: "red" }}>{errors.email.message}</span>}
                   <InputGroup>
                     <Label htmlFor="password">Password</Label>
                     <Input
                       type="password"
-                      id="password"
-                      name="password"
                       placeholder="Enter your password"
-                      value={password}
-                      onChange={handlePasswordChange}
-                      required
+                      {...register("password", { required: "Password is required" })}
                     />
                   </InputGroup>
+                   {errors.password && <span style={{ color: "red" }}>{errors.password.message}</span>}
                   {errorMessage && (
                     <p style={{ color: 'red', marginTop: '-10px', marginBottom: '10px' }}>{errorMessage}</p>
                   )}
@@ -216,9 +214,9 @@ const LoginPage = (): JSX.Element => {
                   </Button>
                 </LoginForm>
                 <div style={{ textAlign: 'left', marginTop: '20px' }}>
-                  <span style={{ color: '#4e342e' }}>Don't have an account? </span>
-                  <Link href="/signup" style={{ color: '#795548', fontWeight: 'bold', textDecoration: 'underline' }}>
-                    Sign Up
+                  {/* <span style={{ color: '#4e342e' }}>Forgot Password ? </span> */}
+                  <Link href="/forgot-password" style={{ color: '#795548', fontWeight: 'bold', textDecoration: 'underline' }}>
+                    Forgot Password ?
                   </Link>
                 </div>
               </ContainerStyled>

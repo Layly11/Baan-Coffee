@@ -72,11 +72,43 @@
     }
   },
       "ERR_USER_NOT_FOUND": {
-    "statusCode": 401,
+    "statusCode": 400,
     "resCode": "0410",
     "resDesc": {
       "en": "User not found when refreshToken",
       "th": "ไม่เจอ User ตอน RefreshToken"
+    }
+  },
+    "ERR_USER_NOT_EXIST": {
+    "statusCode": 400,
+    "resCode": "0411",
+    "resDesc": {
+      "en": "This Email is not exist",
+      "th": "ไม่พบรายการ email ที่ท่านกรอก"
+    }
+  },
+    "ERR_USER_NOT_FOUND_ON_RESET_PASSWORD": {
+    "statusCode": 400,
+    "resCode": "0412",
+    "resDesc": {
+      "en": "User not found",
+      "th": "ไม่พบรายการUser ในระบบ"
+    }
+  },
+      "ERR_TOKEN_NOT_FOUND" : {
+    "statusCode": 400,
+    "resCode": "0413",
+    "resDesc": {
+      "en": "Token not found",
+      "th": "ไม่พบ Token"
+    }
+  },
+      "ERR_INVALID_TOKEN" : {
+    "statusCode": 400,
+    "resCode": "0414",
+    "resDesc": {
+      "en": "Token is invalid",
+      "th": "Token ผิดพลาด"
     }
   }
 

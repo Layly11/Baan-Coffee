@@ -6,7 +6,11 @@ import Badge from '@/components/commons/Badge'
 import { Hidden } from 'react-grid-system'
 import ProductStatusMaster from '../../../constants/masters/ProductStatusMaster.json'
 
-export const Columns = (handleEditItem?: (id: number) => void,  handleDeleteItem?: (id: number) => void,): any[] => {
+export const Columns = (
+    handleEditItem?: (id: number) => void,
+    handleDeleteItem?: (id: number) => void,
+    canEditProduct?: any
+): any[] => {
     const router = useRouter()
     return [
         {
@@ -111,7 +115,8 @@ export const Columns = (handleEditItem?: (id: number) => void,  handleDeleteItem
                          onClick={() => handleDeleteItem?.(Number(row.id))}
                     />
                 </div>
-            )
+            ),
+            isHide: canEditProduct === false
         },
     ]
 }

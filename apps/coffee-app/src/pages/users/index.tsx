@@ -10,7 +10,7 @@ import { Col, Container, Row } from "react-grid-system"
 import Title from "@/components/commons/title"
 import Table from "@/components/commons/table"
 import swalInstance, { Alert } from "@/helpers/sweetalert"
-import { deleteCustomerRequester, fetchCustomerDataRequester, fetchUserDataRequester } from "@/utils/requestUtils"
+import { deleteCustomerRequester, deleteUserRequester, fetchCustomerDataRequester, fetchUserDataRequester } from "@/utils/requestUtils"
 import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.json'
 import PermissionActionMaster from '../../constants/masters/PermissionActionMaster.json'
 import { checkPermission } from "@/helpers/checkPermission"
@@ -18,6 +18,7 @@ import { DeleteCustomerModal, EditCustomerModal } from "@/components/pageCompone
 import { Header } from "@/components/pageComponents/users/header"
 import { Columns } from "@/components/pageComponents/users/column"
 import { checkRouterQueryAndAutoFetchData } from "@/utils/parseUtils"
+import { AddUserModal, DeleteUserModal, EditUserModal } from "@/components/pageComponents/users/modal"
 const pathname = '/users'
 
 const UserPage = () => {
@@ -31,11 +32,24 @@ const UserPage = () => {
     const [rows, setRows] = useState<any>([])
     const [information, setInformation] = useState(router.query.information ?? '')
     const [isEditOpen, setIsEditOpen] = useState(false)
-    const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
+    const [isAddOpen, setIsAddOpen] = useState(false)
+    const [selectedUser, setSelectedUser] = useState<any>(null)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [deletingId, setDeletingId] = useState<number | null>(null)
     const [role, setRole] = useState(router.query.role ?? '')
 
+
+    const canEditUser = user?.permissions.some(
+        (permission) =>
+            permission.name === PermissionMenuMaster.MANAGE_USER &&
+            permission.edit
+    )
+
+      const canAddUser = user?.permissions.some(
+        (permission) =>
+          permission.name === PermissionMenuMaster.MANAGE_USER &&
+          permission.create
+      )
     const fetchUserData = async (page?: any) => {
         setIsFetching(true)
         setIsSearch(false)
@@ -98,21 +112,24 @@ const UserPage = () => {
         await fetchUserData()
     }
 
-    const handleOpenEdit = (customer: any) => {
-        setSelectedCustomer(customer)
+    const handleOpenEdit = (user: any) => {
+        setSelectedUser(user)
         setIsEditOpen(true)
+    }
+    const handleCloseAdd = () => {
+        setIsAddOpen(false)
     }
 
     const handleCloseEdit = () => {
         setIsEditOpen(false)
-        setSelectedCustomer(null)
+        setSelectedUser(null)
     }
 
-     const confirmDelete = async (): Promise<void> => {
+    const confirmDelete = async (): Promise<void> => {
         if (deletingId == null) return
         setShowDeleteModal(false)
         try {
-            await deleteCustomerRequester(deletingId)
+            await deleteUserRequester(deletingId)
             swalInstance.fire({
                 icon: 'success',
                 title: 'Success',
@@ -120,7 +137,7 @@ const UserPage = () => {
                 showConfirmButton: false,
                 showCloseButton: true
             })
-            // fetchCustomerData()
+            fetchUserData()
         } catch (error) {
             console.error(error)
             Alert({ data: error })
@@ -137,13 +154,13 @@ const UserPage = () => {
         checkPermission({ user, page, action }, router)
     }, [user])
 
-     useEffect(() => {
-            if (!router.isReady) return
-            checkRouterQueryAndAutoFetchData({
-                query: router.query,
-                fetchData: fetchUserData
-            })
-        }, [router.isReady, router.query])
+    useEffect(() => {
+        if (!router.isReady) return
+        checkRouterQueryAndAutoFetchData({
+            query: router.query,
+            fetchData: fetchUserData
+        })
+    }, [router.isReady, router.query])
 
 
     return (
@@ -167,6 +184,8 @@ const UserPage = () => {
                         setInformation={setInformation}
                         handleOnClearSearch={handleOnClearSearch}
                         handleOnClickSearch={handleOnClickSearch}
+                        setIsAddOpen= {setIsAddOpen}
+                        canAddUser= {canAddUser}
                     />
 
                     <Row style={{ margin: '20px -10px 0px -10px' }}>
@@ -178,21 +197,26 @@ const UserPage = () => {
                                 setPageSize={setPageSize}
                                 setPage={handleOnChangePage}
                                 page={page}
-                                columns={Columns()}
+                                columns={Columns(setShowDeleteModal, setDeletingId, handleOpenEdit, canEditUser)}
                                 rows={rows}
                                 isSearch={isSearch}
                             />
                         </Col>
                     </Row>
 
-                    {/* <EditCustomerModal
+                    <EditUserModal
                         isOpen={isEditOpen}
                         onClose={handleCloseEdit}
-                        customer={selectedCustomer}
-                        onUpdated={fetchCustomerData}
-                    /> */}
+                        user={selectedUser}
+                        onUpdated={fetchUserData}
+                    />
 
-                    <DeleteCustomerModal
+                    <AddUserModal
+                        isOpen={isAddOpen}
+                        onClose={handleCloseAdd}
+                        onUpdated={fetchUserData}
+                    />
+                    <DeleteUserModal
                         visible={showDeleteModal}
                         onCancel={() => {
                             setShowDeleteModal(false)

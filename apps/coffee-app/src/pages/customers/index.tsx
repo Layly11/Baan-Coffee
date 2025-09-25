@@ -34,6 +34,12 @@ const CustomersPage = () => {
     const [selectedCustomer, setSelectedCustomer] = useState<any>(null)
     const [showDeleteModal, setShowDeleteModal] = useState(false)
     const [deletingId, setDeletingId] = useState<number | null>(null)
+    const canCustomerOrder = user?.permissions.some(
+    (permission) =>
+      permission.name === PermissionMenuMaster.MANAGE_CUSTOMER &&
+      permission.edit
+  )
+
 
     const fetchCustomerData = async (page?: any) => {
         setIsFetching(true)
@@ -180,7 +186,7 @@ const CustomersPage = () => {
                                 setPageSize={setPageSize}
                                 setPage={handleOnChangePage}
                                 page={page}
-                                columns={Columns(setRows, handleOpenEdit, setShowDeleteModal, setDeletingId)}
+                                columns={Columns(setRows, handleOpenEdit, setShowDeleteModal, setDeletingId, canCustomerOrder)}
                                 rows={rows}
                                 isSearch={isSearch}
                             />

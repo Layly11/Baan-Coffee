@@ -1,22 +1,14 @@
 {
   "1": {
-    "id": 1,
-    "label": "Super Admin",
-    "value": "SUPER_ADMIN"
+    "label": "Super Admin"
   },
   "2": {
-    "id": 2,
-    "label": "Admin",
-    "value": "ADMIN"
+    "label": "Admin"
   },
   "3": {
-    "id": 3,
-    "label": "Manager",
-    "value": "MANAGER"
+    "label": "Manager"
   },
   "4": {
-    "id": 4,
-    "label": "Support",
-    "value": "SUPPORT"
+    "label": "Support"
   }
 }

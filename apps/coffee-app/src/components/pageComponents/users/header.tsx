@@ -5,6 +5,7 @@ import { ClearFilterButton } from "@/components/pageComponents/productMenu/clear
 import Input from '../../commons/input'
 import { SelectData } from "@/components/header/selectData";
 import UserRoleMaster from '../../../constants/masters/UserRoleSelect.json'
+import { AddButton } from "./addBtn";
 interface HeaderProps {
     information: string | string[]
     role: string | string[]
@@ -12,10 +13,13 @@ interface HeaderProps {
     setInformation: React.Dispatch<React.SetStateAction<string | string[]>>
     handleOnClearSearch: () => void
     handleOnClickSearch: () => Promise<void>
+    setIsAddOpen: React.Dispatch<React.SetStateAction<boolean>>
+    canAddUser: boolean
 }
 
 
-export const Header = ({ handleOnClearSearch, handleOnClickSearch, information, setInformation, role, setRole}: HeaderProps): JSX.Element => {
+export const Header = ({ handleOnClearSearch, handleOnClickSearch, information, setInformation, role, setRole, setIsAddOpen, canAddUser}: HeaderProps): JSX.Element => {
+    console.log('canAddUser: ',canAddUser)
     return (
         <Row style={{ margin: '0px -10px' }}>
             <Col lg={12}>
@@ -57,6 +61,14 @@ export const Header = ({ handleOnClearSearch, handleOnClickSearch, information, 
                                 <ClearFilterButton handleOnClearSearch={handleOnClearSearch} />
                             </Col>
                         </Hidden>
+                        {canAddUser && (
+
+                          <Col lg={2} xs={12}>
+                            <AddButton
+                            onClick={()=>{setIsAddOpen(true)}}
+                            />
+                        </Col>
+                        )}
                     </Row>
                 </Container>
             </Col>

@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import passport from 'passport';
-import { register, login, refreshToken, logout, checkAvailability } from '../controller/authenController'
+import { register, login, refreshToken, logout, checkAvailability, forgotPassword, resetPassword, checkExpireToken } from '../controller/authenController'
 import { findUserPermission } from '../controller/userController'
 
 const router = express.Router()
@@ -24,7 +24,7 @@ router.post(
 router.post(
     '/login',
     login(),
-     (req: Request, res: Response, next: NextFunction) => {
+    (req: Request, res: Response, next: NextFunction) => {
         const token = res.locals.token
         res.cookie('authToken', token.refreshToken, {
             httpOnly: true,
@@ -45,9 +45,9 @@ router.post(
 )
 
 router.post(
-    '/refresh-token', 
+    '/refresh-token',
     refreshToken(),
-    (req: Request, res: Response, next:NextFunction) => {
+    (req: Request, res: Response, next: NextFunction) => {
         const token = res.locals.token
         res.cookie('authToken', token.refreshToken, {
             httpOnly: true,
@@ -65,7 +65,7 @@ router.post(
         res.json(res.locals.response)
         next()
     }
- )
+)
 
 router.get(
     '/profile',
@@ -85,31 +85,74 @@ router.get(
 
 router.post(
     '/logout',
-     logout(),
-     (req: Request, res: Response, next: NextFunction) => {
-         res.locals.response = {
+    logout(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
             res_code: '0000',
             res_desc: 'Logout Success',
             data: {}
         }
         res.json(res.locals.response)
         next()
-     }
-    );
+    }
+);
 
 
 router.get(
     '/check-availability',
     checkAvailability(),
-    (req:Request, res: Response, next: NextFunction) => {
+    (req: Request, res: Response, next: NextFunction) => {
         res.locals.response = {
             checkExist: res.locals.checkExist
         }
         res.json(res.locals.response)
-          next()
+        next()
     }
 )
 
+
+router.post(
+    '/forgot-password',
+    forgotPassword(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: {}
+        }
+        res.json(res.locals.response)
+        next()
+    }
+);
+
+router.post(
+    '/reset-password',
+    resetPassword(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: undefined
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
+router.post(
+    '/check-expire-token',
+    checkExpireToken(),
+    (req: Request, res: Response, next: NextFunction) => {
+        res.locals.response = {
+            res_code: '0000',
+            res_desc: '',
+            data: {
+                valid: res.locals.valid
+            }
+        }
+        res.json(res.locals.response)
+        next()
+    }
+)
 
 router.get(
     '/test',
@@ -118,5 +161,8 @@ router.get(
         next()
     }
 )
+
+
+
 
 export default router;

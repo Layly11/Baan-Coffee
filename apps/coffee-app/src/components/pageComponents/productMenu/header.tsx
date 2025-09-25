@@ -15,11 +15,12 @@ interface HeaderProps {
     onAddCategory: () => void
     handleOnClearSearch: () => void
     handleOnClickSearch: () => Promise<void>
+    canEditProduct: boolean
 
 }
 
 
-export const Header = ({ categories, setCategories, categoryList, onAddItem, onAddCategory, handleOnClearSearch, handleOnClickSearch }: HeaderProps): JSX.Element => {
+export const Header = ({ categories, setCategories, categoryList, onAddItem, onAddCategory, handleOnClearSearch, handleOnClickSearch, canEditProduct }: HeaderProps): JSX.Element => {
     return (
         <Row style={{ margin: '0px -10px' }}>
             <Col lg={12}>
@@ -55,12 +56,16 @@ export const Header = ({ categories, setCategories, categoryList, onAddItem, onA
                                 <ClearFilterButton handleOnClearSearch={handleOnClearSearch} />
                             </Col>
                         </Hidden>
-                        <Col lg={2}>
-                            <CategoriesButton onClick={onAddCategory} />
-                        </Col>
-                        <Col lg={2}>
-                            <AddButton onClick={onAddItem} />
-                        </Col>
+                        {canEditProduct && (
+                            <>
+                                <Col lg={2}>
+                                    <CategoriesButton onClick={onAddCategory} />
+                                </Col>
+                                <Col lg={2}>
+                                    <AddButton onClick={onAddItem} />
+                                </Col>
+                            </>
+                        )}
                     </Row>
                 </Container>
             </Col>

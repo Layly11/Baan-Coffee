@@ -22,7 +22,6 @@ export = {
       username: {
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
       },
       email: {
         type: DataTypes.STRING,
@@ -61,6 +60,7 @@ export = {
       username: 'admin',
       email: 'admin@gmail.com',
       password: hashedPassword,
+      status: true,
       recent_login: now,
       last_login: now,
       created_at: now,

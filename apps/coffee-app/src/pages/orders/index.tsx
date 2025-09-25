@@ -47,6 +47,11 @@ const OrdersPage = () => {
     const [method, setMethod] = useState(router.query.method ?? '')
     const [customerName, setCustomerName] = useState(router.query.customerName ?? '')
 
+  const canEditOrder = user?.permissions.some(
+    (permission) =>
+      permission.name === PermissionMenuMaster.ORDER_MANAGEMENT &&
+      permission.edit
+  )
 
     const fetchOrderData = async (page?: any) => {
         setIsFetching(true)
@@ -204,7 +209,7 @@ const OrdersPage = () => {
                                 setPageSize={setPageSize}
                                 setPage={handleOnChangePage}
                                 page={page}
-                                columns={Columns(setRows)}
+                                columns={Columns(setRows,canEditOrder)}
                                 rows={rows}
                                 isSearch={isSearch}
                             />

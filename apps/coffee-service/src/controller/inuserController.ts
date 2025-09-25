@@ -1,27 +1,28 @@
-import { dayjs } from "@coffee/helpers";
+import { dayjs, ServiceError } from "@coffee/helpers";
 import { UserModel, UserRoleModel } from "@coffee/models";
 import { NextFunction, Request, Response } from "express";
 import { Op } from "sequelize";
+import UserErrorMaster from "../constants/errors/user.error.json";
 
 export const getUserData = () => async (req: Request, res: Response, next: NextFunction) => {
 
-    const { information,role, limit, offset } = req.query;
+    const { information, role, limit, offset } = req.query;
     try {
-          const infoStr = typeof information === 'string' ? information : undefined;
-          const roles = Array.isArray(role) ? role : role ? [role] : [];
-          const roleIds = roles.map(r => Number(r)).filter(r => !isNaN(r));
-          
-          const where = infoStr
-                    ? {
-                      ...(roleIds.length > 0 && { role_id: { [Op.in]: roleIds } }),
-                        [Op.or]: [
-                            { username: { [Op.like]: `%${infoStr}%` } },
-                            { email: { [Op.like]: `%${infoStr}%` } },
-                        ],
-                    }
-                    : {...(roleIds.length > 0 && { role_id: { [Op.in]: roleIds } }),};
+        const infoStr = typeof information === 'string' ? information : undefined;
+        const roles = Array.isArray(role) ? role : role ? [role] : [];
+        const roleIds = roles.map(r => Number(r)).filter(r => !isNaN(r));
 
-        const {count, rows} = await UserModel.findAndCountAll({
+        const where = infoStr
+            ? {
+                ...(roleIds.length > 0 && { role_id: { [Op.in]: roleIds } }),
+                [Op.or]: [
+                    { username: { [Op.like]: `%${infoStr}%` } },
+                    { email: { [Op.like]: `%${infoStr}%` } },
+                ],
+            }
+            : { ...(roleIds.length > 0 && { role_id: { [Op.in]: roleIds } }), };
+
+        const { count, rows } = await UserModel.findAndCountAll({
             where,
             include: [
                 {
@@ -34,13 +35,17 @@ export const getUserData = () => async (req: Request, res: Response, next: NextF
             offset: Number(offset) || 0,
         })
 
-       
+
         const users = rows.map((u: any) => {
             const user = u.get({ plain: true }) // แปลง Sequelize instance -> plain object
             return {
                 ...user,
                 time: dayjs(user.createdAt).format('DD/MM/YYYY HH:mm'),
-                last_login: dayjs(user.last_login).format('DD/MM/YYYY HH:mm'),
+                last_login: user.last_login
+                    ? dayjs(user.last_login).format('DD/MM/YYYY HH:mm')
+                    : '-',
+                recent_login: user.recent_login ? dayjs(user.recent_login).format('DD/MM/YYYY HH:mm')
+                    : 'Never logged in',
                 role: user.role.name
 
             }
@@ -49,8 +54,95 @@ export const getUserData = () => async (req: Request, res: Response, next: NextF
         res.locals.total = count
         res.locals.users = users
         return next()
-    } catch(err) {
+    } catch (err) {
         next(err)
     }
 }
 
+
+export const updateUserData = () => async (req: Request, res: Response, next: NextFunction) => {
+    const id = req.params.id
+    const { username, email, role, status } = req.body
+    try {
+        const user = await UserModel.findByPk(id)
+
+        if (!user) {
+            return next(new ServiceError(UserErrorMaster.USER_NOT_FOUND))
+        }
+
+        if (username !== '' && username !== null && username !== undefined) {
+            user.username = username
+        }
+
+        if (email !== '' && email !== null && email !== undefined) {
+            user.email = email
+        }
+
+        if (role !== '' && role !== null && role !== undefined) {
+            user.role_id = role
+        }
+
+        if (status !== '' && status !== null && status !== undefined) {
+            user.status = status
+        }
+
+        await user.save()
+
+        return next()
+
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const deleteUserData = () => async (req: Request, res: Response, next: NextFunction) => {
+
+    const id = req.params.id
+    try {
+        const user = await UserModel.findByPk(id)
+        if (!user) {
+            return next(new ServiceError(UserErrorMaster.USER_NOT_FOUND))
+        }
+
+        await user.destroy()
+
+        return next()
+    } catch (err) {
+        next(err)
+    }
+}
+
+export const createUserData = () => async (req: Request, res: Response, next: NextFunction) => {
+    const { username, email, password, role, status } = req.body
+    try {
+
+        if (!username) {
+            return next(new ServiceError(UserErrorMaster.USERNAME_NOT_FOUND))
+        }
+
+        if (!email) {
+            return next(new ServiceError(UserErrorMaster.EMAIL_NOT_FOUND))
+        }
+
+        if (!password) {
+            return next(new ServiceError(UserErrorMaster.PASSSWORD_NOT_FOUND))
+        }
+
+        if (!role) {
+            return next(new ServiceError(UserErrorMaster.ROLE_NOT_FOUND))
+        }
+
+
+        await UserModel.create({
+            username,
+            email,
+            password,
+            role_id: role,
+            status
+        })
+
+        return next()
+    } catch (err) {
+        next(err)
+    }
+}

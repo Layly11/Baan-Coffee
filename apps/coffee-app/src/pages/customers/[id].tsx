@@ -12,7 +12,7 @@ import { useRouter } from "next/router"
 import { Columns } from "@/components/pageComponents/customersOrder/column"
 import { Alert } from "@/helpers/sweetalert"
 import { fetchCustomerOrderRequester } from "@/utils/requestUtils"
-
+import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.json'
 
 const CustomersPage = () => {
     const user = useSelector((state: UseSelectorProps) => state.user)
@@ -26,6 +26,12 @@ const CustomersPage = () => {
     const [pageSize, setPageSize] = useState(!isNaN(Number(router.query.limit)) ? Number(router.query.limit) : 10)
     const [total, setTotal] = useState(0)
     const [rows, setRows] = useState<any>([])
+
+      const canEditOrder = user?.permissions.some(
+        (permission) =>
+          permission.name === PermissionMenuMaster.ORDER_MANAGEMENT &&
+          permission.edit
+      )
 
     const fetchCustomerOrder = async () => {
         try {
@@ -87,7 +93,7 @@ const CustomersPage = () => {
                                 setPageSize={setPageSize}
                                 setPage={handleOnChangePage}
                                 page={page}
-                                columns={Columns(setRows)}
+                                columns={Columns(setRows,canEditOrder)}
                                 rows={rows}
                                 isSearch={isSearch}
                             />

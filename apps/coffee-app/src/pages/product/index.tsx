@@ -53,6 +53,12 @@ const ProductMenuPage = () => {
     const [showCategoryModal, setShowCategoryModal] = useState(false)
     const [size, setSize] = useState<string | string[]>()
     const [sizeList, setSizeList] = useState([])
+
+    const canEditProduct = user?.permissions.some(
+        (permission) =>
+          permission.name === PermissionMenuMaster.PRODUCT_MENU &&
+          permission.edit
+      )
     const fetchProducts = async (page?: number) => {
         try {
             setIsFetching(true)
@@ -358,6 +364,7 @@ const ProductMenuPage = () => {
                         onAddCategory={handleAddCategory}
                         handleOnClearSearch={handleOnClearSearch}
                         handleOnClickSearch={handleOnClickSearch}
+                        canEditProduct={canEditProduct}
                     />
                     <Row style={{ margin: '20px -10px 0px -10px' }}>
                         <Col xs={12}>
@@ -368,7 +375,7 @@ const ProductMenuPage = () => {
                                 setPageSize={setPageSize}
                                 setPage={handleOnChangePage}
                                 page={page}
-                                columns={Columns(handleEditItem, (id) => { handleDeleteItem(id) },)}
+                                columns={Columns(handleEditItem, (id) => { handleDeleteItem(id) }, canEditProduct)}
                                 rows={rows}
                                 isSearch={isSearch}
                             />

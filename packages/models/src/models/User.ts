@@ -52,7 +52,6 @@ UserModel.init({
         field: 'username',
         type: DataTypes.STRING,
         allowNull: false,
-        unique: true,
     },
     email: {
         field: 'email',

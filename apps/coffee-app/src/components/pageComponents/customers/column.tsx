@@ -6,7 +6,7 @@ import CustomerStatusMaster from '../../../constants/masters/CustomerStatus.Mast
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 
-export const Columns = (setRows: any,  handleOpenEdit: any, setShowDeleteModal: any, setDeletingId: any): any[] => {
+export const Columns = (setRows: any, handleOpenEdit: any, setShowDeleteModal: any, setDeletingId: any, canEditOrder: any): any[] => {
     const router = useRouter()
     return [
         {
@@ -33,8 +33,8 @@ export const Columns = (setRows: any,  handleOpenEdit: any, setShowDeleteModal: 
             label: 'Status',
             key: 'verified',
             width: '30%',
-            dataMutation: (row:any) => {
-                const statusKey =  Number(row.verified) === 1 ? 'ACTIVE' : 'INACTIVE'
+            dataMutation: (row: any) => {
+                const statusKey = Number(row.verified) === 1 ? 'ACTIVE' : 'INACTIVE'
                 const status = CustomerStatusMaster[statusKey]
                 return (
                     <DataMutation
@@ -57,22 +57,27 @@ export const Columns = (setRows: any,  handleOpenEdit: any, setShowDeleteModal: 
             label: 'Action',
             key: 'actions',
             width: '30%',
-            dataMutation: (row:any) => (
-                  <div style={{ display: 'flex', gap: '30px', justifyContent: 'center' }}>
-                    <FontAwesomeIcon icon={faMagnifyingGlass} color="#3B5475" size='lg' onClick={() => { router.push(`/customers/${row.id}`)}}/>
+            dataMutation: (row: any) => (
+                <div style={{ display: 'flex', gap: '30px', justifyContent: 'center' }}>
+                    <FontAwesomeIcon icon={faMagnifyingGlass} color="#3B5475" size='lg' onClick={() => { router.push(`/customers/${row.id}`) }} />
                     <i
                         className='fas fa-pen'
                         style={{ color: '#374151', cursor: 'pointer' }}
-                        onClick={() => { handleOpenEdit(row)}}
+                        onClick={() => { handleOpenEdit(row) }}
                     />
-                    <i
-                        className='fas fa-ban'
-                        style={{ color: '#EF4444', cursor: 'pointer' }}
-                         onClick={() => {
-                            setShowDeleteModal(true)
-                            setDeletingId(row.id)
-                        }}
-                    />
+                    {canEditOrder && (
+                        <>
+                            <i
+                                className='fas fa-ban'
+                                style={{ color: '#EF4444', cursor: 'pointer' }}
+                                onClick={() => {
+                                    setShowDeleteModal(true)
+                                    setDeletingId(row.id)
+                                }}
+                            />
+                        </>
+
+                    )}
                 </div>
             )
         }

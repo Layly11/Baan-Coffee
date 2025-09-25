@@ -3,7 +3,9 @@ import DataMutation from '@/utils/dataMutation'
 import { useRouter } from 'next/router'
 import { Hidden } from 'react-grid-system'
 import CustomerStatusMaster from '../../../constants/masters/CustomerStatus.Master.json'
-export const Columns = (): any[] => {
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
+export const Columns = (setShowDeleteModal: any, setDeletingId: any, handleOpenEdit:any, canEditUser:any): any[] => {
     const router = useRouter()
     return [
         {
@@ -27,8 +29,8 @@ export const Columns = (): any[] => {
             width: '30%',
         },
         {
-            label: 'Last Login',
-            key: 'last_login',
+            label: 'Recent Login',
+            key: 'recent_login',
             width: '30%',
         },
         {
@@ -57,8 +59,26 @@ export const Columns = (): any[] => {
                },
         {
             label: 'Action',
-            key: 'verified',
+            key: 'action',
             width: '30%',
+            dataMutation: (row:any) => (
+                              <div style={{ display: 'flex', gap: '30px', justifyContent: 'center' }}>
+                                <i
+                                    className='fas fa-pen'
+                                    style={{ color: '#374151', cursor: 'pointer' }}
+                                    onClick={() => { handleOpenEdit(row)}}
+                                />
+                                <i
+                                    className='fas fa-ban'
+                                    style={{ color: '#EF4444', cursor: 'pointer' }}
+                                     onClick={() => {
+                                        setShowDeleteModal(true)
+                                        setDeletingId(row.id)
+                                    }}
+                                />
+                            </div>
+                        ),
+            isHide: canEditUser === false
         },
     ]
 }

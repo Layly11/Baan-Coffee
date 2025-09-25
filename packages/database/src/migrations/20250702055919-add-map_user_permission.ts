@@ -76,13 +76,13 @@ export = {
       { role_id: 3, menu_id: 1, name: 'DASHBOARD_MANAGER', view: true, create: false, edit: false, delete: false, created_at: now, updated_at: now },
       { role_id: 3, menu_id: 2, name: 'PRODUCT_MENU_MANAGER', view: true, create: true, edit: true, delete: true, created_at: now, updated_at: now },
       { role_id: 3, menu_id: 3, name: 'ORDER_MANAGEMENT_MANAGER', view: true, create: true, edit: true, delete: true, created_at: now, updated_at: now },
-      { role_id: 3, menu_id: 4, name: 'MANAGE_CUSTOMER_MANAGER', view: false, create: false, edit: false, delete: false, created_at: now, updated_at: now },
+      { role_id: 3, menu_id: 4, name: 'MANAGE_CUSTOMER_MANAGER', view: true, create: true, edit: true, delete: true, created_at: now, updated_at: now },
       { role_id: 3, menu_id: 5, name: 'MANAGE_USER_MANAGER', view: false, create: false, edit: false, delete: false, created_at: now, updated_at: now },
 
 
       { role_id: 4, menu_id: 1, name: 'DASHBOARD_SUPPORT', view: true, create: false, edit: false, delete: false, created_at: now, updated_at: now },
-      { role_id: 4, menu_id: 2, name: 'PRODUCT_MENU_SUPPORT', view: false, create: false, edit: false, delete: false, created_at: now, updated_at: now },
-      { role_id: 4, menu_id: 3, name: 'ORDER_MANAGEMENT_SUPPORT', view: false, create: false, edit: false, delete: false, created_at: now, updated_at: now },
+      { role_id: 4, menu_id: 2, name: 'PRODUCT_MENU_SUPPORT', view: true, create: false, edit: false, delete: false, created_at: now, updated_at: now },
+      { role_id: 4, menu_id: 3, name: 'ORDER_MANAGEMENT_SUPPORT', view: true, create: false, edit: false, delete: false, created_at: now, updated_at: now },
       { role_id: 4, menu_id: 4, name: 'MANAGE_CUSTOMER_SUPPORT', view: true, create: true, edit: true, delete: false, created_at: now, updated_at: now },
       { role_id: 4, menu_id: 5, name: 'MANAGE_USER_SUPPORT', view: false, create: false, edit: false, delete: false, created_at: now, updated_at: now },
 

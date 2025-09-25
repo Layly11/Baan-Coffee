@@ -7,8 +7,9 @@ import { Hidden } from 'react-grid-system'
 import OrderStatusMaster from '../../../constants/masters/OrderStatusMaster.json'
 import { SelectData } from '@/components/header/selectData'
 import { updateCanceledOrderRequester, updateOrderStatusRequester } from '@/utils/requestUtils'
+import { Alert } from '@/helpers/sweetalert'
 
-export const Columns = (setRows: any): any[] => {
+export const Columns = (setRows: any, canEditOrder:any): any[] => {
     const router = useRouter()
     return [
         {
@@ -82,9 +83,18 @@ export const Columns = (setRows: any): any[] => {
                             value={row.status}
                             setValue={async (newVal: string) => {
                                 const orderId = row.order_id;
-                                await updateOrderStatusRequester(orderId, { new_status: newVal })
+                                try{
+                                     await updateOrderStatusRequester(orderId, { new_status: newVal })
+                                } catch(err) {
+                                    Alert({data: err})
+                                }
+        
                                 if (newVal === 'cancelled') {
-                                    await updateCanceledOrderRequester({ order_id: orderId })
+                                    try{
+                                          await updateCanceledOrderRequester({ order_id: orderId })
+                                    } catch (err) {
+                                    Alert({data: err})
+                                    }
                                 }
                                 setRows((prev: any[]) =>
                                     prev.map((r) =>
@@ -101,7 +111,8 @@ export const Columns = (setRows: any): any[] => {
                     </div>
 
                 )
-            }
+            },
+            isHide: canEditOrder === false
         },
         {
             label: 'Invoice',

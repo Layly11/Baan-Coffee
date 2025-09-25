@@ -9,7 +9,7 @@ import OrderStatusMaster from '../../../constants/masters/OrderStatusMaster.json
 import { SelectData } from '@/components/header/selectData'
 import { updateCanceledOrderRequester, updateOrderStatusRequester } from '@/utils/requestUtils'
 
-export const Columns = (setRows: any): any[] => {
+export const Columns = (setRows: any, canEditOrder: any): any[] => {
     const router = useRouter()
     return [
         {
@@ -101,7 +101,8 @@ export const Columns = (setRows: any): any[] => {
                     </div>
 
                 )
-            }
+            },
+            isHide: canEditOrder === false
         },
 
     ]

@@ -1,0 +1,50 @@
+{
+     "USER_NOT_FOUND": {
+    "statusCode": 400,
+    "resCode": "4001",
+    "resDesc": {
+      "en": "User not found",
+      "th": "ไม่เจอ User"
+    }
+  },
+    "USERNAME_NOT_FOUND": {
+    "statusCode": 400,
+    "resCode": "4002",
+    "resDesc": {
+      "en": "Usename not found",
+      "th": "ไม่เจอ Username"
+    }
+  },
+    "EMAIL_NOT_FOUND": {
+    "statusCode": 400,
+    "resCode": "4003",
+    "resDesc": {
+      "en": "Email not found",
+      "th": "ไม่เจอ Email"
+    }
+  },
+    "PASSSWORD_NOT_FOUND": {
+    "statusCode": 400,
+    "resCode": "4004",
+    "resDesc": {
+      "en": "Password not found",
+      "th": "ไม่เจอ Password"
+    }
+  },
+    "ROLE_NOT_FOUND": {
+    "statusCode": 400,
+    "resCode": "4005",
+    "resDesc": {
+      "en": "Role not found",
+      "th": "ไม่เจอ Role"
+    }
+  },
+    "STATUS_NOT_FOUND": {
+    "statusCode": 400,
+    "resCode": "4006",
+    "resDesc": {
+      "en": "Status not found",
+      "th": "ไม่เจอ Status"
+    }
+  }
+}

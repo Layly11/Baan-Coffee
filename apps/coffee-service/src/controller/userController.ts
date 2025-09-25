@@ -17,7 +17,8 @@ export const authMiddleware = () => async (req: Request, res: Response, next: Ne
 
     try {
         const { payload } = await jwtVerify(token, jwtSecret) as any
-        const user = await UserModel.findByPk(payload.id, {
+        const user = await UserModel.findOne({
+            where: {id: payload.id, status: true},
             attributes: ['id', 'username', 'email', 'role_id', 'last_login', 'recent_login'],
             include: [
                 {
