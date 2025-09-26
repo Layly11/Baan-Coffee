@@ -8,7 +8,7 @@ const mail_1 = __importDefault(require("@sendgrid/mail"));
 mail_1.default.setApiKey(process.env.API_KEY_SEND_GRID);
 const sendOtpEmail = async (email, otp) => {
     const mailOptions = {
-        from: '"Baan Coffee" <no-reply@baancoffee.com>',
+        from: 'yelaysong15@gmail.com',
         to: email,
         subject: "Your OTP Code - Baan Coffee",
         html: `
@@ -25,12 +25,18 @@ const sendOtpEmail = async (email, otp) => {
       </div>
     `
     };
-    mail_1.default.send(mailOptions);
+    try {
+        await mail_1.default.send(mailOptions);
+        console.log("Email sent!");
+    }
+    catch (err) {
+        console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));
+    }
 };
 exports.sendOtpEmail = sendOtpEmail;
 const sendResetPasswordEmail = async (email, otp) => {
     const mailOptions = {
-        from: '"Baan Coffee" <no-reply@baancoffee.com>',
+        from: 'yelaysong15@gmail.com',
         to: email,
         subject: "Reset your password",
         html: `
@@ -47,7 +53,13 @@ const sendResetPasswordEmail = async (email, otp) => {
   </div>
 `,
     };
-    mail_1.default.send(mailOptions);
+    try {
+        await mail_1.default.send(mailOptions);
+        console.log("Email sent!");
+    }
+    catch (err) {
+        console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));
+    }
 };
 exports.sendResetPasswordEmail = sendResetPasswordEmail;
 const sendResetPasswordAdmin = async (email, resetLink) => {
@@ -60,7 +72,13 @@ const sendResetPasswordAdmin = async (email, resetLink) => {
              <a href="${resetLink}">${resetLink}</a>
              <p>This link will expire in 15 minutes.</p>`,
     };
-    mail_1.default.send(mailOptions);
+    try {
+        await mail_1.default.send(mailOptions);
+        console.log("Email sent!");
+    }
+    catch (err) {
+        console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));
+    }
 };
 exports.sendResetPasswordAdmin = sendResetPasswordAdmin;
 //# sourceMappingURL=emailUtils.js.map

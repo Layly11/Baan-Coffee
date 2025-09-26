@@ -75,9 +75,9 @@ export const cleanUnusedBlobs = async (): Promise<void> => {
  * Schedule cleanup job (default: every day at 3 AM)
  */
 export const scheduleCleanupJob = () => {
-  cron.schedule("*/30 * * * *", async () => {
+  cron.schedule("0 3 1 * *", async () => {
     await cleanUnusedBlobs();
   });
 
-  winston.info("📅 Cron job scheduled: Cleanup orphan blobs at 03:00 daily");
+  winston.info("📅 Cron job scheduled: Cleanup orphan blobs monthly on the 1st at 03:00");
 };

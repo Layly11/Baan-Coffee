@@ -30,8 +30,9 @@ RUN apk update \
     && apk add --no-cache --upgrade libc6-compat curl libcrypto3 libssl3 \
     && rm -rf /var/cache/apk/*
 COPY --from=installer /app .
+COPY packages/database /app/packages/database
 RUN find /app -name ".env" -type f -delete
 WORKDIR /app/apps/coffee-service
 RUN npm install -g npm@latest
 
-CMD ["npm", "start"]
+CMD sh -c "cd /app/packages/database && npm install && npm run db:migrate && cd /app/apps/coffee-service && npm start"

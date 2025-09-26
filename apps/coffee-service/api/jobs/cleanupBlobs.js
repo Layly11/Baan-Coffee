@@ -63,10 +63,10 @@ const cleanUnusedBlobs = async () => {
 };
 exports.cleanUnusedBlobs = cleanUnusedBlobs;
 const scheduleCleanupJob = () => {
-    node_cron_1.default.schedule("*/30 * * * *", async () => {
+    node_cron_1.default.schedule("0 3 1 * *", async () => {
         await (0, exports.cleanUnusedBlobs)();
     });
-    winston_1.default.info("📅 Cron job scheduled: Cleanup orphan blobs at 03:00 daily");
+    winston_1.default.info("📅 Cron job scheduled: Cleanup orphan blobs monthly on the 1st at 03:00");
 };
 exports.scheduleCleanupJob = scheduleCleanupJob;
 //# sourceMappingURL=cleanupBlobs.js.map
