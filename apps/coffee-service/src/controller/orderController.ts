@@ -311,9 +311,9 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
 
         let response
         if (selectedMethod === 'credit') {
-            response = await axios.post('http://127.0.0.1:4002/payment', payload, config)
+            response = await axios.post('https://octopus-unify-sit.digipay.dev/v2/payment', payload, config)
         } else {
-            response = await axios.post('http://127.0.0.1:4002/payment', payload, config)
+            response = await axios.post('https://octopus-unify-sit.digipay.dev/v2/payment', payload, config)
         }
 
         await PaymentModel.create(
@@ -547,7 +547,7 @@ export const payForQR = () => async (req: Request, res: Response, next: NextFunc
             }
         }
 
-        const payment = await axios.post('http://127.0.0.1:4000/api/v1/notify/test/qr', payload, config)
+        const payment = await axios.post('https://octopus-unify-sit.digipay.dev/v2/notify/test/qr', payload, config)
 
         res.locals.payment = payment.data
         return next()
