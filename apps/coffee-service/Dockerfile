@@ -35,4 +35,4 @@ RUN find /app -name ".env" -type f -delete
 WORKDIR /app/apps/coffee-service
 RUN npm install -g npm@latest
 
-CMD sh -c "cd /app/packages/database && npm install && npm run db:migrate && cd /app/apps/coffee-service && npm start"
+CMD sh -c "cd /app/packages/database && npm install && npm run db:migrate && npm run db:seed:all && cd /app/apps/coffee-service && npm start"
