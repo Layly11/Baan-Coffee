@@ -10,7 +10,10 @@ import { RedisClientType } from "redis";
 
 const APP = ({ redis }: { redis: RedisClientType }) => {
     const app = express()
-    app.use(cors());
+    app.use(cors({
+    origin: 'https://baan-coffee-coffee-app.vercel.app', 
+    credentials: true,
+}));
 
     app.set('trust proxy', true)
     app.enable('trust proxy')
