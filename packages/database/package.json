@@ -9,6 +9,8 @@
     "db:migrate:undo": "npm run build && npx sequelize-cli db:migrate:undo --migrations-path dist/migrations",
     "db:create": "npm run build && npx sequelize-cli db:create",
     "db:drop": "npm run build && npx sequelize-cli db:drop",
+    "db:create:seeder": "npx sequelize-cli seed:generate --seeders-path src/seeders --name",
+    "db:seed:all": "npm run build && npx sequelize-cli db:seed:all --seeders-path dist/seeders",
     "migration:create": "npx sequelize-cli migration:create --migrations-path src/migrations"
 
   },
