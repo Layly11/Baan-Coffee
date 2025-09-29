@@ -174,7 +174,7 @@ export const resetPasswordUser = () => async (req: Request, res: Response, next:
 
         await redis.set(`reset_token:${token}`, user.id, { EX: 15 * 60 });
 
-        const resetLink = `https://baan-coffee-production.up.railway.app/reset-password?token=${token}`
+        const resetLink = `https://baan-coffee-coffee-app.vercel.app/reset-password?token=${token}`
 
         await sendResetPasswordAdmin(user.email, resetLink)
 
