@@ -91,7 +91,7 @@ export const updateOrderStatus = () => async (req: Request, res: Response, next:
         }
         if (["complete", "cancelled"].includes(newStatus.toLowerCase())) {
             try {
-                await axios.post('https://baan-coffee-production.up.railway.app/order/notification', { orderId, newStatus })
+                await axios.post('http://baan-coffee-production.up.railway.app/order/notification', { orderId, newStatus })
             } catch (err) {
                 next(err)
             }
@@ -284,8 +284,8 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
             mid: selectedMethod === 'credit' ? process.env.MERCHANT_MID : process.env.MERCHANT_MID_QR,
             order_id: generateOrderId(),
             amount: parseFloat(amount),
-            url_redirect: 'https://baan-coffee-production.up.railway.app/order/payment/result',
-            url_notify: 'https://baan-coffee-production.up.railway.app/order/payment/result',
+            url_redirect: 'http://baan-coffee-production.up.railway.app/order/payment/result',
+            url_notify: 'http://baan-coffee-production.up.railway.app/order/payment/result',
             description: descriptionProduct,
             reference_1: String(customerId),
             reference_2: selectedMethod,
@@ -351,7 +351,7 @@ export const paymentResult = () => async (req: Request, res: Response, next: Nex
     const { order_id, reference_1, reference_2, amount, reference_3, status, process_status, reference, reference_4 } = req.body
     if (status === "APPROVED" || process_status === 'true') {
         try {
-            const axiosRes = await axios.post('https://baan-coffee-production.up.railway.app/order/create', { order_id, reference_1, reference_2, amount, reference_3, reference, reference_4 })
+            const axiosRes = await axios.post('http://baan-coffee-production.up.railway.app/order/create', { order_id, reference_1, reference_2, amount, reference_3, reference, reference_4 })
         } catch (err) {
             next(err)
         }
