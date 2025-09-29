@@ -399,7 +399,6 @@ export const createOrder = () => async (req: Request, res: Response, next: NextF
     try {
         const { order_id, reference_1, reference_2, amount, reference_3, status, reference, reference_4 } = req.body
 
-        console.log("token: ", reference_3)
         const temp = await TempOrderProductsModel.findOne({ where: { token: reference_3 } });
         if (!temp) return next(new ServiceError(OrderErrorMaster.INVALID_TEMP_TOKEN));
 
