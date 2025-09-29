@@ -91,7 +91,7 @@ export const updateOrderStatus = () => async (req: Request, res: Response, next:
         }
         if (["complete", "cancelled"].includes(newStatus.toLowerCase())) {
             try {
-                await axios.post('http://localhost:9302/order/notification', { orderId, newStatus })
+                await axios.post('https://baan-coffee-production.up.railway.app/order/notification', { orderId, newStatus })
             } catch (err) {
                 next(err)
             }
@@ -351,7 +351,7 @@ export const paymentResult = () => async (req: Request, res: Response, next: Nex
     const { order_id, reference_1, reference_2, amount, reference_3, status, process_status, reference, reference_4 } = req.body
     if (status === "APPROVED" || process_status === 'true') {
         try {
-            const axiosRes = await axios.post('http://localhost:9302/order/create', { order_id, reference_1, reference_2, amount, reference_3, reference, reference_4 })
+            const axiosRes = await axios.post('https://baan-coffee-production.up.railway.app/order/create', { order_id, reference_1, reference_2, amount, reference_3, reference, reference_4 })
         } catch (err) {
             next(err)
         }
