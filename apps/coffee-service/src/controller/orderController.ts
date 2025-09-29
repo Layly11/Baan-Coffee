@@ -311,9 +311,19 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
 
         let response
         if (selectedMethod === 'credit') {
-            response = await axios.post('https://octopus-unify-sit.digipay.dev/v2/payment', payload, config)
+            try{
+                response = await axios.post('https://octopus-unify-sit.digipay.dev/v2/payment', payload, config)
+            }
+            catch (err) {
+                return next(err)
+            }
+    
         } else {
-            response = await axios.post('https://octopus-unify-sit.digipay.dev/v2/payment', payload, config)
+            try {
+                response = await axios.post('https://octopus-unify-sit.digipay.dev/v2/payment', payload, config)
+            } catch (err) {
+                return next(err)
+            }
         }
 
         await PaymentModel.create(
