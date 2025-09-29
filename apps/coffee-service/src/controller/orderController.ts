@@ -283,7 +283,7 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
         const payload = {
             mid: selectedMethod === 'credit' ? process.env.MERCHANT_MID : process.env.MERCHANT_MID_QR,
             order_id: generateOrderId(),
-            amount: parseFloat(amount),
+            amount: amount,
             url_redirect: 'https://baan-coffee-production.up.railway.app/order/payment/result',
             url_notify: 'https://baan-coffee-production.up.railway.app/order/payment/result',
             description: descriptionProduct,

@@ -40,66 +40,58 @@ export const getCustomerData = () => async (req: Request, res: Response, next: N
         next(err)
     }
 }
-export const getCustomerOrderData = () => async (req: Request, res: Response, next: NextFunction) => {
+export const getCustomerOrderData =
+  () => async (req: Request, res: Response, next: NextFunction) => {
     const { limit, offset } = req.query;
-    const customerId = req.params.id
+    const customerId = req.params.id;
 
     try {
+      const { count, rows } = await OrderModel.findAndCountAll({
+        where: { customer_id: customerId },
+        include: [
+          {
+            model: CustomersModel,
+            as: "customer",
+            attributes: ["id", "phone"], // เลือกเฉพาะที่ใช้
+          },
+        ],
+        limit: Number(limit) || 10,
+        offset: Number(offset) || 0,
+        order: [["time", "DESC"]],
+      });
 
-        const { count, rows } = await CustomersModel.findAndCountAll({
-            where: { id: customerId },
-            include: [
-                {
-                    model: OrderModel,
-                    as: 'orders',
-                    where: { customer_id: customerId }
-                }
-            ],
-            limit: Number(limit) || 10,
-            offset: Number(offset) || 0,
-        })
-
-   let orders = rows.flatMap((customer: any) =>
-    customer.orders.map((o: any) => {
+      const orders = rows.map((o: any) => {
         const order = o.get({ plain: true });
 
         let shippingAddress = order.shipping_address;
-        if (typeof shippingAddress === 'object' && shippingAddress !== null) {
-            shippingAddress = [
-                shippingAddress.street,
-                shippingAddress.city,
-                shippingAddress.zipcode
-            ]
-                .filter(Boolean)
-                .join(', ');
+        if (typeof shippingAddress === "object" && shippingAddress !== null) {
+          shippingAddress = [
+            shippingAddress.street,
+            shippingAddress.city,
+            shippingAddress.zipcode,
+          ]
+            .filter(Boolean)
+            .join(", ");
         }
 
         return {
-            ...order,
-            timeRaw: order.time,
-            time: dayjs(order.time).format('DD/MM/YYYY HH:MM'),
-            shipping_address: shippingAddress,
-            phone: customer.phone,
+          ...order,
+          timeRaw: order.time,
+          time: dayjs(order.time).format("DD/MM/YYYY HH:mm"),
+          shipping_address: shippingAddress,
+          phone: order.customer?.phone,
         };
-    })
-);
+      });
 
-      orders = orders.sort(
-            (a, b) => new Date(b.timeRaw).getTime() - new Date(a.timeRaw).getTime()
-        );
+      res.locals.total = count; 
+      res.locals.orders = orders;
 
-
-        res.locals.total = count
-        res.locals.orders = orders
-
-        console.log("Rows: ", orders)
-
-        return next()
-
+      return next();
     } catch (err) {
-        next(err)
+      next(err);
     }
-}
+  };
+
 
 export const updateCustomerData = () => async (req: Request, res: Response, next: NextFunction) => {
     
