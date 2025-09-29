@@ -16,7 +16,7 @@ const Container = styled.div`
 
 const Card = styled.div`
   background: #fff;
-  padding: 2rem 2.5rem;
+  padding: 2rem 2.5rem; 
   border-radius: 16px;
   box-shadow: 0 6px 16px rgba(111, 78, 55, 0.15);
   width: 380px;
@@ -40,7 +40,7 @@ const Subtitle = styled.p`
 `;
 
 const Input = styled.input`
-  width: 100%;
+  width: 90%;
   padding: 0.75rem 1rem;
   border: 1px solid #d6ccc2;
   border-radius: 10px;
