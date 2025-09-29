@@ -284,8 +284,8 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
             mid: selectedMethod === 'credit' ? process.env.MERCHANT_MID : process.env.MERCHANT_MID_QR,
             order_id: generateOrderId(),
             amount,
-            url_redirect: 'http://127.0.0.1:9302/order/payment/result',
-            url_notify: 'http://127.0.0.1:9302/order/payment/result',
+            url_redirect: 'https://baan-coffee-production.up.railway.app/order/payment/result',
+            url_notify: 'https://baan-coffee-production.up.railway.app/order/payment/result',
             description: descriptionProduct,
             reference_1: String(customerId),
             reference_2: selectedMethod,
@@ -696,17 +696,17 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
             }
         }
 
-        const paymentInquiry = await axios.get(`http://127.0.0.1:4002/transaction/${payment.reference}`, config)
+        const paymentInquiry = await axios.get(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}`, config)
 
         if (paymentInquiry.data.transaction.status === 'APPROVED') {
-            await axios.post(`http://127.0.0.1:4002/transaction/${payment.reference}/void`, {
+            await axios.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/void`, {
                 reason: "Return an item"
             }, config)
 
             await payment.update({ status: 'VOIDED' }, { transaction: t })
 
         } else if (paymentInquiry.data.transaction.status === 'SETTLED' || paymentInquiry.data.transaction.status === 'PRE-SETTLED') {
-            await axios.post(`http://127.0.0.1:4002/transaction/${payment.reference}/refund`, {
+            await axios.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/refund`, {
                 reason: "Return an item",
                 refund_id: uuidv4()
             }, config)
@@ -795,17 +795,17 @@ export const CancelOrderStatus = () => async (req: Request, res: Response, next:
             }
         }
 
-        const paymentInquiry = await axios.get(`http://127.0.0.1:4002/transaction/${payment.reference}`, config)
+        const paymentInquiry = await axios.get(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}`, config)
 
         if (paymentInquiry.data.transaction.status === 'APPROVED') {
-            await axios.post(`http://127.0.0.1:4002/transaction/${payment.reference}/void`, {
+            await axios.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/void`, {
                 reason: "Return an item"
             }, config)
 
             await payment.update({ status: 'VOIDED' }, { transaction: t })
 
         } else if (paymentInquiry.data.transaction.status === 'SETTLED' || paymentInquiry.data.transaction.status === 'PRE-SETTLED') {
-            await axios.post(`http://127.0.0.1:4002/transaction/${payment.reference}/refund`, {
+            await axios.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/refund`, {
                 reason: "Return an item",
                 refund_id: uuidv4()
             }, config)
