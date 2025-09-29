@@ -558,7 +558,7 @@ export const payForQR = () => async (req: Request, res: Response, next: NextFunc
             }
         }
 
-        const payment = await axios.post('https://octopus-unify-sit.digipay.dev/v2/notify/test/qr', payload, config)
+        const payment = await axios.post('https://octopus-unify-sit.digipay.dev/api/v1/notify/test/qr', payload, config)
 
         res.locals.payment = payment.data
         return next()
