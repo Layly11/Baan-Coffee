@@ -33,7 +33,7 @@ const CustomersPage = () => {
           permission.edit
       )
 
-    const fetchCustomerOrder = async () => {
+    const fetchCustomerOrder = async (page?:any) => {
         try {
              const config = {
                     params: {
@@ -67,7 +67,7 @@ const CustomersPage = () => {
             pathname,
             query: { ...router.query, page }
         })
-        // await fetchCustomerData()
+        await fetchCustomerOrder(page)
     }
 
     return (
