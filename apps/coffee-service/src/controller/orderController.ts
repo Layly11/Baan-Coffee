@@ -30,8 +30,8 @@ export const getOrderData = () => async (req: Request, res: Response, next: Next
             ...(method && { payment_method: method }),
         }
 
-        console.log("OffSet: ",offset)
-        const {count, rows} = await OrderModel.findAndCountAll({
+        console.log("OffSet: ", offset)
+        const { count, rows } = await OrderModel.findAndCountAll({
             where,
             include: [
                 {
@@ -75,7 +75,7 @@ export const updateOrderStatus = () => async (req: Request, res: Response, next:
     try {
         const orderId = req.params.id
         const { new_status: newStatus } = req.body
-        console.log("Body: " ,req.body)
+        console.log("Body: ", req.body)
         const order = await OrderModel.findOne({ where: { order_id: orderId } })
 
         if (!order) {
@@ -86,8 +86,8 @@ export const updateOrderStatus = () => async (req: Request, res: Response, next:
         }
         await order.update({ status: newStatus })
 
-        if(newStatus === 'cancelled') {
-            
+        if (newStatus === 'cancelled') {
+
         }
         if (["complete", "cancelled"].includes(newStatus.toLowerCase())) {
             try {
@@ -202,7 +202,7 @@ export const getNotifyOrder = () => async (req: Request, res: Response, next: Ne
     const customerId = (req.user as any).id
     try {
         const notify = await NotificationModel.findAll({
-            where: {customer_id: customerId},
+            where: { customer_id: customerId },
             order: [['createdAt', 'DESC']],
         })
 
@@ -235,7 +235,7 @@ export const getNotifyOrder = () => async (req: Request, res: Response, next: Ne
         res.locals.notification = notification
 
         return next()
-    } catch(err) {
+    } catch (err) {
 
     }
 }
@@ -311,13 +311,13 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
 
         let response
         if (selectedMethod === 'credit') {
-            try{
+            try {
                 response = await axios.post('https://octopus-unify-sit.digipay.dev/v2/payment', payload, config)
             }
             catch (err) {
                 return next(err)
             }
-    
+
         } else {
             try {
                 response = await axios.post('https://octopus-unify-sit.digipay.dev/v2/payment', payload, config)
@@ -356,12 +356,14 @@ export const paymentResult = () => async (req: Request, res: Response, next: Nex
             next(err)
         }
     } else {
-        const payment = await PaymentModel.findOne({ where: { order_code: order_id } })
-        if (!payment) {
-            return next(new ServiceError(OrderErrorMaster.ERR_PAYMENT_NOT_FOUND))
-        }
+        if (order_id) {
+            const payment = await PaymentModel.findOne({ where: { order_code: order_id } })
+            if (!payment) {
+                return next(new ServiceError(OrderErrorMaster.ERR_PAYMENT_NOT_FOUND))
+            }
 
-        payment.update({ status: 'CANCELED' })
+            payment.update({ status: 'CANCELED' })
+        }
     }
 
     res.send(`
