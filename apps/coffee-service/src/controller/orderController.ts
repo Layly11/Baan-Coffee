@@ -349,7 +349,7 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
 
 export const paymentResult = () => async (req: Request, res: Response, next: NextFunction) => {
     const { order_id, reference_1, reference_2, amount, reference_3, status, process_status, reference, reference_4 } = req.body
-    if (process_status === 'true') {
+    if (status === "APPROVED") {
         try {
             const axiosRes = await axios.post('https://baan-coffee-production.up.railway.app/order/create', { order_id, reference_1, reference_2, amount, reference_3, reference, reference_4 })
         } catch (err) {
