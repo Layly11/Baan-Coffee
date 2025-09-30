@@ -2,9 +2,8 @@
   "extends": "@coffee/tsconfig/base.json",
   "include": ["./src/**/*.ts"],
   "compilerOptions": {
+    "rootDir": "./src",
     "outDir": "./dist",
-    "noImplicitReturns": false,
-    "esModuleInterop": true
   },
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "dist", ".turbo"]
 }
