@@ -17,6 +17,7 @@ const withAuthenticated = (Component: React.FC): React.FC => {
             try {
                 const res = await axios.get('/api/authen/profile')
                 const user = res.data.user
+
                 dispatch({ type: 'SET_USER', payload: user })
             } catch (err: any) {
                 if (err.response.status === 403) {
@@ -47,10 +48,8 @@ const withAuthenticated = (Component: React.FC): React.FC => {
         }
 
         useEffect(() => {
-            if (user === null) {
-                handleFetchUserProfile()
-            }
-        }, [])
+            handleFetchUserProfile()
+        }, [router.pathname])
 
         return <Component {...props} />
     }

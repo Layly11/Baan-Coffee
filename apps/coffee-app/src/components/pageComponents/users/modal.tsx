@@ -20,7 +20,6 @@ export const EditUserModal = ({ isOpen, onClose, user, onUpdated }: Props) => {
     
 
     useEffect(() => {
-        console.log('User: ', user)
         if (user) {
             setForm({
                 username: user.username || '',

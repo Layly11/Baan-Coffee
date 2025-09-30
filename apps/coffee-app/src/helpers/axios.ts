@@ -1,9 +1,10 @@
 import axios from "axios";
+import Router from "next/router";
 
 
 
 const instance = axios.create({
-        withCredentials: true,
+    withCredentials: true,
 })
 let isRefreshing = false
 let failedQueue: Array<(token?: string) => void> = []
@@ -15,18 +16,18 @@ export const setStoreDispatch = (dispatch: any) => {
 }
 
 export const setAccessToken = (token: string) => {
-     accessToken = token
+    accessToken = token
     instance.defaults.headers.common['Authorization'] = `Bearer ${token}`
 }
 
 instance.interceptors.request.use(
-  (config) => {
-    if (accessToken) {
-      config.headers['Authorization'] = `Bearer ${accessToken}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
+    (config) => {
+        if (accessToken) {
+            config.headers['Authorization'] = `Bearer ${accessToken}`
+        }
+        return config
+    },
+    (error) => Promise.reject(error)
 )
 
 instance.interceptors.response.use(
@@ -66,9 +67,16 @@ instance.interceptors.response.use(
 
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`
                 return instance(originalRequest)
-            } catch (refreshErr) {
+            } catch (refreshErr: any) {
                 isRefreshing = false
                 failedQueue = []
+                console.log("Err: ",refreshErr.response )
+                if ((refreshErr.response?.status === 401 || refreshErr.response?.status  === 500) && Router.pathname !== '/login') {
+                    accessToken = null;
+                    delete instance.defaults.headers.common["Authorization"];
+                    Router.push("/login");
+                }
+
                 return Promise.reject(refreshErr)
             }
         }
