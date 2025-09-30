@@ -77,42 +77,41 @@ const getCustomerOrderData = () => async (req, res, next) => {
     const { limit, offset } = req.query;
     const customerId = req.params.id;
     try {
-        const { count, rows } = await models_1.CustomersModel.findAndCountAll({
-            where: { id: customerId },
+        const { count, rows } = await models_1.OrderModel.findAndCountAll({
+            where: { customer_id: customerId },
             include: [
                 {
-                    model: models_1.OrderModel,
-                    as: 'orders',
-                    where: { customer_id: customerId }
-                }
+                    model: models_1.CustomersModel,
+                    as: "customer",
+                    attributes: ["id", "phone"],
+                },
             ],
             limit: Number(limit) || 10,
             offset: Number(offset) || 0,
+            order: [["time", "DESC"]],
         });
-        let orders = rows.flatMap((customer) => customer.orders.map((o) => {
+        const orders = rows.map((o) => {
             const order = o.get({ plain: true });
             let shippingAddress = order.shipping_address;
-            if (typeof shippingAddress === 'object' && shippingAddress !== null) {
+            if (typeof shippingAddress === "object" && shippingAddress !== null) {
                 shippingAddress = [
                     shippingAddress.street,
                     shippingAddress.city,
-                    shippingAddress.zipcode
+                    shippingAddress.zipcode,
                 ]
                     .filter(Boolean)
-                    .join(', ');
+                    .join(", ");
             }
             return {
                 ...order,
                 timeRaw: order.time,
-                time: (0, helpers_1.dayjs)(order.time).format('DD/MM/YYYY HH:MM'),
+                time: (0, helpers_1.dayjs)(order.time).format("DD/MM/YYYY HH:mm"),
                 shipping_address: shippingAddress,
-                phone: customer.phone,
+                phone: order.customer?.phone,
             };
-        }));
-        orders = orders.sort((a, b) => new Date(b.timeRaw).getTime() - new Date(a.timeRaw).getTime());
+        });
         res.locals.total = count;
         res.locals.orders = orders;
-        console.log("Rows: ", orders);
         return next();
     }
     catch (err) {

@@ -12,7 +12,10 @@ const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cors_1 = __importDefault(require("cors"));
 const APP = ({ redis }) => {
     const app = (0, express_1.default)();
-    app.use((0, cors_1.default)());
+    app.use((0, cors_1.default)({
+        origin: 'https://baan-coffee-coffee-app.vercel.app',
+        credentials: true,
+    }));
     app.set('trust proxy', true);
     app.enable('trust proxy');
     app.disable('x-powered-by');

@@ -48,7 +48,7 @@ const getOrderData = () => async (req, res, next) => {
         });
         const orders = rows.map((o) => ({
             order_id: o.order_id,
-            time: (0, helpers_2.dayjs)(o.time).format('DD/MM/YYYY HH:MM'),
+            time: (0, helpers_2.dayjs)(o.time).tz().format('DD/MM/YYYY HH:mm'),
             customer_name: o.customer.name,
             method: o.payment_method,
             total_price: o.total_price,
@@ -80,7 +80,7 @@ const updateOrderStatus = () => async (req, res, next) => {
         }
         if (["complete", "cancelled"].includes(newStatus.toLowerCase())) {
             try {
-                await axios_1.default.post('http://localhost:9302/order/notification', { orderId, newStatus });
+                await axios_1.default.post('https://baan-coffee-production.up.railway.app/order/notification', { orderId, newStatus });
             }
             catch (err) {
                 next(err);
@@ -246,9 +246,9 @@ const createPayment = () => async (req, res, next) => {
         const payload = {
             mid: selectedMethod === 'credit' ? process.env.MERCHANT_MID : process.env.MERCHANT_MID_QR,
             order_id: generateOrderId(),
-            amount,
-            url_redirect: 'http://127.0.0.1:9302/order/payment/result',
-            url_notify: 'http://127.0.0.1:9302/order/payment/result',
+            amount: amount,
+            url_redirect: 'https://baan-coffee-production.up.railway.app/order/payment/result',
+            url_notify: 'https://baan-coffee-production.up.railway.app/order/payment/result',
             description: descriptionProduct,
             reference_1: String(customerId),
             reference_2: selectedMethod,
@@ -271,10 +271,20 @@ const createPayment = () => async (req, res, next) => {
         };
         let response;
         if (selectedMethod === 'credit') {
-            response = await axios_1.default.post('http://127.0.0.1:4002/payment', payload, config);
+            try {
+                response = await axios_1.default.post('https://octopus-unify-sit.digipay.dev/v2/payment', payload, config);
+            }
+            catch (err) {
+                return next(err);
+            }
         }
         else {
-            response = await axios_1.default.post('http://127.0.0.1:4002/payment', payload, config);
+            try {
+                response = await axios_1.default.post('https://octopus-unify-sit.digipay.dev/v2/payment', payload, config);
+            }
+            catch (err) {
+                return next(err);
+            }
         }
         await models_1.PaymentModel.create({
             order_code: payload.order_id,
@@ -295,20 +305,22 @@ const createPayment = () => async (req, res, next) => {
 exports.createPayment = createPayment;
 const paymentResult = () => async (req, res, next) => {
     const { order_id, reference_1, reference_2, amount, reference_3, status, process_status, reference, reference_4 } = req.body;
-    if (status === "APPROVED" || process_status === 'true') {
+    if (status === "APPROVED") {
         try {
-            const axiosRes = await axios_1.default.post('http://localhost:9302/order/create', { order_id, reference_1, reference_2, amount, reference_3, reference, reference_4 });
+            const axiosRes = await axios_1.default.post('https://baan-coffee-production.up.railway.app/order/create', { order_id, reference_1, reference_2, amount, reference_3, reference, reference_4 });
         }
         catch (err) {
             next(err);
         }
     }
     else {
-        const payment = await models_1.PaymentModel.findOne({ where: { order_code: order_id } });
-        if (!payment) {
-            return next(new helpers_1.ServiceError(order_error_json_1.default.ERR_PAYMENT_NOT_FOUND));
+        if (order_id) {
+            const payment = await models_1.PaymentModel.findOne({ where: { order_code: order_id } });
+            if (!payment) {
+                return next(new helpers_1.ServiceError(order_error_json_1.default.ERR_PAYMENT_NOT_FOUND));
+            }
+            payment.update({ status: 'CANCELED' });
         }
-        payment.update({ status: 'CANCELED' });
     }
     res.send(`
     <html>
@@ -473,7 +485,7 @@ const payForQR = () => async (req, res, next) => {
                 'X-Content-Signature': contentSignature
             }
         };
-        const payment = await axios_1.default.post('http://127.0.0.1:4000/api/v1/notify/test/qr', payload, config);
+        const payment = await axios_1.default.post('https://octopus-unify-sit.digipay.dev/api/v1/notify/test/qr', payload, config);
         res.locals.payment = payment.data;
         return next();
     }
@@ -559,10 +571,11 @@ const getTrackOrder = () => async (req, res, next) => {
         const mappedLastOrder = {
             ...orderPlain,
             time: latestOrder?.time
-                ? new Date(latestOrder.time).toLocaleTimeString("en-US", {
-                    hour: "numeric",
+                ? new Date(latestOrder.time).toLocaleTimeString("th-TH", {
+                    hour: "2-digit",
                     minute: "2-digit",
-                    hour12: true,
+                    hour12: false,
+                    timeZone: 'Asia/Bangkok',
                 })
                 : undefined,
         };
@@ -596,15 +609,15 @@ const CancelOrder = () => async (req, res, next) => {
                 'X-Partner-ID': process.env.X_PARTNER_ID
             }
         };
-        const paymentInquiry = await axios_1.default.get(`http://127.0.0.1:4002/transaction/${payment.reference}`, config);
+        const paymentInquiry = await axios_1.default.get(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}`, config);
         if (paymentInquiry.data.transaction.status === 'APPROVED') {
-            await axios_1.default.post(`http://127.0.0.1:4002/transaction/${payment.reference}/void`, {
+            await axios_1.default.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/void`, {
                 reason: "Return an item"
             }, config);
             await payment.update({ status: 'VOIDED' }, { transaction: t });
         }
         else if (paymentInquiry.data.transaction.status === 'SETTLED' || paymentInquiry.data.transaction.status === 'PRE-SETTLED') {
-            await axios_1.default.post(`http://127.0.0.1:4002/transaction/${payment.reference}/refund`, {
+            await axios_1.default.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/refund`, {
                 reason: "Return an item",
                 refund_id: (0, uuid_1.v4)()
             }, config);
@@ -680,15 +693,15 @@ const CancelOrderStatus = () => async (req, res, next) => {
                 'X-Partner-ID': process.env.X_PARTNER_ID
             }
         };
-        const paymentInquiry = await axios_1.default.get(`http://127.0.0.1:4002/transaction/${payment.reference}`, config);
+        const paymentInquiry = await axios_1.default.get(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}`, config);
         if (paymentInquiry.data.transaction.status === 'APPROVED') {
-            await axios_1.default.post(`http://127.0.0.1:4002/transaction/${payment.reference}/void`, {
+            await axios_1.default.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/void`, {
                 reason: "Return an item"
             }, config);
             await payment.update({ status: 'VOIDED' }, { transaction: t });
         }
         else if (paymentInquiry.data.transaction.status === 'SETTLED' || paymentInquiry.data.transaction.status === 'PRE-SETTLED') {
-            await axios_1.default.post(`http://127.0.0.1:4002/transaction/${payment.reference}/refund`, {
+            await axios_1.default.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/refund`, {
                 reason: "Return an item",
                 refund_id: (0, uuid_1.v4)()
             }, config);

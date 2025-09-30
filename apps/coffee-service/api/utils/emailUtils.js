@@ -63,6 +63,7 @@ const sendResetPasswordEmail = async (email, otp) => {
 };
 exports.sendResetPasswordEmail = sendResetPasswordEmail;
 const sendResetPasswordAdmin = async (email, resetLink) => {
+    console.log("resetPassword: ", resetLink);
     const mailOptions = {
         from: `yelaysong15@gmail.com`,
         to: email,
