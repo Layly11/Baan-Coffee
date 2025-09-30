@@ -78,6 +78,10 @@ export const updateUserData = () => async (req: Request, res: Response, next: Ne
         }
 
         if (email !== '' && email !== null && email !== undefined) {
+            const userExist = await UserModel.findOne({ where: { email } })
+            if (userExist && userExist.id !== user.id) {
+                return next(new ServiceError(UserErrorMaster.EMAIL_IS_EXISTS))
+            }
             user.email = email
         }
 
@@ -135,6 +139,11 @@ export const createUserData = () => async (req: Request, res: Response, next: Ne
             return next(new ServiceError(UserErrorMaster.ROLE_NOT_FOUND))
         }
 
+        const emailExists = await UserModel.findOne({ where: {email} })
+
+        if (emailExists) {
+            return next(new ServiceError(UserErrorMaster.EMAIL_IS_EXISTS))
+        }
 
         await UserModel.create({
             username,
@@ -151,7 +160,7 @@ export const createUserData = () => async (req: Request, res: Response, next: Ne
 }
 
 export const resetPasswordUser = () => async (req: Request, res: Response, next: NextFunction) => {
-    const {id} = req.params
+    const { id } = req.params
     const redis = getRedisClient()
     try {
         const user = await UserModel.findOne({
@@ -161,16 +170,16 @@ export const resetPasswordUser = () => async (req: Request, res: Response, next:
             }
         })
 
-        if(!user) {
-             return next(new ServiceError(UserErrorMaster.USER_NOT_FOUND))
+        if (!user) {
+            return next(new ServiceError(UserErrorMaster.USER_NOT_FOUND))
         }
 
         const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET)
 
         const token = await new jose.SignJWT({ userId: user.id })
-              .setProtectedHeader({ alg: "HS256" })
-              .setExpirationTime("15m")
-              .sign(jwtSecret);
+            .setProtectedHeader({ alg: "HS256" })
+            .setExpirationTime("15m")
+            .sign(jwtSecret);
 
         await redis.set(`reset_token:${token}`, user.id, { EX: 15 * 60 });
 

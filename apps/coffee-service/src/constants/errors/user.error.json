@@ -46,5 +46,13 @@
       "en": "Status not found",
       "th": "ไม่เจอ Status"
     }
+  },
+   "EMAIL_IS_EXISTS": {
+    "statusCode": 400,
+    "resCode": "4006",
+    "resDesc": {
+      "en": "Email is exists",
+      "th": "Email นี้ใช้ไปแล้ว"
+    }
   }
 }

@@ -4,11 +4,13 @@ import { Migration } from 'sequelize-cli'
 export = {
   up: async (queryInterface, Sequelize) => {
     const now = new Date();
-    const hashedPassword = await bcrypt.hash("140974saiaye", 10);
+    const hashedPassword = await bcrypt.hash("tAH0WFcV67Au2zX", 10);
 
     const [user] = await queryInterface.sequelize.query(
   `SELECT * FROM users WHERE email = 'admin@gmail.com'`
 );
+
+console.log("HashPassword: ", hashedPassword)
 
 if (!user.length) {
   await queryInterface.bulkInsert("users", [
