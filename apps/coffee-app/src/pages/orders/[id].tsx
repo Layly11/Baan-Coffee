@@ -12,7 +12,9 @@ import { fetchInvoiceRequester } from "@/utils/requestUtils"
 import { useEffect, useState } from "react"
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
-
+import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.json'
+import PermissionActionMaster from '../../constants/masters/PermissionActionMaster.json'
+import { checkPermission } from "@/helpers/checkPermission"
 
 const Container = styled.div`
   background: #f9fafb;
@@ -172,13 +174,19 @@ const OrdersPage = () => {
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
 
-        const margin = 10; 
+        const margin = 10;
         const pdfWidth = pageWidth - margin * 2;
         const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
 
         pdf.addImage(imgData, "PNG", margin, margin, pdfWidth, pdfHeight);
         pdf.save(`invoice-${invoice.id}.pdf`);
     };
+
+    useEffect(() => {
+        const page = PermissionMenuMaster.ORDER_MANAGEMENT
+        const action = PermissionActionMaster.VIEW
+        checkPermission({ user, page, action }, router)
+    }, [user])
 
     if (loading || !invoice) {
         return <MainLayout isFetching={true}><p>Loading...</p></MainLayout>;

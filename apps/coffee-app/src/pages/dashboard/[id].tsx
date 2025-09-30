@@ -12,6 +12,9 @@ import { useRouter } from "next/router"
 import { fetchDashboardDetailRequester } from '../../utils/requestUtils'
 import { Alert } from "@/helpers/sweetalert"
 import DetailsTable from "@/components/pageComponents/dashboard/detail/detailTable"
+import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.json'
+import PermissionActionMaster from '../../constants/masters/PermissionActionMaster.json'
+import { checkPermission } from "@/helpers/checkPermission"
 
 const DashBoardPage = () => {
     const router = useRouter()
@@ -40,6 +43,12 @@ const DashBoardPage = () => {
             handleFetchDashboardDetail()
         }
     }, [id])
+
+    useEffect(() => {
+    const page = PermissionMenuMaster.DASHBOARD
+    const action = PermissionActionMaster.VIEW
+    checkPermission({ user, page, action }, router)
+  }, [user])
 
     return (
         <>

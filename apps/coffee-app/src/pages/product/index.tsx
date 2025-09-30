@@ -56,9 +56,9 @@ const ProductMenuPage = () => {
 
     const canEditProduct = user?.permissions.some(
         (permission) =>
-          permission.name === PermissionMenuMaster.PRODUCT_MENU &&
-          permission.edit
-      )
+            permission.name === PermissionMenuMaster.PRODUCT_MENU &&
+            permission.edit
+    )
     const fetchProducts = async (page?: number) => {
         try {
             setIsFetching(true)
@@ -341,6 +341,11 @@ const ProductMenuPage = () => {
     const handleAddCategory = () => {
         setShowCategoryModal(true)
     }
+    useEffect(() => {
+        const page = PermissionMenuMaster.PRODUCT_MENU
+        const action = PermissionActionMaster.VIEW
+        checkPermission({ user, page, action }, router)
+    }, [user])
 
     return (
         <>

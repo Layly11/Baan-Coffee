@@ -13,6 +13,8 @@ import { Columns } from "@/components/pageComponents/customersOrder/column"
 import { Alert } from "@/helpers/sweetalert"
 import { fetchCustomerOrderRequester } from "@/utils/requestUtils"
 import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.json'
+import PermissionActionMaster from '../../constants/masters/PermissionActionMaster.json'
+import { checkPermission } from "@/helpers/checkPermission"
 
 const CustomersPage = () => {
     const user = useSelector((state: UseSelectorProps) => state.user)
@@ -69,6 +71,13 @@ const CustomersPage = () => {
         })
         await fetchCustomerOrder(page)
     }
+
+        useEffect(() => {
+            const page = PermissionMenuMaster.MANAGE_CUSTOMER
+            const action = PermissionActionMaster.VIEW
+            checkPermission({ user, page, action }, router)
+        }, [user])
+    
 
     return (
         <>
