@@ -7,7 +7,6 @@ import { momentAsiaBangkok, ServiceError } from "@coffee/helpers";
 import OrderErrorMaster from '../constants/errors/order.error.json'
 import { v4 as uuidv4 } from "uuid";
 import { dayjs } from "@coffee/helpers";
-import { error } from "console";
 
 export const getOrderData = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -53,7 +52,7 @@ export const getOrderData = () => async (req: Request, res: Response, next: Next
         const orders = rows.map((o: any) => (
             {
                 order_id: o.order_id,
-                time: dayjs(o.time).format('DD/MM/YYYY HH:MM'),
+                time: dayjs(o.time).tz().format('DD/MM/YYYY HH:mm'),
                 customer_name: o.customer.name,
                 method: o.payment_method,
                 total_price: o.total_price,
@@ -664,10 +663,11 @@ export const getTrackOrder = () => async (req: Request, res: Response, next: Nex
         const mappedLastOrder = {
             ...orderPlain,
             time: latestOrder?.time
-                ? new Date(latestOrder.time).toLocaleTimeString("en-US", {
-                    hour: "numeric",
+                ? new Date(latestOrder.time).toLocaleTimeString("th-TH", {
+                    hour: "2-digit", 
                     minute: "2-digit",
-                    hour12: true,
+                    hour12: false, 
+                    timeZone: 'Asia/Bangkok', 
                 })
                 : undefined,
         }
