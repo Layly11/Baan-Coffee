@@ -32,9 +32,6 @@ export const EditUserModal = ({ isOpen, onClose, user, onUpdated }: Props) => {
         }
     }, [user])
 
-    useEffect(() => {
-        console.log("Role: ", form.role)
-    }, [form.role])
 
 
 

@@ -54,7 +54,6 @@ const CustomersPage = () => {
             }
             const res = await fetchCustomerDataRequester(config)
 
-            console.log("res: ", res.data)
             if (res.data !== null) {
                 const customers = res.data.customers
                 const total = res.data.total

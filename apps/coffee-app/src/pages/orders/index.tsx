@@ -56,7 +56,6 @@ const OrdersPage = () => {
     const fetchOrderData = async (page?: any) => {
         setIsFetching(true)
         setIsSearch(false)
-        console.log("Page:",page)
         try {
             const config = {
                 params: {
@@ -73,7 +72,6 @@ const OrdersPage = () => {
             const orders = res.data.orders
             const total = res.data.total
 
-            console.log("total: ",total)
             setRows(orders)
             setTotal(total)
 

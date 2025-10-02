@@ -234,7 +234,6 @@ export const verifyOtpCustomer = () => async (req: Request, res: Response, next:
     try {
         const { email, otp } = req.body;
 
-        console.log("OTP From Mobile: ", otp)
         if (!email || !otp) {
             return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_OTP_REQUIRED));
         }

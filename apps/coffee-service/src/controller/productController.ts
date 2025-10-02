@@ -106,7 +106,6 @@ export const getProductData = () => async (req: Request, res: Response, next: Ne
 export const getProductSize = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
         const sizes = await SizeModel.findAll()
-        console.log("SizeModel: ", sizes)
 
         res.locals.sizes = sizes
 
@@ -593,7 +592,6 @@ export const getSizebyProduct = () => async (req: Request, res: Response, next: 
             }
         ))
 
-        console.log("mappedSizeProduct", mappedSizeProduct)
         res.locals.sizes = mappedSizeProduct
         return next()
     } catch (err) {

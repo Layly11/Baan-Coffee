@@ -235,9 +235,6 @@ export default function MainLayout({ isFetching, children }: { isFetching: boole
     }
   }
 
-  useEffect(() => {
-    console.log("User Recent Login: ",user)
-  },[user])
     const profileName = useMemo(
     () => (
       <ProfileName>

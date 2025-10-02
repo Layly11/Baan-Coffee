@@ -48,7 +48,6 @@ const CustomersPage = () => {
             if(res.data !== null) {
              const orders = res.data.orders
             const total = res.data.total
-                console.log("Data: ", orders)
             setRows(orders)
             setTotal(total)
             }

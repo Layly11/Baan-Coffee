@@ -259,7 +259,6 @@ export const resetPassword = () => async (req: Request, res: Response, next: Nex
     }
     const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET)
 
-    console.log("userId: ", userId)
     await jose.jwtVerify(token, jwtSecret);
 
     const user = await UserModel.findOne({

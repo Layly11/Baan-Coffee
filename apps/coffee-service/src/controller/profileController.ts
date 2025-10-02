@@ -108,7 +108,6 @@ export const fetchAddressCustomer = () => async (req: Request, res: Response, ne
             order: [["createdAt", "ASC"]],
         })
 
-        console.log('Address: ', addresses)
 
         res.locals.address = addresses
 

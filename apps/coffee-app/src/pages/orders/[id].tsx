@@ -142,7 +142,6 @@ const OrdersPage = () => {
         setLoading(true)
         try {
             const res = await fetchInvoiceRequester(id)
-            console.log("Data: ", res.data.invoice)
             setInvoice(res.data.invoice)
         } catch (err) {
             console.error(err)

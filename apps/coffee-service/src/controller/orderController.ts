@@ -29,7 +29,6 @@ export const getOrderData = () => async (req: Request, res: Response, next: Next
             ...(method && { payment_method: method }),
         }
 
-        console.log("OffSet: ", offset)
         const { count, rows } = await OrderModel.findAndCountAll({
             where,
             include: [
@@ -74,7 +73,7 @@ export const updateOrderStatus = () => async (req: Request, res: Response, next:
     try {
         const orderId = req.params.id
         const { new_status: newStatus } = req.body
-        console.log("Body: ", req.body)
+
         const order = await OrderModel.findOne({ where: { order_id: orderId } })
 
         if (!order) {
@@ -144,7 +143,6 @@ export const getInvoiceData = () => async (req: Request, res: Response, next: Ne
             discount: 0,
         }
 
-        console.log("Invoice: ", invoice)
 
         res.locals.invoice = invoice
         return next()
@@ -686,7 +684,6 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
     try {
         const { order_id } = req.body
 
-        console.log("Body: ", req.body)
         const payment = await PaymentModel.findOne({ where: { order_code: order_id }, transaction: t })
         const order = await OrderModel.findOne({ where: { order_id }, include: [{ model: OrderItemModel, as: 'items' }], transaction: t })
 
@@ -772,7 +769,7 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
         await order.update({ status: 'cancelled' }, { transaction: t })
 
         await t.commit();
-        
+
         try {
             await axios.post('https://baan-coffee-production.up.railway.app/order/notification', { orderId: order_id, newStatus: 'cancelled' })
         } catch (err) {
@@ -793,7 +790,6 @@ export const CancelOrderStatus = () => async (req: Request, res: Response, next:
     try {
         const { order_id } = req.body
 
-        console.log("Body: ", req.body)
         const payment = await PaymentModel.findOne({ where: { order_code: order_id }, transaction: t })
         const order = await OrderModel.findOne({ where: { order_id }, include: [{ model: OrderItemModel, as: 'items' }], transaction: t })
 

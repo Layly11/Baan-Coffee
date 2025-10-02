@@ -205,8 +205,6 @@ const ProductMenuPage = () => {
 
     const handleConfirmAdd = async (): Promise<void> => {
         try {
-            console.log("NewDescription (Add): ", newDescription)
-            console.log("ProductName (Add): ", newProductName)
             setShowAddModal(false)
             const formData = new FormData()
             if (newFile !== null && newFile !== undefined) formData.append('product_image', newFile)

@@ -70,7 +70,6 @@ instance.interceptors.response.use(
             } catch (refreshErr: any) {
                 isRefreshing = false
                 failedQueue = []
-                console.log("Err: ",refreshErr.response )
                 if ((refreshErr.response?.status === 401 || refreshErr.response?.status  === 500) && Router.pathname !== '/login') {
                     accessToken = null;
                     delete instance.defaults.headers.common["Authorization"];

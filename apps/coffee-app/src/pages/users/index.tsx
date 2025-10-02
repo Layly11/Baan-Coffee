@@ -51,7 +51,6 @@ const UserPage = () => {
           permission.create
       )
     const fetchUserData = async (page?: any) => {
-        console.log("fetch page: ", page)
         setIsFetching(true)
         setIsSearch(false)
         try {
@@ -64,11 +63,9 @@ const UserPage = () => {
                 }
             }
             const res = await fetchUserDataRequester(config)
-            console.log("res: ", res.data)
             if (res.data !== null) {
                 const users = res.data.users
                 const total = res.data.total
-                console.log('user: ', users)
                 setRows(users)
                 setTotal(total)
             }
@@ -106,7 +103,6 @@ const UserPage = () => {
     }
 
     const handleOnChangePage = async (page: number): Promise<void> => {
-        console.log("page: ",page)
         setPage(page)
         router.replace({
             pathname,

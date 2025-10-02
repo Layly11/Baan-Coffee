@@ -86,7 +86,6 @@ export const Columns = (setShowDeleteModal: any, setDeletingId: any, handleOpenE
                                     }
                                 })
                                 const res = await resetPasswordRequester(row.id)
-                                console.log("res: ", res)
                                 if (res.res_code === '0000') {
                                     swalInstance.fire({
                                         icon: "success",
