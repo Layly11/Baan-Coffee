@@ -600,10 +600,11 @@ export const getOrderHistorty = () => async (req: Request, res: Response, next: 
                 size: item.size,
                 description: item.description || "",
                 price: Number(item.price).toFixed(2),
-                time: new Date(o.createdAt).toLocaleTimeString("en-US", {
+                time: new Date(o.createdAt).toLocaleTimeString("th-TH", {
                     hour: "numeric",
                     minute: "2-digit",
                     hour12: true,
+                    timeZone: 'Asia/Bangkok', 
                 }),
                 imageSource: item.image_url
 
@@ -771,7 +772,7 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
         await order.update({ status: 'cancelled' }, { transaction: t })
 
         try {
-            await axios.post('https://baan-coffee-production.up.railway.app/order/notification', { order_id, newStatus: 'cancelled' })
+            await axios.post('https://baan-coffee-production.up.railway.app/order/notification', { orderId: order_id, newStatus: 'cancelled' })
         } catch (err) {
             return next(err)
         }
