@@ -85,9 +85,7 @@ export const updateOrderStatus = () => async (req: Request, res: Response, next:
         }
         await order.update({ status: newStatus })
 
-        if (newStatus === 'cancelled') {
-
-        }
+        
         if (["complete", "cancelled"].includes(newStatus.toLowerCase())) {
             try {
                 await axios.post('https://baan-coffee-production.up.railway.app/order/notification', { orderId, newStatus })
@@ -664,10 +662,10 @@ export const getTrackOrder = () => async (req: Request, res: Response, next: Nex
             ...orderPlain,
             time: latestOrder?.time
                 ? new Date(latestOrder.time).toLocaleTimeString("th-TH", {
-                    hour: "2-digit", 
+                    hour: "2-digit",
                     minute: "2-digit",
-                    hour12: false, 
-                    timeZone: 'Asia/Bangkok', 
+                    hour12: false,
+                    timeZone: 'Asia/Bangkok',
                 })
                 : undefined,
         }
@@ -771,6 +769,12 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
         }
 
         await order.update({ status: 'cancelled' }, { transaction: t })
+
+        try {
+            await axios.post('https://baan-coffee-production.up.railway.app/order/notification', { order_id, newStatus: 'cancelled' })
+        } catch (err) {
+            next(err)
+        }
 
         await t.commit();
         return next()
