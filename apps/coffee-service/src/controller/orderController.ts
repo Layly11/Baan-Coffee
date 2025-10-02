@@ -773,7 +773,7 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
         try {
             await axios.post('https://baan-coffee-production.up.railway.app/order/notification', { order_id, newStatus: 'cancelled' })
         } catch (err) {
-            next(err)
+            return next(err)
         }
 
         await t.commit();
