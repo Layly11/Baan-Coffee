@@ -88,6 +88,7 @@ export const AddProductModal = ({
             backgroundColor: "#5D3A00",
         },
     };
+    const allowedExtensions = ['.png', '.jpg', '.jpeg']
 
     useEffect(() => {
         if (!visible) {
@@ -98,7 +99,7 @@ export const AddProductModal = ({
 
     useEffect(() => {
         if (!visible) return;
-        console.log("CategotyList: ",Object.fromEntries(categoryList))
+        console.log("CategotyList: ", Object.fromEntries(categoryList))
         if (editingItemId !== null) {
             const item = items.find((i: any) => i.id === editingItemId)
             if (!item) {
@@ -152,20 +153,67 @@ export const AddProductModal = ({
         setRemoveImage(false)
         const file = e.target.files?.[0];
         if (file === null || file === undefined) return;
-        if (!validateImageFile(file)) return;
-        onChangeFile(file);
-        setUploadedFileName(file.name);
-        setPreviewUrl(URL.createObjectURL(file));
+        validateImageFile(file)
+            .then((isValidMagic) => {
+                if (!isValidMagic) {
+                    swalInstance.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'กรุณาอัปโหลดไฟล์ JPG หรือ PNG เท่านั้น',
+                        showCloseButton: true,
+                        showConfirmButton: false
+                    })
+                    return
+                }
+                onChangeFile(file)
+                setUploadedFileName(file.name)
+                setPreviewUrl(URL.createObjectURL(file))
+            })
+            .catch((err) => {
+                console.log(err)
+            })
     };
 
-    const validateImageFile = (file: File): boolean => {
-        if (!file.type.startsWith("image/")) {
-            return false;
+    const validateMagicNumber = async (file: File): Promise<boolean> => {
+        return await new Promise((resolve) => {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                if (reader.result instanceof ArrayBuffer) {
+                    if (reader.result == null || reader.result.byteLength < 8) resolve(false)
+
+                    const bytes = new Uint8Array(reader.result).subarray(0, 8)
+                    const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ')
+
+                    if (file.type === 'image/png') {
+                        resolve(hex.startsWith('89 50 4e 47 0d 0a 1a 0a'))
+                    }
+
+                    if (file.type === 'image/jpg') {
+                        resolve(hex.startsWith('ff d8 ff'))
+                    }
+
+                    if (file.type === 'image/jpeg') {
+                        resolve(hex.startsWith('ff d8 ff'))
+                    }
+
+                    resolve(false)
+                } else {
+                    resolve(false)
+                }
+            }
+            reader.readAsArrayBuffer(file.slice(0, 8))
+        })
+    }
+
+    const validateImageFile = async (file: File): Promise<boolean> => {
+        if (!file.type.startsWith('image/')) return false
+        if (file.size > 5 * 1024 * 1024) return false
+        const fileExtension = file.name.split('.').pop()?.toLowerCase()
+        if (fileExtension === undefined || !allowedExtensions.includes(`.${fileExtension}`)) {
+            return false
         }
-        if (file.size > 5 * 1024 * 1024) {
-            return false;
-        }
-        return true;
+        const isValidMagic = await validateMagicNumber(file)
+        return isValidMagic
     };
 
     const handleRemoveFile = (): void => {
@@ -177,9 +225,18 @@ export const AddProductModal = ({
             URL.revokeObjectURL(previewUrl);
         }
     };
-    const handleFileUpload = (file: any): void => {
+    const handleFileUpload = async (file: any): Promise<void> => {
         setRemoveImage(false)
-        if (!validateImageFile(file)) return;
+        if (!(await validateImageFile(file))) {
+            swalInstance.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'กรุณาอัปโหลดไฟล์ JPG หรือ PNG เท่านั้น',
+                showCloseButton: true,
+                showConfirmButton: false
+            })
+            return
+        }
         onChangeFile(file);
         setUploadedFileName(file.name);
         setPreviewUrl(URL.createObjectURL(file));

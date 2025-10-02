@@ -6,6 +6,30 @@ import ProductMasterError from '../constants/errors/product.error.json'
 import path from "path"
 import { v4 as uuidv4 } from 'uuid'
 import { Sequelize } from "sequelize"
+
+const allowedExtensions = ['.png', '.jpg', '.jpeg']
+
+export const isValidImageMagicNumber = (buffer: Buffer, mimetype: string): boolean => {
+    if (!buffer || buffer.length < 8) return false
+
+    const bytes = buffer.subarray(0, 8)
+    const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ')
+
+    if (mimetype === 'image/png') {
+        return hex.startsWith('89 50 4e 47 0d 0a 1a 0a')
+    }
+
+    if (mimetype === 'image/jpg') {
+        return hex.startsWith('ff d8 ff')
+    }
+
+    if (mimetype === 'image/jpeg') {
+        return hex.startsWith('ff d8 ff')
+    }
+
+    return false
+}
+
 export const getProductData = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { categories, limit, offset } = req.query
@@ -123,6 +147,20 @@ export const createProduct = () => async (req: Request, res: Response, next: Nex
             await transaction.rollback()
             return next(new ServiceError(ProductMasterError.FILE_SIZE_LIMIT))
         }
+
+        const fileExtension = path.extname(file.originalname).toLowerCase()
+
+        if (!allowedExtensions.includes(fileExtension)) {
+            await transaction.rollback()
+            return next(new ServiceError(ProductMasterError.FILE_TYPE_REQUIRE_IMAGE))
+        }
+
+        if (!isValidImageMagicNumber(file.buffer, file.mimetype)) {
+            await transaction.rollback()
+            return next(new ServiceError(ProductMasterError.FILE_TYPE_REQUIRE_IMAGE))
+        }
+
+
         if (!productName) {
             return next(new ServiceError(ProductMasterError.PRODUCT_NAME_REQUIRE))
         }
@@ -436,7 +474,7 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
                 {
                     model: ProductModel,
                     as: 'product',
-                    attributes: ['id','name', 'price', 'image_url', 'description'],
+                    attributes: ['id', 'name', 'price', 'image_url', 'description'],
                     where: { status: 1 }
                 },
             ],
@@ -535,8 +573,8 @@ export const getSizebyProduct = () => async (req: Request, res: Response, next: 
     try {
         const productId = req.params.id
 
-        const sizes = await ProductSizeModel.findAll({ 
-            where: {product_id: productId},
+        const sizes = await ProductSizeModel.findAll({
+            where: { product_id: productId },
             include: [
                 {
                     model: SizeModel,
@@ -546,7 +584,7 @@ export const getSizebyProduct = () => async (req: Request, res: Response, next: 
         })
 
 
-        const mappedSizeProduct = sizes.map((s:any) => (
+        const mappedSizeProduct = sizes.map((s: any) => (
             {
                 id: s.size.id,
                 title: s.size.name,
@@ -555,7 +593,7 @@ export const getSizebyProduct = () => async (req: Request, res: Response, next: 
             }
         ))
 
-        console.log("mappedSizeProduct",  mappedSizeProduct)
+        console.log("mappedSizeProduct", mappedSizeProduct)
         res.locals.sizes = mappedSizeProduct
         return next()
     } catch (err) {
