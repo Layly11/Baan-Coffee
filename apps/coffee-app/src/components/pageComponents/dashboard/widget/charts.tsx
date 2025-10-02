@@ -73,7 +73,6 @@ export const WeeklySalesChart = ({data}: WeeklySalesChartProps) => {
       <Title>Weekly Sales</Title>
       <Tabs>
         <TabButton active={tab === "Sales"} onClick={() => setTab("Sales")}>Sales</TabButton>
-        <TabButton active={tab === "Orders"} onClick={() => setTab("Orders")}>Orders</TabButton>
       </Tabs>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={data}>

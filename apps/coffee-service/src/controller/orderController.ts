@@ -598,7 +598,7 @@ export const getOrderHistorty = () => async (req: Request, res: Response, next: 
                 size: item.size,
                 description: item.description || "",
                 price: Number(item.price).toFixed(2),
-                time: new Date(o.createdAt).toLocaleTimeString("th-TH", {
+                time: new Date(o.createdAt).toLocaleTimeString("en-US", {
                     hour: "numeric",
                     minute: "2-digit",
                     hour12: true,
