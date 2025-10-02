@@ -51,6 +51,22 @@ export const register = () => async (req: Request, res: Response, next: NextFunc
   }
 }
 
+async function handleFailedAttempt(redis: any, attemptsKey: string, lockKey: string) {
+  const maxAttempts = 5
+  const windowSec = 60
+  const lockSec = 900
+
+  const attempts = await redis.incr(attemptsKey)
+  if (attempts === 1) {
+    await redis.expire(attemptsKey, windowSec)
+  }
+
+  if (attempts > maxAttempts) {
+    await redis.set(lockKey, "1", { EX: lockSec })
+    await redis.del(attemptsKey)
+  }
+}
+
 export const login = () => async (req: Request, res: Response, next: NextFunction) => {
   const { email, password } = req.body
 
@@ -59,18 +75,39 @@ export const login = () => async (req: Request, res: Response, next: NextFunctio
   }
 
   try {
+    const redis = getRedisClient()
+    const ip = req.ip
+    const attemptsKey = `login:attempts:${ip}:${email}`
+    const lockKey = `login:lock:${ip}:${email}`
+
+    const isLocked = await redis.ttl(lockKey)
+    if (isLocked > 0) {
+      return next(
+        new ServiceError({
+          "statusCode": 400,
+          "resCode": "0415",
+          "resDesc": {
+            "en": `Too many login attempts. Please try again in ${isLocked} seconds.`,
+            "th": `พยายามเข้าสู่ระบบเกินกำหนด กรุณาลองใหม่อีกครั้งใน ${isLocked} วินาที`
+          }
+        })
+      )
+    }
 
     const user = await UserModel.findOne({ where: { email, status: true } })
-    const redis = getRedisClient()
     if (!user) {
+      await handleFailedAttempt(redis, attemptsKey, lockKey)
       return next(new ServiceError(AuthenMasterError.ERR_LOGIN_USER_INVALID))
     }
 
     const isMatch = await user.matchPassword(password)
     if (!isMatch) {
+        await handleFailedAttempt(redis, attemptsKey, lockKey)
       return next(new ServiceError(AuthenMasterError.ERR_LOGIN_USER_INVALID))
     }
 
+    await redis.del(attemptsKey)
+    
     user.last_login = user.recent_login
     user.recent_login = new Date()
     await user.save()
@@ -296,7 +333,7 @@ export const checkExpireToken = () => async (req: Request, res: Response, next: 
   } catch (err: any) {
     if (err.code === "ERR_JWT_EXPIRED") {
       res.locals.valid = false
-      return next(); 
+      return next();
     }
 
     return next(err);

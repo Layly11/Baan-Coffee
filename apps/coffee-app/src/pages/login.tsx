@@ -137,6 +137,7 @@ const LoginPage = (): JSX.Element => {
       }
     } catch (error) {
       setErrorMessage('Invalid email or password.') 
+      Alert({data: error})
     } finally {
       setLoading(false)
     }
