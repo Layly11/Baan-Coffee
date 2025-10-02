@@ -66,11 +66,19 @@ export const getUserData = () => async (req: Request, res: Response, next: NextF
 export const updateUserData = () => async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params.id
     const { username, email, role, status } = req.body
+    const currentUser = req.user as any
     try {
         const user = await UserModel.findByPk(id)
 
         if (!user) {
             return next(new ServiceError(UserErrorMaster.USER_NOT_FOUND))
+        }
+
+
+        if (currentUser.role_id === 2) {
+            if (role === 1 || role === 2) {
+                return next(new ServiceError(UserErrorMaster.ERR_ADMIN_PERMISSION))
+            }
         }
 
         if (username !== '' && username !== null && username !== undefined) {
@@ -103,24 +111,46 @@ export const updateUserData = () => async (req: Request, res: Response, next: Ne
 }
 
 export const deleteUserData = () => async (req: Request, res: Response, next: NextFunction) => {
-
     const id = req.params.id
+    const currentUser = req.user as any
+
     try {
         const user = await UserModel.findByPk(id)
         if (!user) {
             return next(new ServiceError(UserErrorMaster.USER_NOT_FOUND))
         }
 
-        await user.destroy()
+        if (currentUser.id === user.id) {
+            return next(new ServiceError(UserErrorMaster.CAN_NOT_DELETE_OWN_ACCOUNT))
+        }
 
-        return next()
+
+        if (currentUser.role_id === 1) {
+            await user.destroy()
+            return next()
+        }
+
+
+        if (currentUser.role_id === 2) {
+            if (user.role_id === 1 || user.role_id === 2) {
+                return next(new ServiceError(UserErrorMaster.CAN_NOT_DELETE_SUPER_ADMIN))
+            }
+            await user.destroy()
+            return next()
+        }
+
+
+        return next(new ServiceError(UserErrorMaster.NOT_HAVE_PERMISSION_DELETE))
+
     } catch (err) {
         next(err)
     }
 }
 
+
 export const createUserData = () => async (req: Request, res: Response, next: NextFunction) => {
     const { username, email, password, role, status } = req.body
+    const currentUser = req.user as any
     try {
 
         if (!username) {
@@ -139,7 +169,13 @@ export const createUserData = () => async (req: Request, res: Response, next: Ne
             return next(new ServiceError(UserErrorMaster.ROLE_NOT_FOUND))
         }
 
-        const emailExists = await UserModel.findOne({ where: {email} })
+        if (currentUser.role_id === 2) {
+            if (role === 1 || role === 2) {
+                return next(new ServiceError(UserErrorMaster.ERR_ADMIN_PERMISSION))
+            }
+        }
+
+        const emailExists = await UserModel.findOne({ where: { email } })
 
         if (emailExists) {
             return next(new ServiceError(UserErrorMaster.EMAIL_IS_EXISTS))

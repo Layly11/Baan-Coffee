@@ -8,8 +8,20 @@ import { faMagnifyingGlass } from '@fortawesome/free-solid-svg-icons'
 import { faKey } from '@fortawesome/free-solid-svg-icons'
 import { resetPasswordRequester } from '@/utils/requestUtils'
 import swalInstance, { Alert } from '@/helpers/sweetalert'
-export const Columns = (setShowDeleteModal: any, setDeletingId: any, handleOpenEdit: any, canEditUser: any): any[] => {
+export const Columns = (setShowDeleteModal: any, setDeletingId: any, handleOpenEdit: any, canEditUser: any, user: any): any[] => {
     const router = useRouter()
+
+    
+    const canAction = (row: any) => {
+        if (user?.role === 'SUPER_ADMIN') return true;
+
+        if (user?.role === 'ADMIN') {
+            return row.role_id > 2;
+        }
+
+        return false;
+    }
+
     return [
         {
             label: 'Name',
@@ -64,8 +76,12 @@ export const Columns = (setShowDeleteModal: any, setDeletingId: any, handleOpenE
             label: 'Action',
             key: 'action',
             width: '30%',
-            dataMutation: (row: any) => (
-                <div style={{ display: 'flex', gap: '30px', justifyContent: 'center' }}>
+            dataMutation: (row: any) => {
+                 const editable = canAction(row);
+                 return (
+                    <>
+                    { editable ? (
+                        <div style={{ display: 'flex', gap: '30px', justifyContent: 'center' }}>
                     <i
                         className='fas fa-pen'
                         style={{ color: '#374151', cursor: 'pointer' }}
@@ -114,7 +130,15 @@ export const Columns = (setShowDeleteModal: any, setDeletingId: any, handleOpenE
                         }}
                     />
                 </div>
-            ),
+                    ) 
+                : (
+                    <> </>
+                )}
+                    </>
+                    
+                 )
+                
+            },
             isHide: canEditUser === false
         },
     ]

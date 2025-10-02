@@ -196,7 +196,7 @@ const UserPage = () => {
                                 setPageSize={setPageSize}
                                 setPage={handleOnChangePage}
                                 page={page}
-                                columns={Columns(setShowDeleteModal, setDeletingId, handleOpenEdit, canEditUser)}
+                                columns={Columns(setShowDeleteModal, setDeletingId, handleOpenEdit, canEditUser, user)}
                                 rows={rows}
                                 isSearch={isSearch}
                             />
@@ -208,12 +208,14 @@ const UserPage = () => {
                         onClose={handleCloseEdit}
                         user={selectedUser}
                         onUpdated={fetchUserData}
+                        currentUser={user}
                     />
 
                     <AddUserModal
                         isOpen={isAddOpen}
                         onClose={handleCloseAdd}
                         onUpdated={fetchUserData}
+                        user={user}
                     />
                     <DeleteUserModal
                         visible={showDeleteModal}

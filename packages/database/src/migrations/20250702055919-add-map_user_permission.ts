@@ -70,7 +70,7 @@ export = {
       { role_id: 2, menu_id: 2, name: 'PRODUCT_MENU_ADMIN', view: true, create: true, edit: true, delete: true, created_at: now, updated_at: now },
       { role_id: 2, menu_id: 3, name: 'ORDER_MANAGEMENT_ADMIN', view: true, create: true, edit: true, delete: true, created_at: now, updated_at: now },
       { role_id: 2, menu_id: 4, name: 'MANAGE_CUSTOMER_ADMIN', view: true, create: true, edit: true, delete: true, created_at: now, updated_at: now },
-      { role_id: 2, menu_id: 5, name: 'MANAGE_USER_ADMIN', view: true, create: false, edit: false, delete: false, created_at: now, updated_at: now },
+      { role_id: 2, menu_id: 5, name: 'MANAGE_USER_ADMIN', view: true, create: true, edit: true, delete: true, created_at: now, updated_at: now },
 
 
       { role_id: 3, menu_id: 1, name: 'DASHBOARD_MANAGER', view: true, create: false, edit: false, delete: false, created_at: now, updated_at: now },

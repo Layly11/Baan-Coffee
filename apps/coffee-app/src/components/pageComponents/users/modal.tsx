@@ -13,11 +13,25 @@ type Props = {
     onClose: () => void
     user: any
     onUpdated: () => void
+    currentUser: any
 }
 
-export const EditUserModal = ({ isOpen, onClose, user, onUpdated }: Props) => {
+export const EditUserModal = ({ isOpen, onClose, user, onUpdated, currentUser }: Props) => {
     const [form, setForm] = useState({ username: '', email: '', phone: '', role: '', status: false })
     
+
+    const filteredRoleList = Object.entries(UserSelectRoleMaster)
+    .filter(([roleId, role]) => {
+        if (currentUser.role === 'ADMIN') { 
+            return roleId === "3" || roleId === "4" 
+        }
+        return true 
+    })
+    .reduce((acc, [roleId, role]) => {
+        (acc as Record<string, typeof role>)[roleId] = role
+        return acc
+    }, {} as Record<string, (typeof UserSelectRoleMaster)[keyof typeof UserSelectRoleMaster]>)
+
 
     useEffect(() => {
         if (user) {
@@ -150,7 +164,7 @@ export const EditUserModal = ({ isOpen, onClose, user, onUpdated }: Props) => {
                                     placeholder="Role"
                                     value={form.role}
                                     setValue={handleSelectRole}
-                                    jsonList={UserSelectRoleMaster}
+                                    jsonList={filteredRoleList}
                                     isSearchable={false}
                                     isClearable={false}
                                     hideSelectedOptions={false}
@@ -201,8 +215,22 @@ export const EditUserModal = ({ isOpen, onClose, user, onUpdated }: Props) => {
         </ModalBackgroundContainer>
     )
 }
-export const AddUserModal = ({ isOpen, onClose, onUpdated }: any) => {
+export const AddUserModal = ({ isOpen, onClose, onUpdated, user }: any) => {
     const [form, setForm] = useState({ username: '', email: '', password: '', phone: '', role: '', status: false })
+
+ 
+
+    const filteredRoleList = Object.entries(UserSelectRoleMaster)
+    .filter(([roleId, role]) => {
+        if (user.role === 'ADMIN') { 
+            return roleId === "3" || roleId === "4" 
+        }
+        return true 
+    })
+    .reduce((acc, [roleId, role]) => {
+        (acc as Record<string, typeof role>)[roleId] = role
+        return acc
+    }, {} as Record<string, (typeof UserSelectRoleMaster)[keyof typeof UserSelectRoleMaster]>)
 
  const palette = {
         btnCancel: {
@@ -340,7 +368,7 @@ export const AddUserModal = ({ isOpen, onClose, onUpdated }: any) => {
                                     placeholder="Role"
                                     value={form.role}
                                     setValue={handleSelectRole}
-                                    jsonList={UserSelectRoleMaster}
+                                    jsonList={filteredRoleList}
                                     isSearchable={false}
                                     isClearable={false}
                                     hideSelectedOptions={false}

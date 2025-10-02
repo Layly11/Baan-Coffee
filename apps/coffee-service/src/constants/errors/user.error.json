@@ -54,5 +54,38 @@
       "en": "Email is exists",
       "th": "Email นี้ใช้ไปแล้ว"
     }
+  },
+  "CAN_NOT_DELETE_SUPER_ADMIN": {
+    "statusCode": 403,
+    "resCode": "4007",
+    "resDesc": {
+      "en": "Admin cannot delete Admin or Super Admin",
+      "th": "ผู้ใช้งาน Admin ไม่สามารถลบ Admin หรือ Super Admin ได้"
+    }
+  },
+    "CAN_NOT_DELETE_OWN_ACCOUNT": {
+    "statusCode": 403,
+    "resCode": "4008",
+    "resDesc": {
+      "en": "You cannot delete your own account",
+      "th": "ไม่สามารถลบบัญชีของตัวเองได้"
+    }
+  },
+  "NOT_HAVE_PERMISSION_DELETE": {
+    "statusCode": 403,
+    "resCode": "4009",
+    "resDesc": {
+      "en": "You do not have permission to delete users",
+      "th": "คุณไม่มีสิทธิ์ลบผู้ใช้งาน"
+    }
+  },
+  "ERR_ADMIN_PERMISSION": {
+    "statusCode": 403,
+    "resCode": "4010",
+    "resDesc": {
+      "en": "Admin cannot assign user role as Admin or Super Admin",
+      "th": "Admin ไม่สามารถกำหนด Role เป็น Admin หรือ Super Admin ได้"
+    }
   }
+
 }
