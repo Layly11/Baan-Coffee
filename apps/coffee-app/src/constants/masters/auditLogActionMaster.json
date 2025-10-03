@@ -1,0 +1,34 @@
+{
+  "LOGIN": {
+    "label": "Login",
+    "value": "LOGIN"
+  },
+  "LOGIN_FAILURE": {
+    "label": "Login failure",
+    "value": "LOGIN_FAILURE"
+  },
+  "LOGOUT": {
+    "label": "Logout",
+    "value": "LOGOUT"
+  },
+  "VIEW_DASHBOARD": {
+    "label": "View Dashboard",
+    "value": "VIEW_DASHBOARD"
+  },
+  "SEARCH_DASHBOARD": {
+    "label": "Search Dashboard",
+    "value": "SEARCH_DASHBOARD"
+  },
+  "VIEW_USER": {
+    "label": "View User",
+    "value": "VIEW_USER"
+  },
+  "SEARCH_USER": {
+    "label": "Search User",
+    "value": "SEARCH_USER"
+  },
+  "VIEW_AUDIT_LOG": {
+    "label": "View Audit Log",
+    "value": "VIEW_AUDIT_LOG"
+  }
+}

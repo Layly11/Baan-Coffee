@@ -18,6 +18,7 @@ import { PaymentModel } from './models/Payment';
 import { OrderItemModel } from "./models/OrderItems";
 import { TempOrderProductsModel } from './models/TempOrderProducts';
 import { NotificationModel } from './models/Notification';
+import { AuditLogModel } from './models/AuditLog';
 
 
 UserModel.belongsTo(UserRoleModel,{
@@ -202,3 +203,4 @@ export * from './models/Payment'
 export * from './models/OrderItems'
 export * from './models/TempOrderProducts'
 export * from './models/Notification'
+export * from './models/AuditLog'

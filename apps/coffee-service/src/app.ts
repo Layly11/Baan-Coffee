@@ -6,14 +6,15 @@ import { createRequestLog, createResponseLog, createErrorLog } from './controlle
 import cookieParser from 'cookie-parser';
 import cors from 'cors'
 import { RedisClientType } from "redis";
+import { createFailureAuditLog, createSuccessAuditLog } from "./controller/auditLogController";
 
 
 const APP = ({ redis }: { redis: RedisClientType }) => {
     const app = express()
     app.use(cors({
-    origin: 'https://baan-coffee-coffee-app.vercel.app', 
-    credentials: true,
-}));
+        origin: 'https://baan-coffee-coffee-app.vercel.app',
+        credentials: true,
+    }));
 
     app.set('trust proxy', true)
     app.enable('trust proxy')
@@ -41,13 +42,10 @@ const APP = ({ redis }: { redis: RedisClientType }) => {
     })
 
 
-    // app.get('/payment/result', (req: Request, res: Response, next: NextFunction) => {
-    //     res.redirect()
-    //     next()
-    // })
-
     app.use(createRouters({ redis }))
 
+    app.use(createSuccessAuditLog())
+    app.use(createFailureAuditLog())
     app.use(createResponseLog())
     app.use(createErrorLog())
 

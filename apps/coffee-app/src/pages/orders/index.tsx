@@ -53,17 +53,17 @@ const OrdersPage = () => {
       permission.edit
   )
 
-    const fetchOrderData = async (page?: any) => {
+    const fetchOrderData = async (page?: any, isClear?: boolean) => {
         setIsFetching(true)
         setIsSearch(false)
         try {
             const config = {
                 params: {
-                    start_date: dayjs(startDate).format('YYYY-MM-DD'),
-                    end_date: dayjs(endDate).format('YYYY-MM-DD'),
-                    status: parseToArrayAndRemoveSelectAllValue(checkNullUndefiendEmptyString(status)),
-                    method: parseToArrayAndRemoveSelectAllValue(checkNullUndefiendEmptyString(method)),
-                    customer_name: parseToArrayAndRemoveSelectAllValue(checkNullUndefiendEmptyString(customerName)),
+                    start_date: isClear ? dayjs().endOf('day').subtract(30, 'day').startOf('day').toDate() : dayjs(startDate).format('YYYY-MM-DD'),
+                    end_date: isClear ? dayjs().toDate() :dayjs(endDate).format('YYYY-MM-DD'),
+                    status: isClear ? '' : parseToArrayAndRemoveSelectAllValue(checkNullUndefiendEmptyString(status)),
+                    method: isClear ? '' : parseToArrayAndRemoveSelectAllValue(checkNullUndefiendEmptyString(method)),
+                    customer_name: isClear ? '' : parseToArrayAndRemoveSelectAllValue(checkNullUndefiendEmptyString(customerName)),
                     limit: (pageSize),
                     offset: (pageSize * (page ?? 0))
                 }
@@ -83,6 +83,9 @@ const OrdersPage = () => {
         }
     }
 
+    useEffect(() => {
+        fetchOrderData()
+    },[])
 
     const handleOnClearSearch = async () => {
         setStartDate(dayjs().endOf('day').subtract(30, 'day').startOf('day').toDate())
@@ -96,8 +99,11 @@ const OrdersPage = () => {
         setIsSearch(true)
         router.push({
             pathname,
-            query: {}
+            query: {
+            }
         })
+
+        fetchOrderData(0,true)
     }
 
     const handleOnClickSearch = async () => {
@@ -147,8 +153,19 @@ const OrdersPage = () => {
       setEndDate(defaultEnd.toDate())
     }
 
-    if (typeof router.query.page === 'string' && !isNaN(Number(router.query.page))) {
+     if (typeof router.query.page === 'string' && !isNaN(Number(router.query.page))) {
       setPage(Number(router.query.page))
+    }
+
+     if (router.query.status) {
+      setStatus(router.query.status)
+    }
+
+    if (router.query.method) {
+      setMethod(router.query.method)
+    }
+    if (router.query.customerName) {
+      setCustomerName(router.query.customerName)
     }
     if (typeof router.query.limit === 'string' && !isNaN(Number(router.query.limit))) {
       setPageSize(Number(router.query.limit))

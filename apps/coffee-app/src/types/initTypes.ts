@@ -1,0 +1,7 @@
+export enum AuditLogActionType {
+    LOGIN = 'LOGIN',
+    LOGIN_FAILURE = 'LOGIN_FAILURE',
+    LOGOUT = 'LOGOUT',
+    VIEW_AUDIT_LOG = 'VIEW_AUDIT_LOG',
+    SEARCH_AUDIT_LOG = 'SEARCH_AUDIT_LOG',
+}

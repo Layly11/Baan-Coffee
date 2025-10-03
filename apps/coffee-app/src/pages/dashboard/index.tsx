@@ -71,12 +71,12 @@ const DashBoardPage = () => {
     }
   }
 
-  // useEffect(() => {
-  //   const fetchData = async (): Promise<void> => {
-  //     await fetchDashboardSummaryList()
-  //   }
-  //   fetchData()
-  // }, [])
+  useEffect(() => {
+    const fetchData = async (): Promise<void> => {
+      await fetchDashboardSummaryList()
+    }
+    fetchData()
+  }, [])
 
   const handleOnClickSearch = async (): Promise<void> => {
     setIsSearch(false)
@@ -91,18 +91,22 @@ const DashBoardPage = () => {
     await fetchDashboardSummaryList()
   }
 
-   const handleOnClearSearch = async () => {
-        setStartDate(dayjs().endOf('day').subtract(30, 'day').startOf('day').toDate())
-        setEndDate(dayjs().toDate())
-        setRows([])
-        setTotal(0)
-        setPage(0)
-        setIsSearch(true)
-        router.push({
-            pathname,
-            query: {}
-        })
-    }
+  const handleOnClearSearch = async () => {
+    setStartDate(dayjs().endOf('day').subtract(30, 'day').startOf('day').toDate())
+    setEndDate(dayjs().toDate())
+    setRows([])
+    setTotal(0)
+    setPage(0)
+    setIsSearch(true)
+    router.push({
+      pathname,
+      query: {
+        startDate: String(dayjs().endOf('day').subtract(30, 'day').startOf('day').toDate()),
+        endDate: String(dayjs().toDate()),
+      }
+    })
+
+  }
 
 
   const handleOnChangePage = async (page: number): Promise<void> => {
@@ -146,7 +150,7 @@ const DashBoardPage = () => {
     }
   }, [router.isReady, router.query])
 
-  
+
   useEffect(() => {
     if (!router.isReady) return
     checkRouterQueryAndAutoFetchData({

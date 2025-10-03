@@ -74,7 +74,7 @@ export const authMiddlewareCustomer = () => async (req: Request, res: Response, 
 
 export const findUserPermission = () => async (req: Request, res: Response, next: NextFunction) => {
     const user = req.user as any
-
+    
     if (!user) return next(new ServiceError(HTTP_ERROR.ERR_HTTP_401))
 
     const query: query_type = {

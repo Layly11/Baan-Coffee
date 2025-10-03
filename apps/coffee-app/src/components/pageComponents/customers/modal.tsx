@@ -94,7 +94,7 @@ export const EditCustomerModal = ({ isOpen, onClose, customer, onUpdated }: Prop
                         </Col>
 
                         <Row style={{ marginTop: "12px", alignItems: "center" }}>
-                            <Col lg={1.5}>
+                            <Col lg={1.7}>
                                 <label style={{ fontWeight: 500, color: "#b3b3b3" }}>
                                     Name
                                 </label>
@@ -110,7 +110,7 @@ export const EditCustomerModal = ({ isOpen, onClose, customer, onUpdated }: Prop
                         </Row>
 
                         <Row style={{ marginTop: "12px", alignItems: "center" }}>
-                            <Col lg={1.5}>
+                            <Col lg={1.7}>
                                 <label style={{ fontWeight: 500, color: "#b3b3b3" }}>
                                     Email
                                 </label>
@@ -125,7 +125,7 @@ export const EditCustomerModal = ({ isOpen, onClose, customer, onUpdated }: Prop
                             </Col>
                         </Row>
                         <Row style={{ marginTop: "12px", alignItems: "center" }}>
-                            <Col lg={1.5}>
+                            <Col lg={1.7}>
                                 <label style={{ fontWeight: 500, color: "#b3b3b3" }}>
                                     Phone
                                 </label>
@@ -141,8 +141,8 @@ export const EditCustomerModal = ({ isOpen, onClose, customer, onUpdated }: Prop
                         </Row>
 
                         <Row style={{ marginTop: '12px', alignItems: 'center' }}>
-                            <Col lg={1.47}>
-                                <label style={{ fontWeight: 500, color: '#b3b3b3' }}>Active</label>
+                            <Col lg={1.7}>
+                                <label style={{ fontWeight: 500, color: '#b3b3b3' }}>Verified</label>
                             </Col>
                             <Col lg={3}>
                                 <input

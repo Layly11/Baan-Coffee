@@ -1,14 +1,14 @@
 {
     "ACTIVE": {
     "id": 1,
-    "label": "Active",
+    "label": "Verified",
     "value": "ACTIVE",
     "color": "#2fa12d",
     "backgroundColor": "#e9f8e9"
   }, 
   "INACTIVE": {
     "id": 2,
-    "label": "Inactive",
+    "label": "Unverified",
     "value": "INACTIVE",
     "color": "#FF0000",
     "backgroundColor": "#ffe4e3"

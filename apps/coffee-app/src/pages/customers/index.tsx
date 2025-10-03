@@ -41,13 +41,13 @@ const CustomersPage = () => {
   )
 
 
-    const fetchCustomerData = async (page?: any) => {
+    const fetchCustomerData = async (page?: any, isClear?: boolean) => {
         setIsFetching(true)
         setIsSearch(false)
         try {
             const config = {
                 params: {
-                    information,
+                    information: isClear ? '' : information,
                     limit: (pageSize),
                     offset: (pageSize * (page ?? 0))
                 }
@@ -69,9 +69,9 @@ const CustomersPage = () => {
         }
     }
 
-    // useEffect(() => {
-    //     fetchCustomerData()
-    // }, [])
+    useEffect(() => {
+        fetchCustomerData()
+    }, [])
 
     const handleOnClearSearch = async () => {
         setRows([])
@@ -83,6 +83,7 @@ const CustomersPage = () => {
             pathname,
             query: {}
         })
+        fetchCustomerData(0,true)
     }
 
     const handleOnClickSearch = async () => {
@@ -153,6 +154,18 @@ const CustomersPage = () => {
     }, [])
 
 
+        useEffect(() => {
+        if (!router.isReady) return
+    
+    
+        if (router.query.information) {
+          setInformation(router.query.information)
+        }
+        if (typeof router.query.limit === 'string' && !isNaN(Number(router.query.limit))) {
+          setPageSize(Number(router.query.limit))
+        }
+      }, [router.isReady, router.query])
+    
 
 
     return (

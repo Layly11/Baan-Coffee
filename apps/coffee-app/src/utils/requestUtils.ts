@@ -304,6 +304,19 @@ export const resetPasswordRequester = async (id: any): Promise<any> => {
         })
     })
 }
+export const fetchAuditLogRequester = async (config: any): Promise<any> => {
+    return await new Promise((resolve, rejects) => {
+        axios.get(`/api/audit-log`, config)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
+
+
 
 
 

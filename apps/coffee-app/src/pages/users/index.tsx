@@ -50,14 +50,14 @@ const UserPage = () => {
           permission.name === PermissionMenuMaster.MANAGE_USER &&
           permission.create
       )
-    const fetchUserData = async (page?: any) => {
+    const fetchUserData = async (page?: number, isClear?: boolean) => {
         setIsFetching(true)
         setIsSearch(false)
         try {
             const config = {
                 params: {
-                    information,
-                    role,
+                    information: isClear ? '' : information,
+                    role: isClear ? '' : role,
                     limit: (pageSize),
                     offset: (pageSize * (page ?? 0))
                 }
@@ -76,6 +76,9 @@ const UserPage = () => {
             setIsFetching(false)
         }
     }
+    useEffect(() => {
+        fetchUserData()
+    }, [])
 
     const handleOnClearSearch = async () => {
         setRows([])
@@ -88,6 +91,7 @@ const UserPage = () => {
             pathname,
             query: {}
         })
+        await  fetchUserData(0,true)
     }
 
     const handleOnClickSearch = async () => {
@@ -96,7 +100,8 @@ const UserPage = () => {
         router.push({
             pathname,
             query: {
-                information
+                information,
+                role
             }
         })
         await fetchUserData(0)
@@ -147,6 +152,20 @@ const UserPage = () => {
     }
 
 
+    useEffect(() => {
+        if (!router.isReady) return
+    
+        if (router.query.information) {
+          setInformation(router.query.information)
+        }
+        if (router.query.role) {
+          setRole(router.query.role)
+        }
+        if (typeof router.query.limit === 'string' && !isNaN(Number(router.query.limit))) {
+          setPageSize(Number(router.query.limit))
+        }
+      }, [router.isReady, router.query])
+    
     useEffect(() => {
         const page = PermissionMenuMaster.MANAGE_CUSTOMER
         const action = PermissionActionMaster.VIEW

@@ -7,6 +7,7 @@ import cartRouter from './routes/cartRouter'
 import orderRouter from './routes/orderRouter'
 import createCustomerRouter from './routes/customerRouter'
 import userRouter from './routes/userRouter'
+import auditLogRouter from './routes/auditLogRouter'
 import { RedisClientType } from 'redis'
 
 export default function createRouters({ redis }: { redis: RedisClientType }) {
@@ -20,6 +21,7 @@ export default function createRouters({ redis }: { redis: RedisClientType }) {
     router.use('/cart', cartRouter)
     router.use('/order', orderRouter)
     router.use('/user', userRouter)
+    router.use('/audit-log', auditLogRouter)
 
     return router
 

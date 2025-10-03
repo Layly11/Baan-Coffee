@@ -1,0 +1,30 @@
+{
+  "AUTHEN": {
+    "label": "Authen",
+    "value": "AUTHEN"
+  },
+  "DASHBOARD": {
+    "label": "Dashboard",
+    "value": "DASHBOARD"
+  },
+  "PRODUCT_MENU": {
+    "label": "Product",
+    "value": "PRODUCT_MENU"
+  },
+  "ORDER_MANAGEMENT": {
+    "label": "Order",
+    "value": "ORDER_MANAGEMENT"
+  },
+  "MANAGE_CUSTOMER": {
+    "label": "Customer",
+    "value": "MANAGE_CUSTOMER"
+  },
+  "MANAGE_USER": {
+    "label": "User",
+    "value": "MANAGE_USER"
+  },
+  "AUDIT_LOG": {
+    "label": "Audit Log",
+    "value": "AUDIT_LOG"
+  }
+}
