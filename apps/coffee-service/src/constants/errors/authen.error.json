@@ -110,6 +110,14 @@
       "en": "Token is invalid",
       "th": "Token ผิดพลาด"
     }
+  },
+   "TOKEN_EXPIRED" : {
+    "statusCode": 401,
+    "resCode": "0415",
+    "resDesc": {
+      "en": "Token Expired",
+      "th": "Token Expired"
+    }
   }
 
 }

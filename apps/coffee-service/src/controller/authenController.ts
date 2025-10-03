@@ -107,7 +107,7 @@ export const login = () => async (req: Request, res: Response, next: NextFunctio
     }
 
     await redis.del(attemptsKey)
-    
+
     user.last_login = user.recent_login
     user.recent_login = new Date()
     await user.save()
@@ -204,8 +204,14 @@ export const refreshToken = () => async (req: Request, res: Response, next: Next
       refreshToken: newRefreshToken
     }
     next()
-  } catch (error) {
+  } catch (error:any) {
+
+    if(error.code === 'ERR_JWT_EXPIRED'){
+      return next(new ServiceError(AuthenMasterError.TOKEN_EXPIRED))
+    }
+
     next(error)
+  
   }
 }
 
