@@ -6,5 +6,6 @@
     "PRODUCT_MENU_TITLE": "Product Menu · Baan Coffee",
     "ORDERS_TITLE": "Orders · Baan Coffee",
     "CUSTOMER_TITLE": "Customer · Baan Coffee",
-    "USER_TITLE": "User · Baan Coffee"
+    "USER_TITLE": "User · Baan Coffee",
+    "AUDIT_LOG": "AuditLog · Baan Coffee"
 }

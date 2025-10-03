@@ -55,6 +55,12 @@ export = {
         created_at: now,
         updated_at: now
       },
+      {
+        id: 6, 
+        name: 'AUDIT_LOG',
+        created_at: now,
+        updated_at: now
+      }
     ]);
 
   },
