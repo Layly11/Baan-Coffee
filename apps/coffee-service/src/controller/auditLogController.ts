@@ -51,12 +51,25 @@ export const findAuditLogs = () => async (req: Request, res: Response, next: Nex
         audit_action: auditAction,
         start_date: startDate,
         end_date: endDate,
+        menu,
+        text_search: textSearch,
         limit,
         offset,
 
     } = req.query
 
     const portal = req.user as any
+
+    const queryString = textSearch?.toString() || ''
+
+    const encryptedFields = ['editor_name', 'staff_id', 'target_name']
+
+     const encryptedConditions = encryptedFields.map((field) => ({
+      [field]: { [Op.like]: `%${queryString}%` }
+    }))
+      if (queryString) {
+      encryptedConditions.push({ staff_id: { [Op.like]: `%${queryString}%` } } as any)
+    }
     const where = {
         ...(startDate && endDate && {
             created_at: {
@@ -65,7 +78,11 @@ export const findAuditLogs = () => async (req: Request, res: Response, next: Nex
                     dayjs(endDate as string).endOf('day').toISOString()
                 ]
             }
-        })
+        }),
+        ...(menu && { menu }),
+         ...(queryString && {
+        [Op.or]: [...encryptedConditions]
+      })
     }
 
 

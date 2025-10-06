@@ -30,5 +30,10 @@
   "VIEW_AUDIT_LOG": {
     "label": "View Audit Log",
     "value": "VIEW_AUDIT_LOG"
+  },
+  "SEARCH_AUDIT_LOG": {
+    "label": "Search Audit Log",
+    "value": "SEARCH_AUDIT_LOG"
+    
   }
 }

@@ -15,6 +15,7 @@ import { Columns } from "@/components/pageComponents/audit-log/column";
 import { AuditLogActionType } from "@/types/initTypes";
 import { Alert } from "@/helpers/sweetalert";
 import { fetchAuditLogRequester } from "@/utils/requestUtils";
+import { checkNullUndefiendEmptyString, parseToArrayAndRemoveSelectAllValue } from "@/utils/parseUtils";
 
 
 const pathname = '/audit-log'
@@ -38,10 +39,12 @@ const AuditLogPage = (): JSX.Element => {
     const [pageSize, setPageSize] = useState(!isNaN(Number(router.query.limit)) ? Number(router.query.limit) : 10)
     const [total, setTotal] = useState(0)
     const [rows, setRows] = useState([])
+    const [menu, setMenu] = useState(router.query.menu ?? '')
+    const [textSearch, setTextSearch] = useState<string | string[]>(router.query.textSearch ?? '')
 
 
 
-    const handleFetchAuditLog = (auditAction: AuditLogActionType) => async (page?: number): Promise<void> => {
+    const handleFetchAuditLog = (auditAction?: AuditLogActionType) => async (page?: number, isClear?: boolean): Promise<void> => {
         setIsFetching(true)
         setIsSearch(false)
         console.log("fetch")
@@ -49,15 +52,16 @@ const AuditLogPage = (): JSX.Element => {
         try {
             const config = {
                 params: {
-                    audit_action: auditAction,
-                    start_date: dayjs(startDate).format('YYYY-MM-DD'),
-                    end_date: dayjs(endDate).format('YYYY-MM-DD'),
+                    audit_action: isClear ? undefined : auditAction,
+                    start_date: isClear ? dayjs().startOf('day').toDate() : dayjs(startDate).format('YYYY-MM-DD'),
+                    end_date: isClear ? dayjs().toDate() : dayjs(endDate).format('YYYY-MM-DD'),
+                    menu: isClear ? '' : parseToArrayAndRemoveSelectAllValue(checkNullUndefiendEmptyString(menu)),
+                    text_search: isClear ? '' : checkNullUndefiendEmptyString(textSearch),
                     limit: (pageSize),
                     offset: (pageSize * (page ?? 0))
                 }
             }
             const response = await fetchAuditLogRequester(config)
-            console.log("Res: ", response)
             setTotal(response.data.total)
             setRows(response.data.audit_logs)
 
@@ -77,11 +81,30 @@ const AuditLogPage = (): JSX.Element => {
 
 
     const handleOnClickSearch = async (): Promise<void> => {
-
+        setIsSearch(false)
+        setPage(0)
+        router.replace({
+            pathname,
+            query: {
+                startDate: dayjs(startDate).format('YYYY-MM-DD'),
+                endDate: dayjs(endDate).format('YYYY-MM-DD'),
+                menu,
+                textSearch
+            }
+        })
+        await handleFetchAuditLog(AuditLogActionType.SEARCH_AUDIT_LOG)()
     }
 
-    const handleOnClearSearch = (): void => {
+    const handleOnClearSearch = async (): Promise<void> => {
+        setStartDate(dayjs().startOf('day').toDate())
+        setEndDate(dayjs().toDate())
+        setMenu('')
+        setTextSearch('')
 
+        router.replace({
+            pathname
+        })
+        await handleFetchAuditLog(AuditLogActionType.SEARCH_AUDIT_LOG)(0, true)
     }
 
 
@@ -92,6 +115,7 @@ const AuditLogPage = (): JSX.Element => {
             query: { ...router.query, page }
         })
 
+        await handleFetchAuditLog()(page)
     }
     return (
         <>
@@ -106,6 +130,14 @@ const AuditLogPage = (): JSX.Element => {
                 </Row>
 
                 <Header
+                    startDate={startDate}
+                    setStartDate={setStartDate}
+                    endDate={endDate}
+                    setEndDate={setEndDate}
+                    menu={menu}
+                    setMenu={setMenu}
+                    textSearch={textSearch}
+                    setTextSearch={setTextSearch}
                     handleOnClearSearch={handleOnClearSearch}
                     handleOnClickSearch={handleOnClickSearch}
                 />

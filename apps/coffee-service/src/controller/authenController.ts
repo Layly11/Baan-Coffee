@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 import * as jose from 'jose'
-import { UserModel } from '@coffee/models'
+import { UserModel, UserRoleModel } from '@coffee/models'
 import { ServiceError } from '@coffee/helpers'
 import AuthenMasterError from '../constants/errors/authen.error.json'
 import winston from '../helpers/winston'
@@ -9,6 +9,7 @@ import USER_ROLE from '../constants/masters/userRole.json'
 import { getRedisClient } from '../helpers/redis'
 import { isEnglishOnly } from '../utils/validator'
 import { sendResetPasswordAdmin } from '../utils/emailUtils';
+import { AuditLogActionType, AuditLogMenuType, CreateAuditLog } from '../constants/commons/createAuditLog';
 
 
 export const register = () => async (req: Request, res: Response, next: NextFunction) => {
@@ -94,15 +95,60 @@ export const login = () => async (req: Request, res: Response, next: NextFunctio
       )
     }
 
-    const user = await UserModel.findOne({ where: { email, status: true } })
+    const user = await UserModel.findOne({
+      where: { email, status: true },
+      include: [
+        {
+          model: UserRoleModel,
+          as: 'role',
+          attributes: ['name']
+        }
+      ]
+    })
+
     if (!user) {
+      res.locals.audit = CreateAuditLog(
+      {
+        menu: AuditLogMenuType.AUTHEN,
+        action: AuditLogActionType.LOGIN_FAILURE,
+        editorName: '',
+        editorRole:  '',
+        eventDateTime: new Date(),
+        staffId: '',
+        staffEmail: '',
+        channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+        searchCriteria: undefined,
+        previousValues: undefined,
+        newValues: undefined,
+        recordKeyValues: undefined,
+        isPii: false
+      }
+    )
       await handleFailedAttempt(redis, attemptsKey, lockKey)
       return next(new ServiceError(AuthenMasterError.ERR_LOGIN_USER_INVALID))
     }
 
     const isMatch = await user.matchPassword(password)
     if (!isMatch) {
-        await handleFailedAttempt(redis, attemptsKey, lockKey)
+        res.locals.audit = CreateAuditLog(
+      {
+        menu: AuditLogMenuType.AUTHEN,
+        action: AuditLogActionType.LOGIN_FAILURE,
+        editorName: user.username,
+        editorRole: user.role.name,
+        eventDateTime: new Date(),
+        staffId: user.id,
+        staffEmail: user.email,
+        channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+        searchCriteria: undefined,
+        previousValues: undefined,
+        newValues: undefined,
+        recordKeyValues: undefined,
+        isPii: false
+      }
+    )
+
+      await handleFailedAttempt(redis, attemptsKey, lockKey)
       return next(new ServiceError(AuthenMasterError.ERR_LOGIN_USER_INVALID))
     }
 
@@ -140,6 +186,25 @@ export const login = () => async (req: Request, res: Response, next: NextFunctio
     await redis.expire(`refreshTokens:${user.id}`, 60 * 60 * 24 * 7);
 
 
+
+    console.log("action: ", AuditLogActionType.LOGIN)
+    res.locals.audit = CreateAuditLog(
+      {
+        menu: AuditLogMenuType.AUTHEN,
+        action: AuditLogActionType.LOGIN,
+        editorName: user.username,
+        editorRole: user.role.name,
+        eventDateTime: new Date(),
+        staffId: user.id,
+        staffEmail: user.email,
+        channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+        searchCriteria: undefined,
+        previousValues: undefined,
+        newValues: undefined,
+        recordKeyValues: undefined,
+        isPii: false
+      }
+    )
 
     res.locals.token = {
       accessToken,
@@ -204,14 +269,14 @@ export const refreshToken = () => async (req: Request, res: Response, next: Next
       refreshToken: newRefreshToken
     }
     next()
-  } catch (error:any) {
+  } catch (error: any) {
 
-    if(error.code === 'ERR_JWT_EXPIRED'){
+    if (error.code === 'ERR_JWT_EXPIRED') {
       return next(new ServiceError(AuthenMasterError.TOKEN_EXPIRED))
     }
 
     next(error)
-  
+
   }
 }
 
