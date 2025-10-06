@@ -19,6 +19,7 @@ import PermissionActionMaster from '../../constants/masters/PermissionActionMast
 import { checkPermission } from "@/helpers/checkPermission"
 import { checkRouterQueryAndAutoFetchData } from "@/utils/parseUtils"
 import DashBoardOverview from "@/components/pageComponents/dashboard/dashboardOverview"
+import { AuditLogActionType } from "@/types/initTypes"
 
 
 const pathname = '/dashboard'
@@ -44,12 +45,13 @@ const DashBoardPage = () => {
       : dayjs().toDate()
   )
 
-  const fetchDashboardSummaryList = async (): Promise<void> => {
+  const fetchDashboardSummaryList = (auditAction?: AuditLogActionType) => async (): Promise<void> => {
     try {
       setIsFetching(true)
       setIsSearch(false)
       const config = {
         params: {
+          audit_action: auditAction,
           start_date: dayjs(startDate).format('YYYY-MM-DD'),
           end_date: dayjs(endDate).format('YYYY-MM-DD'),
           limit: (pageSize),
@@ -60,6 +62,7 @@ const DashBoardPage = () => {
       if (response.data != null) {
         const total = response.data.total
         const summary = response.data.summaryList
+        console.log("Summary: ", summary)
         setRows(summary)
         setTotal(total)
       }
@@ -73,7 +76,7 @@ const DashBoardPage = () => {
 
   useEffect(() => {
     const fetchData = async (): Promise<void> => {
-      await fetchDashboardSummaryList()
+      await fetchDashboardSummaryList(AuditLogActionType.VIEW_DASHBOARD)()
     }
     fetchData()
   }, [])
@@ -88,7 +91,7 @@ const DashBoardPage = () => {
         endDate: dayjs(endDate).format('YYYY-MM-DD'),
       }
     })
-    await fetchDashboardSummaryList()
+    await fetchDashboardSummaryList(AuditLogActionType.SEARCH_DASHBOARD)()
   }
 
   const handleOnClearSearch = async () => {
@@ -115,7 +118,7 @@ const DashBoardPage = () => {
       pathname,
       query: { ...router.query, page }
     })
-    await fetchDashboardSummaryList()
+    await fetchDashboardSummaryList()()
   }
 
   useEffect(() => {
@@ -155,7 +158,7 @@ const DashBoardPage = () => {
     if (!router.isReady) return
     checkRouterQueryAndAutoFetchData({
       query: router.query,
-      fetchData: fetchDashboardSummaryList
+      fetchData: fetchDashboardSummaryList()
     })
   }, [router.isReady, router.query])
 

@@ -4,14 +4,18 @@ import { momentAsiaBangkok, ServiceError } from "@coffee/helpers";
 import { Op } from 'sequelize'
 import { dayjs } from "@coffee/helpers";
 import DashBoardErrorMaster from '../constants/errors/dashboard.error.json'
+import { AuditLogActionType, AuditLogMenuType, CreateAuditLog } from "../constants/commons/createAuditLog";
 
 export const getDashBoardData = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {
+            audit_action: auditAction,
             start_date: startDate,
             end_date: endDate,
             limit,
             offset } = req.query as any
+
+        const portal = req.user as any
 
         if ((startDate && isNaN(Date.parse(startDate))) || (endDate && isNaN(Date.parse(endDate)))) {
             return next(new ServiceError(DashBoardErrorMaster.ERR_DATE_INVALID_FORMAT))
@@ -42,7 +46,13 @@ export const getDashBoardData = () => async (req: Request, res: Response, next: 
                 },
                 {
                     model: TopProductModel,
-                    as: 'top_products'
+                    as: 'top_products',
+                    include: [
+                        {
+                            model: ProductModel,
+                            as: 'product',
+                        }
+                    ]
                 }
             ],
             where,
@@ -52,15 +62,42 @@ export const getDashBoardData = () => async (req: Request, res: Response, next: 
             distinct: true
         })
 
-        const summary = rows.map((summary: any) => ({
-            id: summary.id,
-            date: dayjs(summary.date).format('DD/MM/YYYY'),
-            totalSales: summary.total_sales,
-            orders: summary.total_orders,
-            shift: summary.shifts,
-            bestSeller: summary.top_products[0]?.product_name || '-',
-            notifications: summary.inventory_statuses.some((i: any) => i.status !== 'normal') ? '1 รายการ' : '-',
-        }))
+
+        const summary = rows.map((summary: any) => {
+            const topProducts = summary.top_products || []
+
+            const bestSellerProduct = topProducts.reduce((best: any, current: any) => {
+                if (!best) return current
+                return (current.total_sold || 0) > (best.total_sold || 0) ? current : best
+            }, null)
+
+            return {
+                id: summary.id,
+                date: dayjs(summary.date).format('DD/MM/YYYY'),
+                totalSales: summary.total_sales,
+                orders: summary.total_orders,
+                bestSeller: bestSellerProduct?.product?.name || '-',
+                bestSellerQuantity: bestSellerProduct?.total_sold || 0
+            }
+        })
+
+        if (auditAction) {
+            res.locals.audit = CreateAuditLog({
+                menu: AuditLogMenuType.DASHBOARD,
+                action: auditAction,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                searchCriteria: JSON.stringify({ query: req.query }),
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: undefined,
+                isPii: true
+            })
+        }
 
         res.locals.total = count
         res.locals.summaryList = summary
@@ -172,6 +209,8 @@ export const getDashBoardOverview = () => async (req: Request, res: Response, ne
 export const getDashboardDetail = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
         const id = req.params.id
+        const portal = req.user as any
+
         if (isNaN(Number(id))) {
             return next(new ServiceError(DashBoardErrorMaster.ERR_ID_NOT_A_NUMBER))
         }
@@ -203,6 +242,24 @@ export const getDashboardDetail = () => async (req: Request, res: Response, next
         if (!detail) {
             return next(new ServiceError(DashBoardErrorMaster.ERR_DETAIL_UNDEFINDED))
         }
+
+        res.locals.audit = CreateAuditLog(
+            {
+                menu: AuditLogMenuType.DASHBOARD,
+                action: AuditLogActionType.VIEW_DASHBOARD_DETAILS,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                searchCriteria: undefined,
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: undefined,
+                isPii: true
+            }
+        )
 
         res.locals.detail = detail
         next()

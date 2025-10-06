@@ -104,7 +104,7 @@ const AuditLogPage = (): JSX.Element => {
         router.replace({
             pathname
         })
-        await handleFetchAuditLog(AuditLogActionType.SEARCH_AUDIT_LOG)(0, true)
+        await handleFetchAuditLog()(0, true)
     }
 
 

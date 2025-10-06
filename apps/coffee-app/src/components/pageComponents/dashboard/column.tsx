@@ -21,24 +21,9 @@ export const Columns = (): any[] => {
             width: '15%',
         },
         {
-            label: 'Shift',
-            key: 'shift',
-            width: '20%',
-            dataMutation: (row: any) => {
-                return `${row.shift.length} ${row.shift.map(
-                    (shift: any) =>  `(${shift.employee_name})`
-                )}`
-            }
-        },
-        {
             label: 'Best Seller Menu',
             key: 'bestSeller',
             width: '15%',
-        },
-        {
-            label: 'Notifications',
-            key: 'notifications',
-            width: '20%',
         },
         {
             label: 'View Details',

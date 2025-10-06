@@ -66,9 +66,9 @@ const DetailBody = ({
                                     label='Payment'
                                     value={
                                         [
-                                            dashboardInfo?.payments?.cash ? `Cash: ${dashboardInfo.payments.cash}` : null,
-                                            dashboardInfo?.payments?.credit ? `Credit: ${dashboardInfo.payments.credit}` : null,
-                                            dashboardInfo?.payments?.qr ? `QR: ${dashboardInfo.payments.qr}` : null
+                                            dashboardInfo?.payments?.cash ? `Cash: ${dashboardInfo.payments.cash.toFixed(2)}` : null,
+                                            dashboardInfo?.payments?.credit ? `Credit: ${dashboardInfo.payments.credit.toFixed(2)}` : null,
+                                            dashboardInfo?.payments?.qr ? `QR: ${dashboardInfo.payments.qr.toFixed(2)}` : null
                                         ]
                                             .filter(Boolean)
                                             .join(' | ')

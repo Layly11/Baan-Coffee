@@ -19,6 +19,10 @@
     "label": "Search Dashboard",
     "value": "SEARCH_DASHBOARD"
   },
+  "VIEW_DASHBOARD_DETAILS": {
+    "label": "View Dashboard Details",
+    "value": "VIEW_DASHBOARD_DETAILS"
+  },
   "VIEW_USER": {
     "label": "View User",
     "value": "VIEW_USER"
@@ -34,6 +38,5 @@
   "SEARCH_AUDIT_LOG": {
     "label": "Search Audit Log",
     "value": "SEARCH_AUDIT_LOG"
-    
   }
 }
