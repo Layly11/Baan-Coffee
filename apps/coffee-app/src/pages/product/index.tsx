@@ -19,6 +19,7 @@ import Swal, { Alert } from "@/helpers/sweetalert"
 import { createProductRequester, deleteProductRequester, fetchCategoryRequester, fetchProductsDetailRequester, fetchSizeProductRequester, updateProductRequester } from "@/utils/requestUtils"
 import { AddProductModal, CategoryModal, DeleteProductModal } from "@/components/pageComponents/productMenu/modal"
 import { it } from "node:test"
+import { AuditLogActionType } from "@/types/initTypes"
 
 const pathname = '/product'
 const ProductMenuPage = () => {
@@ -59,11 +60,12 @@ const ProductMenuPage = () => {
             permission.name === PermissionMenuMaster.PRODUCT_MENU &&
             permission.edit
     )
-    const fetchProducts = async (page?: number) => {
+    const fetchProducts = (auditAction?: AuditLogActionType) => async (page?: number) => {
         try {
             setIsFetching(true)
             const config = {
                 params: {
+                    audit_action: auditAction,
                     categories: parseToArrayAndRemoveSelectAllValue(checkNullUndefiendEmptyString(categories)),
                     limit: (pageSize),
                     offset: (pageSize * (page ?? 0))
@@ -132,7 +134,7 @@ const ProductMenuPage = () => {
     }
 
     useEffect(() => {
-        fetchProducts()
+        fetchProducts(AuditLogActionType.VIEW_PRODUCT)()
         fetchCategories()
         fetchSize()
         setIsClearSearch(false)
@@ -147,7 +149,7 @@ const ProductMenuPage = () => {
                 categories
             }
         })
-        fetchProducts()
+        fetchProducts(AuditLogActionType.SEARCH_PRODUCT)()
     }
 
     const handleOnClearSearch = () => {
@@ -173,7 +175,7 @@ const ProductMenuPage = () => {
             query: { ...router.query, page }
         })
 
-        fetchProducts(page)
+        fetchProducts()(page)
     }
 
     const handleAddItem = () => {
@@ -229,7 +231,7 @@ const ProductMenuPage = () => {
 
             await createProductRequester(formData)
 
-            fetchProducts()
+            fetchProducts()()
             setShowAddModal(false)
             resetProductForm()
             setEditingItemId(null)
@@ -271,7 +273,7 @@ const ProductMenuPage = () => {
             formData.append("is_remove_image", String(isRemoveImage))
 
             await updateProductRequester(formData, editingItemId)
-            fetchProducts()
+            fetchProducts()()
             setShowAddModal(false)
             resetProductForm()
             setEditingItemId(null)
@@ -326,7 +328,7 @@ const ProductMenuPage = () => {
                 showConfirmButton: false,
                 showCloseButton: true
             })
-            fetchProducts()
+            fetchProducts()()
         } catch (error) {
             console.error(error)
             Alert({ data: error })

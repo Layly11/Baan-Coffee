@@ -38,5 +38,13 @@
   "SEARCH_AUDIT_LOG": {
     "label": "Search Audit Log",
     "value": "SEARCH_AUDIT_LOG"
+  },
+  "VIEW_PRODUCT": {
+    "label": "View Product",
+    "value": "VIEW_PRODUCT"
+  },
+  "SEARCH_PRODUCT": {
+    "label": "Search Product",
+    "value": "SEARCH_PRODUCT"
   }
 }

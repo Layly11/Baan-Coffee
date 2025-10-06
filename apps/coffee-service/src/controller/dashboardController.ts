@@ -37,14 +37,6 @@ export const getDashBoardData = () => async (req: Request, res: Response, next: 
         const { count, rows } = await DailySummaryModel.findAndCountAll({
             include: [
                 {
-                    model: ShiftTodayModel,
-                    as: 'shifts'
-                },
-                {
-                    model: InventoryStatusModel,
-                    as: 'inventory_statuses'
-                },
-                {
                     model: TopProductModel,
                     as: 'top_products',
                     include: [
@@ -65,12 +57,11 @@ export const getDashBoardData = () => async (req: Request, res: Response, next: 
 
         const summary = rows.map((summary: any) => {
             const topProducts = summary.top_products || []
-
             const bestSellerProduct = topProducts.reduce((best: any, current: any) => {
                 if (!best) return current
                 return (current.total_sold || 0) > (best.total_sold || 0) ? current : best
             }, null)
-
+            
             return {
                 id: summary.id,
                 date: dayjs(summary.date).format('DD/MM/YYYY'),

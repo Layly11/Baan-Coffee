@@ -6,6 +6,7 @@ import ProductMasterError from '../constants/errors/product.error.json'
 import path from "path"
 import { v4 as uuidv4 } from 'uuid'
 import { Sequelize } from "sequelize"
+import { AuditLogMenuType, CreateAuditLog } from "../constants/commons/createAuditLog"
 
 const allowedExtensions = ['.png', '.jpg', '.jpeg']
 
@@ -32,8 +33,8 @@ export const isValidImageMagicNumber = (buffer: Buffer, mimetype: string): boole
 
 export const getProductData = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { categories, limit, offset } = req.query
-
+        const { categories, limit, offset, audit_action: auditAction } = req.query
+        const portal = req.user as any
         const categoryArray = Array.isArray(categories)
             ? categories
             : typeof categories === 'string'
@@ -94,6 +95,27 @@ export const getProductData = () => async (req: Request, res: Response, next: Ne
                 }
             ))
         }));
+
+
+        if (auditAction) {
+            res.locals.audit = CreateAuditLog(
+                {
+                    menu: AuditLogMenuType.PRODUCT_MENU,
+                    action: auditAction,
+                    editorName: portal.username,
+                    editorRole: portal.role.name,
+                    eventDateTime: new Date(),
+                    staffId: portal.id,
+                    staffEmail: portal.email,
+                    channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                    searchCriteria: JSON.stringify({ query: req.query }),
+                    previousValues: undefined,
+                    newValues: undefined,
+                    recordKeyValues: undefined,
+                    isPii: true
+                }
+            )
+        }
 
         res.locals.products = products
         return next()
