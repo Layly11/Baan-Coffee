@@ -255,6 +255,7 @@ const ProductMenuPage = () => {
                 Swal.fire({ icon: 'error', title: 'Duration ควรอยู่ระหว่าง 1 ถึง 600 วินาที', text: 'กรุณาเลือกค่าใหม่อีกครั้ง', showCloseButton: true, showConfirmButton: false })
                 return
             }
+            console.log('newProductName: ', newProductName)
             formData.append('product_name', newProductName)
             if (newCategory !== undefined) {
                 formData.append('categories', Array.isArray(newCategory) ? newCategory.join(',') : newCategory)

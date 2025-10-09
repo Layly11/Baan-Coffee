@@ -62,15 +62,15 @@ export = {
         allowNull: true
       },
       previous_values: {
-        type: Sequelize.STRING(255),
+        type: Sequelize.TEXT('long'),
         allowNull: true
       },
       new_values: {
-        type: Sequelize.STRING(255),
+        type: Sequelize.TEXT('long'),
         allowNull: true
       },
       record_key_values: {
-        type: Sequelize.STRING(255),
+        type: Sequelize.TEXT('long'),
         allowNull: true
       },
       is_pii: {

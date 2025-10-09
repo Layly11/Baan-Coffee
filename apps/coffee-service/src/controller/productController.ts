@@ -6,7 +6,7 @@ import ProductMasterError from '../constants/errors/product.error.json'
 import path from "path"
 import { v4 as uuidv4 } from 'uuid'
 import { Sequelize } from "sequelize"
-import { AuditLogMenuType, CreateAuditLog } from "../constants/commons/createAuditLog"
+import { AuditLogActionType, AuditLogMenuType, CreateAuditLog } from "../constants/commons/createAuditLog"
 
 const allowedExtensions = ['.png', '.jpg', '.jpeg']
 
@@ -150,6 +150,7 @@ export const createProduct = () => async (req: Request, res: Response, next: Nex
             is_active: isActive
         } = req.body
 
+        const portal = req.user as any
         let { sizes } = req.body
 
         const file = (req.file!) || null
@@ -248,6 +249,27 @@ export const createProduct = () => async (req: Request, res: Response, next: Nex
 
         await transaction.commit()
 
+        res.locals.audit = CreateAuditLog({
+            menu: AuditLogMenuType.PRODUCT_MENU,
+            action: AuditLogActionType.CREATE_PRODUCT,
+            editorName: portal.username,
+            editorRole: portal.role.name,
+            eventDateTime: new Date(),
+            staffId: portal.id,
+            staffEmail: portal.email,
+            channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+            searchCriteria: undefined,
+            previousValues: undefined,
+            newValues: undefined,
+            recordKeyValues: JSON.stringify({
+                file: {
+                    originalname: file.originalname
+                },
+                body: req.body
+            }),
+            isPii: true
+        })
+
         return next()
 
     } catch (err) {
@@ -260,6 +282,17 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
         const id = Number(req.params.id)
         const item = await ProductModel.findByPk(id)
 
+        const previous_values = {
+            image_url: item?.image_url,
+            name: item?.name,
+            categories_id: item?.category_id,
+            price: item?.price,
+            description: item?.description,
+            status: item?.status
+        }
+
+        const newValues: Record<string, any> = {}
+
         if (!item) {
             return next(new ServiceError(ProductMasterError.PRODUCT_NOT_FOUND))
         }
@@ -271,6 +304,10 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
             is_active: isActive,
             is_remove_image: isRemoveImage
         } = req.body
+
+        console.log(req.body)
+
+        const portal = req.user as any
 
         let { sizes } = req.body
 
@@ -306,6 +343,7 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
                 contentType: file.mimetype
             })
             item.image_url = image_url
+            newValues.image_url = image_url
         }
 
         if (isRemoveImage === 'true') {
@@ -321,6 +359,7 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
 
         if (productName !== undefined) {
             item.name = productName
+            newValues.name = productName
         }
         if (categories !== undefined) {
             const categoryId = Number(categories)
@@ -328,15 +367,19 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
                 return next(new ServiceError(ProductMasterError.INVALID_CATEGORY_ID))
             }
             item.category_id = categoryId
+            newValues.categories_id = categoryId
         }
         if (price !== undefined) {
             item.price = price
+            newValues.price = price
         }
         if (description !== undefined || description !== null) {
             item.description = description
+            newValues.description = description
         }
         if (isActive !== undefined) {
             item.status = isActive
+            newValues.status = isActive
         }
         await item.save()
 
@@ -352,6 +395,24 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
             await ProductSizeModel.bulkCreate(sizeData)
         }
 
+        res.locals.audit = CreateAuditLog(
+            {
+                menu: AuditLogMenuType.PRODUCT_MENU,
+                action: AuditLogActionType.EDIT_PRODUCT,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                searchCriteria: undefined,
+                previousValues: JSON.stringify(previous_values),
+                newValues: JSON.stringify(newValues),
+                recordKeyValues: undefined,
+                isPii: true
+            }
+        )
+
         res.locals.item = item
 
         return next()
@@ -366,8 +427,14 @@ export const deleteProduct = () => async (req: Request, res: Response, next: Nex
         const id = req.params.id
         const item = await ProductModel.findByPk(id)
 
+        const portal = req.user as any
+
         if (!item) {
             return next(new ServiceError(ProductMasterError.PRODUCT_NOT_FOUND))
+        }
+        const recordKeyValues = {
+            id: item.id,
+            imageUrl: item.image_url
         }
 
         await TopProductModel.destroy({ where: { product_id: id } })
@@ -385,6 +452,25 @@ export const deleteProduct = () => async (req: Request, res: Response, next: Nex
         // }
 
         await item.destroy()
+
+
+        res.locals.audit = CreateAuditLog(
+            {
+                menu: AuditLogMenuType.PRODUCT_MENU,
+                action: AuditLogActionType.DELETE_PRODUCT,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                searchCriteria: undefined,
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: JSON.stringify(recordKeyValues),
+                isPii: true
+            }
+        )
 
         return next()
     } catch (err) {

@@ -105,15 +105,15 @@ AuditLogModel.init(
       allowNull: true
     },
     previous_values: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.TEXT('long'),
       allowNull: true
     },
     new_values: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.TEXT('long'),
       allowNull: true
     },
     record_key_values: {
-      type: DataTypes.STRING(255),
+      type: DataTypes.TEXT('long'),
       allowNull: true
     },
     is_pii: {

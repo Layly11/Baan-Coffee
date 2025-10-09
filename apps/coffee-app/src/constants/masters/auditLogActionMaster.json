@@ -46,5 +46,19 @@
   "SEARCH_PRODUCT": {
     "label": "Search Product",
     "value": "SEARCH_PRODUCT"
+  },
+  "CREATE_PRODUCT": {
+    "label": "Create Product",
+    "value": "CREATE_PRODUCT"
+  },
+  "EDIT_PRODUCT": {
+    "label": "Edit Product",
+    "value": "EDIT_PRODUCT"
+  },
+  "DELETE_PRODUCT": {
+    "label": "Delete Product",
+    "value": "DELETE_PRODUCT"
   }
+
+  
 }
