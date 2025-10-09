@@ -1,6 +1,6 @@
 import express, { Request, Response, NextFunction } from 'express';
 
-import { CancelOrder, CancelOrderStatus, createNotifyOrder, createOrder, createPayment, getInvoiceData, getNotifyOrder, getOrderData, getOrderHistorty, getPaymentByRefercnce, getTrackOrder, payForQR, paymentResult, updateOrderStatus } from '../controller/orderController';
+import { CancelOrder, CancelOrderStatus, createNotifyOrder, createOrder, createPayment, DownloadInvoice, getInvoiceData, getNotifyOrder, getOrderData, getOrderHistorty, getPaymentByRefercnce, getTrackOrder, payForQR, paymentResult, updateOrderStatus } from '../controller/orderController';
 import { authMiddleware, authMiddlewareCustomer, findUserPermission, validateUserPermission } from '../controller/userController';
 import { ORDER_MANAGEMENT } from '../constants/masters/portalPermissionMaster.json'
 import { VIEW, CREATE, EDIT, DELETE } from '../constants/masters/portalPermissionActionMaster.json'
@@ -94,6 +94,24 @@ router.post(
     next()
   }
 )
+router.post(
+  '/download-invoice/:id',
+  authMiddleware(),
+  findUserPermission(),
+  validateUserPermission(ORDER_MANAGEMENT, EDIT),
+  DownloadInvoice(),
+  (req: Request, res: Response, next: NextFunction) => {
+    res.locals.response = {
+      res_code: '0000',
+      res_desc: '',
+      data: undefined
+    }
+    res.json(res.locals.response)
+    next()
+  }
+)
+
+
 
 
 

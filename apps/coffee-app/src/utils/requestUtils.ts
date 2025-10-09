@@ -315,6 +315,17 @@ export const fetchAuditLogRequester = async (config: any): Promise<any> => {
         })
     })
 }
+export const createAuditLogOutputInvoiceRequester = async (id: any, config: any): Promise<any> => {
+return await new Promise((resolve, rejects) => {
+        axios.post(`/api/order/download-invoice/${id}`,{},config)
+        .then((res) => {
+            resolve(res.data)
+        })
+        .catch((err) => {
+            rejects(err)
+        })
+    })
+}
 
 
 

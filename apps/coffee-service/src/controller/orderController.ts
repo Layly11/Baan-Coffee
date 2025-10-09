@@ -7,11 +7,13 @@ import { momentAsiaBangkok, ServiceError } from "@coffee/helpers";
 import OrderErrorMaster from '../constants/errors/order.error.json'
 import { v4 as uuidv4 } from "uuid";
 import { dayjs } from "@coffee/helpers";
+import { AuditLogActionType, AuditLogMenuType, CreateAuditLog } from "../constants/commons/createAuditLog";
 
 export const getOrderData = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { start_date: startDate, end_date: endDate, status, method, customer_name: customerName, limit, offset } = req.query as any
+        const { start_date: startDate, end_date: endDate, status, method, customer_name: customerName, limit, offset, audit_action: auditAction } = req.query as any
 
+        const portal = req.user as any
         if ((startDate && isNaN(Date.parse(startDate))) || (endDate && isNaN(Date.parse(endDate)))) {
             return next(new ServiceError(OrderErrorMaster.ERR_DATE_INVALID_FORMAT))
         }
@@ -58,6 +60,25 @@ export const getOrderData = () => async (req: Request, res: Response, next: Next
                 status: o.status
             }
         ))
+        if (auditAction) {
+            res.locals.audit = CreateAuditLog(
+                {
+                    menu: AuditLogMenuType.ORDER_MANAGEMENT,
+                    action: auditAction,
+                    editorName: portal.username,
+                    editorRole: portal.role.name,
+                    eventDateTime: new Date(),
+                    staffId: portal.id,
+                    staffEmail: portal.email,
+                    channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                    searchCriteria: JSON.stringify({ query: req.query }),
+                    previousValues: undefined,
+                    newValues: undefined,
+                    recordKeyValues: undefined,
+                    isPii: true
+                }
+            )
+        }
 
         res.locals.orders = orders
         res.locals.total = count
@@ -73,8 +94,21 @@ export const updateOrderStatus = () => async (req: Request, res: Response, next:
     try {
         const orderId = req.params.id
         const { new_status: newStatus } = req.body
+        const portal = req.user as any
 
-        const order = await OrderModel.findOne({ where: { order_id: orderId } })
+        const order = await OrderModel.findOne({
+            where: { order_id: orderId },
+            include: [
+                {
+                    model: CustomersModel,
+                    as: 'customer',
+                },
+                {
+                    model: OrderItemModel,
+                    as: 'items'
+                }
+            ],
+        })
 
         if (!order) {
             return next(new ServiceError(OrderErrorMaster.ORDER_NOT_FOUND))
@@ -82,9 +116,11 @@ export const updateOrderStatus = () => async (req: Request, res: Response, next:
         if (!["pending", "preparing", "out_for_delivery", "complete", "cancelled"].includes(newStatus)) {
             return next(new ServiceError(OrderErrorMaster.STATUS_NOT_FOUND))
         }
+
+        const previous_values = order.status
         await order.update({ status: newStatus })
 
-        
+
         if (["complete", "cancelled"].includes(newStatus.toLowerCase())) {
             try {
                 await axios.post('https://baan-coffee-production.up.railway.app/order/notification', { orderId, newStatus })
@@ -93,6 +129,24 @@ export const updateOrderStatus = () => async (req: Request, res: Response, next:
             }
         }
 
+        res.locals.audit = CreateAuditLog(
+            {
+                menu: AuditLogMenuType.ORDER_MANAGEMENT,
+                action: AuditLogActionType.EDIT_ORDER_STATUS,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                targetName: order.customer?.name,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                searchCriteria: undefined,
+                previousValues: JSON.stringify({status: previous_values}),
+                newValues: JSON.stringify({status: order.status}),
+                recordKeyValues: undefined,
+                isPii: true
+            }
+        )
         return next()
     } catch (err) {
         next(err)
@@ -103,7 +157,7 @@ export const updateOrderStatus = () => async (req: Request, res: Response, next:
 export const getInvoiceData = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
         const orderId = req.params.id
-
+        const portal = req.user as any
         const order = await OrderModel.findOne({
             where: { order_id: orderId },
             include: [
@@ -143,6 +197,24 @@ export const getInvoiceData = () => async (req: Request, res: Response, next: Ne
             discount: 0,
         }
 
+        res.locals.audit = CreateAuditLog(
+            {
+                menu: AuditLogMenuType.ORDER_MANAGEMENT,
+                action: AuditLogActionType.VIEW_ORDERS_INVOICE,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                targetName: order.customer?.name,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                searchCriteria: undefined,
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: undefined,
+                isPii: true
+            }
+        )
 
         res.locals.invoice = invoice
         return next()
@@ -232,6 +304,59 @@ export const getNotifyOrder = () => async (req: Request, res: Response, next: Ne
         return next()
     } catch (err) {
 
+    }
+}
+
+export const DownloadInvoice = () => async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const orderId = req.params.id
+        const { audit_action: auditAction } = req.query
+
+        console.log('autdit: ', req.params)
+        const portal = req.user as any
+        const order = await OrderModel.findOne({
+            where: { order_id: orderId },
+            include: [
+                {
+                    model: CustomersModel,
+                    as: 'customer',
+                },
+                {
+                    model: OrderItemModel,
+                    as: 'items'
+                }
+            ],
+        },)
+
+        if (!order) {
+            return next(new ServiceError(OrderErrorMaster.ORDER_NOT_FOUND))
+        }
+
+        if (auditAction) {
+            res.locals.audit = CreateAuditLog(
+                {
+                    menu: AuditLogMenuType.ORDER_MANAGEMENT,
+                    action: auditAction,
+                    editorName: portal.username,
+                    editorRole: portal.role.name,
+                    targetName: order.customer?.name,
+                    eventDateTime: new Date(),
+                    staffId: portal.id,
+                    staffEmail: portal.email,
+                    channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                    searchCriteria: undefined,
+                    previousValues: undefined,
+                    newValues: undefined,
+                    recordKeyValues: undefined,
+                    isPii: true
+                }
+            )
+        }
+
+
+        return next()
+    } catch (err) {
+        next(err)
     }
 }
 
@@ -602,7 +727,7 @@ export const getOrderHistorty = () => async (req: Request, res: Response, next: 
                     hour: "numeric",
                     minute: "2-digit",
                     hour12: true,
-                    timeZone: 'Asia/Bangkok', 
+                    timeZone: 'Asia/Bangkok',
                 }),
                 imageSource: item.image_url
 

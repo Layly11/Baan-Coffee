@@ -8,13 +8,14 @@ import { Col, Row } from "react-grid-system"
 import styled from "styled-components";
 import { useRouter } from "next/router"
 import { Alert } from "@/helpers/sweetalert"
-import { fetchInvoiceRequester } from "@/utils/requestUtils"
+import { createAuditLogOutputInvoiceRequester, fetchInvoiceRequester } from "@/utils/requestUtils"
 import { useEffect, useState } from "react"
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.json'
 import PermissionActionMaster from '../../constants/masters/PermissionActionMaster.json'
 import { checkPermission } from "@/helpers/checkPermission"
+import { AuditLogActionType } from "@/types/initTypes"
 
 const Container = styled.div`
   background: #f9fafb;
@@ -91,7 +92,7 @@ const Summary = styled.div`
 
 const ButtonGroup = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
 `;
 
 const Button = styled.button<{ variant?: "purple" | "green" | "blue" }>`
@@ -157,10 +158,6 @@ const OrdersPage = () => {
         }
     }, [id])
 
-    const handlePrint = () => {
-        window.print();
-    };
-
     const handleDownload = async () => {
         const invoiceElement = document.getElementById("invoice-card");
         if (!invoiceElement) return;
@@ -179,6 +176,15 @@ const OrdersPage = () => {
 
         pdf.addImage(imgData, "PNG", margin, margin, pdfWidth, pdfHeight);
         pdf.save(`invoice-${invoice.id}.pdf`);
+        
+        if(id) {
+            const config = {
+                params: {
+                    audit_action: AuditLogActionType.DOWNLOAD_ORDER_INVOICE
+                }
+            }
+            await createAuditLogOutputInvoiceRequester(id, config)
+        }
     };
 
     useEffect(() => {
@@ -273,9 +279,6 @@ const OrdersPage = () => {
                     </div>
                     <ButtonGroup>
                         <Button variant="purple" onClick={handleDownload} >Download Invoice</Button>
-                        <div style={{ display: "flex", gap: "8px" }}>
-                            <Button variant="blue" onClick={handlePrint}>Print Invoice</Button>
-                        </div>
                     </ButtonGroup>
                 </Card>
             </MainLayout>

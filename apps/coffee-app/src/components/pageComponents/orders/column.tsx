@@ -9,7 +9,7 @@ import { SelectData } from '@/components/header/selectData'
 import { updateCanceledOrderRequester, updateOrderStatusRequester } from '@/utils/requestUtils'
 import { Alert } from '@/helpers/sweetalert'
 
-export const Columns = (setRows: any, canEditOrder:any): any[] => {
+export const Columns = (setRows: any, canEditOrder: any, setIsFetching: any): any[] => {
     const router = useRouter()
     return [
         {
@@ -83,17 +83,24 @@ export const Columns = (setRows: any, canEditOrder:any): any[] => {
                             value={row.status}
                             setValue={async (newVal: string) => {
                                 const orderId = row.order_id;
-                                try{
-                                     await updateOrderStatusRequester(orderId, { new_status: newVal })
-                                } catch(err) {
-                                    Alert({data: err})
+                                try {
+                                    setIsFetching(true)
+                                    await updateOrderStatusRequester(orderId, { new_status: newVal })
+                                } catch (err) {
+                                    Alert({ data: err })
+                                } finally {
+                                    setIsFetching(false)
                                 }
-        
+
                                 if (newVal === 'cancelled') {
-                                    try{
-                                          await updateCanceledOrderRequester({ order_id: orderId })
+                                    try {
+                                        setIsFetching(true)
+                                        await updateCanceledOrderRequester({ order_id: orderId })
                                     } catch (err) {
-                                    Alert({data: err})
+                                        Alert({ data: err })
+                                    }
+                                    finally {
+                                        setIsFetching(false)
                                     }
                                 }
                                 setRows((prev: any[]) =>

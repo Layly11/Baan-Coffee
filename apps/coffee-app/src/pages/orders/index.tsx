@@ -18,6 +18,7 @@ import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.j
 import PermissionActionMaster from '../../constants/masters/PermissionActionMaster.json'
 import { checkPermission } from "@/helpers/checkPermission"
 import { checkNullUndefiendEmptyString, checkRouterQueryAndAutoFetchData, parseToArrayAndRemoveSelectAllValue } from "@/utils/parseUtils"
+import { AuditLogActionType } from "@/types/initTypes"
 
 const pathname = '/orders'
 
@@ -53,12 +54,13 @@ const OrdersPage = () => {
       permission.edit
   )
 
-    const fetchOrderData = async (page?: any, isClear?: boolean) => {
+    const fetchOrderData = (auditAction?: AuditLogActionType) => async(page?: any, isClear?: boolean) => {
         setIsFetching(true)
         setIsSearch(false)
         try {
             const config = {
                 params: {
+                    audit_action: auditAction,
                     start_date: isClear ? dayjs().endOf('day').subtract(30, 'day').startOf('day').toDate() : dayjs(startDate).format('YYYY-MM-DD'),
                     end_date: isClear ? dayjs().toDate() :dayjs(endDate).format('YYYY-MM-DD'),
                     status: isClear ? '' : parseToArrayAndRemoveSelectAllValue(checkNullUndefiendEmptyString(status)),
@@ -84,7 +86,7 @@ const OrdersPage = () => {
     }
 
     useEffect(() => {
-        fetchOrderData()
+        fetchOrderData(AuditLogActionType.VIEW_ORDERS)()
     },[])
 
     const handleOnClearSearch = async () => {
@@ -103,7 +105,7 @@ const OrdersPage = () => {
             }
         })
 
-        fetchOrderData(0,true)
+        fetchOrderData()(0,true)
     }
 
     const handleOnClickSearch = async () => {
@@ -120,7 +122,7 @@ const OrdersPage = () => {
                 limit: pageSize
             }
         })
-        await fetchOrderData(0)
+        await fetchOrderData(AuditLogActionType.SEARCH_ORDERS)(0)
     }
 
     const handleOnChangePage = async (page: number): Promise<void> => {
@@ -130,7 +132,7 @@ const OrdersPage = () => {
             query: { ...router.query, page }
         })
 
-        await fetchOrderData(page)
+        await fetchOrderData()(page)
 
     }
 
@@ -182,7 +184,7 @@ const OrdersPage = () => {
     useEffect(() => {
         checkRouterQueryAndAutoFetchData({
             query: router.query,
-            fetchData: fetchOrderData
+            fetchData: fetchOrderData()
         })
     }, [])
 
@@ -224,7 +226,7 @@ const OrdersPage = () => {
                                 setPageSize={setPageSize}
                                 setPage={handleOnChangePage}
                                 page={page}
-                                columns={Columns(setRows,canEditOrder)}
+                                columns={Columns(setRows,canEditOrder, setIsFetching)}
                                 rows={rows}
                                 isSearch={isSearch}
                             />

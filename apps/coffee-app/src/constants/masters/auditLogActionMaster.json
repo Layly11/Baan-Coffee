@@ -58,6 +58,26 @@
   "DELETE_PRODUCT": {
     "label": "Delete Product",
     "value": "DELETE_PRODUCT"
+  },
+  "VIEW_ORDERS": {
+    "label": "View Orders",
+    "value": "VIEW_ORDERS"
+  },
+  "SEARCH_ORDERS": {
+    "label": "Search Orders",
+    "value": "SEARCH_ORDERS"
+  },
+  "VIEW_ORDERS_INVOICE": {
+    "label": "View Orders Invoice",
+    "value": "VIEW_ORDERS_INVOICE"
+  },
+  "DOWNLOAD_ORDER_INVOICE": {
+    "label": "Download Orders Invoice",
+    "value": "DOWNLOAD_ORDER_INVOICE"
+  },
+  "EDIT_ORDER_STATUS": {
+    "label": "Edit Order Status",
+    "value": "EDIT_ORDER_STATUS"
   }
 
   
