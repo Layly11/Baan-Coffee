@@ -6,14 +6,16 @@ import * as jose from 'jose'
 import UserErrorMaster from "../constants/errors/user.error.json";
 import { getRedisClient } from "../helpers/redis";
 import { sendResetPasswordAdmin } from "../utils/emailUtils";
+import { AuditLogActionType, AuditLogMenuType, CreateAuditLog } from "../constants/commons/createAuditLog";
 
 export const getUserData = () => async (req: Request, res: Response, next: NextFunction) => {
 
-    const { information, role, limit, offset } = req.query;
+    const { audit_action: auditAction, information, role, limit, offset } = req.query;
     try {
         const infoStr = typeof information === 'string' ? information : undefined;
         const roles = Array.isArray(role) ? role : role ? [role] : [];
         const roleIds = roles.map(r => Number(r)).filter(r => !isNaN(r));
+        const portal = req.user as any
 
         const where = infoStr
             ? {
@@ -54,6 +56,26 @@ export const getUserData = () => async (req: Request, res: Response, next: NextF
             }
         })
 
+        if (auditAction) {
+            res.locals.audit = CreateAuditLog(
+                {
+                    menu: AuditLogMenuType.USERS,
+                    action: auditAction,
+                    editorName: portal.username,
+                    editorRole: portal.role.name,
+                    eventDateTime: new Date(),
+                    staffId: portal.id,
+                    staffEmail: portal.email,
+                    channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                    searchCriteria: JSON.stringify({ query: req.query }),
+                    previousValues: undefined,
+                    newValues: undefined,
+                    recordKeyValues: undefined,
+                    isPii: true
+                }
+            )
+        }
+
         res.locals.total = count
         res.locals.users = users
         return next()
@@ -69,11 +91,15 @@ export const updateUserData = () => async (req: Request, res: Response, next: Ne
     const currentUser = req.user as any
     try {
         const user = await UserModel.findByPk(id)
-
         if (!user) {
             return next(new ServiceError(UserErrorMaster.USER_NOT_FOUND))
         }
-
+        const previousValues = {
+            username: user.username,
+            email: user.email,
+            role: user.role_id,
+            status: user.status
+        }
 
         if (currentUser.role_id === 2) {
             if (role === 1 || role === 2) {
@@ -103,6 +129,25 @@ export const updateUserData = () => async (req: Request, res: Response, next: Ne
 
         await user.save()
 
+        res.locals.audit = CreateAuditLog(
+            {
+                menu: AuditLogMenuType.USERS,
+                action: AuditLogActionType.EDIT_USER,
+                editorName: currentUser.username,
+                editorRole: currentUser.role.name,
+                targetName: previousValues.username,
+                eventDateTime: new Date(),
+                staffId: currentUser.id,
+                staffEmail: currentUser.email,
+                channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                searchCriteria: undefined,
+                previousValues: JSON.stringify(previousValues),
+                newValues: JSON.stringify(req.body),
+                recordKeyValues: undefined,
+                isPii: true
+            }
+        )
+
         return next()
 
     } catch (err) {
@@ -116,10 +161,11 @@ export const deleteUserData = () => async (req: Request, res: Response, next: Ne
 
     try {
         const user = await UserModel.findByPk(id)
+
         if (!user) {
             return next(new ServiceError(UserErrorMaster.USER_NOT_FOUND))
         }
-
+        const targetName = user.username
         if (currentUser.id === user.id) {
             return next(new ServiceError(UserErrorMaster.CAN_NOT_DELETE_OWN_ACCOUNT))
         }
@@ -127,6 +173,24 @@ export const deleteUserData = () => async (req: Request, res: Response, next: Ne
 
         if (currentUser.role_id === 1) {
             await user.destroy()
+            res.locals.audit = CreateAuditLog(
+                {
+                    menu: AuditLogMenuType.USERS,
+                    action: AuditLogActionType.DELETE_USER,
+                    editorName: currentUser.username,
+                    editorRole: currentUser.role.name,
+                    targetName,
+                    eventDateTime: new Date(),
+                    staffId: currentUser.id,
+                    staffEmail: currentUser.email,
+                    channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                    searchCriteria: undefined,
+                    previousValues: undefined,
+                    newValues: undefined,
+                    recordKeyValues: undefined,
+                    isPii: true
+                }
+            )
             return next()
         }
 
@@ -136,6 +200,24 @@ export const deleteUserData = () => async (req: Request, res: Response, next: Ne
                 return next(new ServiceError(UserErrorMaster.CAN_NOT_DELETE_SUPER_ADMIN))
             }
             await user.destroy()
+            res.locals.audit = CreateAuditLog(
+                {
+                    menu: AuditLogMenuType.USERS,
+                    action: AuditLogActionType.DELETE_USER,
+                    editorName: currentUser.username,
+                    editorRole: currentUser.role.name,
+                    targetName,
+                    eventDateTime: new Date(),
+                    staffId: currentUser.id,
+                    staffEmail: currentUser.email,
+                    channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                    searchCriteria: undefined,
+                    previousValues: undefined,
+                    newValues: undefined,
+                    recordKeyValues: undefined,
+                    isPii: true
+                }
+            )
             return next()
         }
 
@@ -189,6 +271,32 @@ export const createUserData = () => async (req: Request, res: Response, next: Ne
             status
         })
 
+
+        res.locals.audit = CreateAuditLog(
+            {
+                menu: AuditLogMenuType.USERS,
+                action: AuditLogActionType.CREATE_USER,
+                editorName: currentUser.username,
+                editorRole: currentUser.role.name,
+                targetName: username,
+                eventDateTime: new Date(),
+                staffId: currentUser.id,
+                staffEmail: currentUser.email,
+                channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                searchCriteria: undefined,
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: JSON.stringify({
+                    username,
+                    email,
+                    password,
+                    role_id: role,
+                    status
+                }),
+                isPii: true
+            }
+        )
+
         return next()
     } catch (err) {
         next(err)
@@ -198,6 +306,7 @@ export const createUserData = () => async (req: Request, res: Response, next: Ne
 export const resetPasswordUser = () => async (req: Request, res: Response, next: NextFunction) => {
     const { id } = req.params
     const redis = getRedisClient()
+    const portal = req.user as any
     try {
         const user = await UserModel.findOne({
             where: {
@@ -209,6 +318,7 @@ export const resetPasswordUser = () => async (req: Request, res: Response, next:
         if (!user) {
             return next(new ServiceError(UserErrorMaster.USER_NOT_FOUND))
         }
+        const targetName = user.username
 
         const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET)
 
@@ -223,6 +333,24 @@ export const resetPasswordUser = () => async (req: Request, res: Response, next:
 
         await sendResetPasswordAdmin(user.email, resetLink)
 
+        res.locals.audit = CreateAuditLog(
+            {
+                menu: AuditLogMenuType.USERS,
+                action: AuditLogActionType.RESET_PASSWORD_USER,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                targetName,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                searchCriteria: JSON.stringify({ query: req.query }),
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: undefined,
+                isPii: true
+            }
+        )
         return next()
     } catch (err) {
         next(err)

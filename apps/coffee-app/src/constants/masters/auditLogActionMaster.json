@@ -31,6 +31,22 @@
     "label": "Search User",
     "value": "SEARCH_USER"
   },
+  "CREATE_USER": {
+    "label": "Create User",
+    "value": "CREATE_USER"
+  },
+  "DELETE_USER": {
+    "label": "Delete User",
+    "value": "DELETE_USER"
+  },
+  "EDIT_USER": {
+    "label": "Edit User",
+    "value": "EDIT_USER"
+  },
+  "RESET_PASSWORD_USER": {
+    "label": "Reset Password User",
+    "value": "RESET_PASSWORD_USER"
+  },
   "VIEW_AUDIT_LOG": {
     "label": "View Audit Log",
     "value": "VIEW_AUDIT_LOG"

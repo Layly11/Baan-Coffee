@@ -19,6 +19,7 @@ import { Header } from "@/components/pageComponents/users/header"
 import { Columns } from "@/components/pageComponents/users/column"
 import { checkRouterQueryAndAutoFetchData } from "@/utils/parseUtils"
 import { AddUserModal, DeleteUserModal, EditUserModal } from "@/components/pageComponents/users/modal"
+import { AuditLogActionType } from "@/types/initTypes"
 const pathname = '/users'
 
 const UserPage = () => {
@@ -50,12 +51,13 @@ const UserPage = () => {
           permission.name === PermissionMenuMaster.MANAGE_USER &&
           permission.create
       )
-    const fetchUserData = async (page?: number, isClear?: boolean) => {
+    const fetchUserData = (auditAction?: AuditLogActionType)=> async (page?: number, isClear?: boolean) => {
         setIsFetching(true)
         setIsSearch(false)
         try {
             const config = {
                 params: {
+                    audit_action: auditAction,
                     information: isClear ? '' : information,
                     role: isClear ? '' : role,
                     limit: (pageSize),
@@ -77,7 +79,7 @@ const UserPage = () => {
         }
     }
     useEffect(() => {
-        fetchUserData()
+        fetchUserData(AuditLogActionType.VIEW_USER)()
     }, [])
 
     const handleOnClearSearch = async () => {
@@ -91,7 +93,7 @@ const UserPage = () => {
             pathname,
             query: {}
         })
-        await  fetchUserData(0,true)
+        await  fetchUserData()(0,true)
     }
 
     const handleOnClickSearch = async () => {
@@ -104,7 +106,7 @@ const UserPage = () => {
                 role
             }
         })
-        await fetchUserData(0)
+        await fetchUserData(AuditLogActionType.SEARCH_USER)(0)
     }
 
     const handleOnChangePage = async (page: number): Promise<void> => {
@@ -113,7 +115,7 @@ const UserPage = () => {
             pathname,
             query: { ...router.query, page }
         })
-        await fetchUserData(page)
+        await fetchUserData()(page)
     }
 
     const handleOpenEdit = (user: any) => {
@@ -141,7 +143,7 @@ const UserPage = () => {
                 showConfirmButton: false,
                 showCloseButton: true
             })
-            fetchUserData()
+            fetchUserData()()
         } catch (error) {
             console.error(error)
             Alert({ data: error })
@@ -176,7 +178,7 @@ const UserPage = () => {
     useEffect(() => {
         checkRouterQueryAndAutoFetchData({
             query: router.query,
-            fetchData: fetchUserData
+            fetchData: fetchUserData()
         })
     }, [])
 
@@ -226,14 +228,14 @@ const UserPage = () => {
                         isOpen={isEditOpen}
                         onClose={handleCloseEdit}
                         user={selectedUser}
-                        onUpdated={fetchUserData}
+                        onUpdated={fetchUserData()}
                         currentUser={user}
                     />
 
                     <AddUserModal
                         isOpen={isAddOpen}
                         onClose={handleCloseAdd}
-                        onUpdated={fetchUserData}
+                        onUpdated={fetchUserData()}
                         user={user}
                     />
                     <DeleteUserModal
