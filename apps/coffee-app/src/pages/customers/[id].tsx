@@ -15,6 +15,7 @@ import { fetchCustomerOrderRequester } from "@/utils/requestUtils"
 import PermissionMenuMaster from '../../constants/masters/PermissionMenuMaster.json'
 import PermissionActionMaster from '../../constants/masters/PermissionActionMaster.json'
 import { checkPermission } from "@/helpers/checkPermission"
+import { AuditLogActionType } from "@/types/initTypes"
 
 const CustomersPage = () => {
     const user = useSelector((state: UseSelectorProps) => state.user)
@@ -29,54 +30,55 @@ const CustomersPage = () => {
     const [total, setTotal] = useState(0)
     const [rows, setRows] = useState<any>([])
 
-      const canEditOrder = user?.permissions.some(
+    const canEditOrder = user?.permissions.some(
         (permission) =>
-          permission.name === PermissionMenuMaster.ORDER_MANAGEMENT &&
-          permission.edit
-      )
+            permission.name === PermissionMenuMaster.ORDER_MANAGEMENT &&
+            permission.edit
+    )
 
-    const fetchCustomerOrder = async (page?:any) => {
+    const fetchCustomerOrder = (auditAction?: AuditLogActionType) => async (page?: any) => {
         try {
-             const config = {
-                    params: {
-                      limit: (pageSize),
-                      offset: (pageSize * (page ?? 0))
-                    }
-                  }
+            const config = {
+                params: {
+                    audit_action: auditAction,
+                    limit: (pageSize),
+                    offset: (pageSize * (page ?? 0))
+                }
+            }
             const res = await fetchCustomerOrderRequester(id, config)
 
-            if(res.data !== null) {
-             const orders = res.data.orders
-            const total = res.data.total
-            setRows(orders)
-            setTotal(total)
+            if (res.data !== null) {
+                const orders = res.data.orders
+                const total = res.data.total
+                setRows(orders)
+                setTotal(total)
             }
         } catch (err) {
             console.error(err)
-            Alert({data: err})
+            Alert({ data: err })
         }
     }
 
     useEffect(() => {
-        if(id) {
-             fetchCustomerOrder()
+        if (id) {
+            fetchCustomerOrder(AuditLogActionType.VIEW_CUSTOMER_ORDER)()
         }
-    },[id])
+    }, [id])
     const handleOnChangePage = async (page: number): Promise<void> => {
         setPage(page)
         router.replace({
             pathname,
             query: { ...router.query, page }
         })
-        await fetchCustomerOrder(page)
+        await fetchCustomerOrder()(page)
     }
 
-        useEffect(() => {
-            const page = PermissionMenuMaster.MANAGE_CUSTOMER
-            const action = PermissionActionMaster.VIEW
-            checkPermission({ user, page, action }, router)
-        }, [user])
-    
+    useEffect(() => {
+        const page = PermissionMenuMaster.MANAGE_CUSTOMER
+        const action = PermissionActionMaster.VIEW
+        checkPermission({ user, page, action }, router)
+    }, [user])
+
 
     return (
         <>
@@ -101,7 +103,7 @@ const CustomersPage = () => {
                                 setPageSize={setPageSize}
                                 setPage={handleOnChangePage}
                                 page={page}
-                                columns={Columns(setRows,canEditOrder)}
+                                columns={Columns(setRows, canEditOrder)}
                                 rows={rows}
                                 isSearch={isSearch}
                             />

@@ -89,103 +89,103 @@ const Button = styled.button<{ disabled?: boolean }>`
 `;
 
 export default function ResetPassword() {
-    const router = useRouter()
-    const [password, setPassword] = useState("");
-    const [confirm, setConfirm] = useState("");
-    const [loading, setLoading] = useState(false);
-    const { token } = router.query
-    const rules = {
-        lowercase: /[a-z]/.test(password),
-        uppercase: /[A-Z]/.test(password),
-        number: /[0-9]/.test(password),
-        length: password.length >= 12 && password.length <= 20,
-        match: password === confirm && password.length > 0,
-    };
+  const router = useRouter()
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { token } = router.query
+  const rules = {
+    lowercase: /[a-z]/.test(password),
+    uppercase: /[A-Z]/.test(password),
+    number: /[0-9]/.test(password),
+    length: password.length >= 12 && password.length <= 20,
+    match: password === confirm && password.length > 0,
+  };
 
-    const handleSubmit = async() => {
-        if (!token) return;
-        setLoading(true);
-        try {
-            if (token) {
-                await axios.post('/api/authen/reset-password', { token, password })
-                router.push("/login");
-                swalInstance.fire({
-                    icon: 'success',
-                    title: 'Password Reset Email Password reset successfully',
-                    text: 'รหัสผ่านถูกresetเรียบร้อย',
-                    timer: 2500,
-                    showConfirmButton: false
-                });
+  const handleSubmit = async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      if (token) {
+        await axios.post('/api/authen/reset-password', { token, password })
+        router.push("/login");
+        swalInstance.fire({
+          icon: 'success',
+          title: 'Password Reset Email Password reset successfully',
+          text: 'รหัสผ่านถูกresetเรียบร้อย',
+          timer: 2500,
+          showConfirmButton: false
+        });
 
-            }
-        } catch (err) {
-            Alert({ data: err })
-        } finally {
-            setLoading(false);
+      }
+    } catch (err) {
+      Alert({ data: err })
+    } finally {
+      setLoading(false);
+    }
+  }
+
+
+  const checkExpireToken = async () => {
+    try {
+      const res = await axios.post('/api/authen/check-expire-token', { token })
+
+      if (res.data !== null) {
+        const valid = res.data.data.valid
+
+        if (valid === false) {
+          router.replace('/login')
+          swalInstance.fire({
+            icon: 'error',
+            title: 'Token expired',
+            text: 'หมดเวลาในการ reset password',
+            timer: 2500,
+            showConfirmButton: false
+          });
         }
+      }
+    } catch (err) {
+      Alert({ data: err })
     }
 
+  }
+  useEffect(() => {
+    if (!token) return;
 
-    const checkExpireToken = async () => {
-        try {
-            const res = await axios.post('/api/authen/check-expire-token', { token })
+    checkExpireToken()
+  }, [token])
 
-            if (res.data !== null) {
-                const valid = res.data.data.valid
+  const allValid = Object.values(rules).every(Boolean);
 
-                if (valid === false) {
-                    router.replace('/login')
-                    swalInstance.fire({
-                        icon: 'error',
-                        title: 'Token expired',
-                        text: 'หมดเวลาในการ reset password',
-                        timer: 2500,
-                        showConfirmButton: false
-                    });
-                }
-            }
-        } catch (err) {
-            Alert({ data: err })
-        }
+  return (
+    <Container>
+      <Card>
+        <Title>BaanCoffee</Title>
+        <Subtitle>Change Password</Subtitle>
 
-    }
-    useEffect(() => {
-        if (!token) return;
+        <Input
+          type="password"
+          placeholder="Password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+        <Input
+          type="password"
+          placeholder="Confirm Password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+        />
 
-        checkExpireToken()
-    }, [token])
+        <PasswordRules>
+          <Rule valid={rules.lowercase}>At least one lowercase character (a-z)</Rule>
+          <Rule valid={rules.uppercase}>At least one uppercase character (A-Z)</Rule>
+          <Rule valid={rules.number}>At least one number (0-9)</Rule>
+          <Rule valid={rules.length}>At least 12 - 20 characters</Rule>
+          <Rule valid={rules.match}>Password and Confirm Password must match</Rule>
+        </PasswordRules>
 
-    const allValid = Object.values(rules).every(Boolean);
-
-    return (
-        <Container>
-            <Card>
-                <Title>BaanCoffee</Title>
-                <Subtitle>Change Password</Subtitle>
-
-                <Input
-                    type="password"
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                />
-                <Input
-                    type="password"
-                    placeholder="Confirm Password"
-                    value={confirm}
-                    onChange={(e) => setConfirm(e.target.value)}
-                />
-
-                <PasswordRules>
-                    <Rule valid={rules.lowercase}>At least one lowercase character (a-z)</Rule>
-                    <Rule valid={rules.uppercase}>At least one uppercase character (A-Z)</Rule>
-                    <Rule valid={rules.number}>At least one number (0-9)</Rule>
-                    <Rule valid={rules.length}>At least 12 - 20 characters</Rule>
-                    <Rule valid={rules.match}>Password and Confirm Password must match</Rule>
-                </PasswordRules>
-
-                <Button disabled={!allValid || loading} onClick={handleSubmit}>Confirm</Button>
-            </Card>
-        </Container>
-    );
+        <Button disabled={!allValid || loading} onClick={handleSubmit}>Confirm</Button>
+      </Card>
+    </Container>
+  );
 }

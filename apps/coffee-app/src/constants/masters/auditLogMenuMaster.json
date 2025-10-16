@@ -26,5 +26,9 @@
   "AUDIT_LOG": {
     "label": "Audit Log",
     "value": "AUDIT_LOG"
+  },
+  "CUSTOMER": {
+    "label": "Customer",
+    "value": "CUSTOMER"
   }
 }

@@ -78,7 +78,25 @@
   "EDIT_ORDER_STATUS": {
     "label": "Edit Order Status",
     "value": "EDIT_ORDER_STATUS"
+  },
+  "VIEW_CUSTOMER": {
+    "label": "View Customer",
+    "value": "VIEW_CUSTOMER"
+  },
+  "SEARCH_CUSTOMER": {
+    "label": "Search Customer",
+    "value": "SEARCH_CUSTOMER"
+  },
+  "VIEW_CUSTOMER_ORDER": {
+    "label": "View Customer Order",
+    "value": "VIEW_CUSTOMER_ORDER"
+  },
+  "EDIT_CUSTOMER": {
+    "label": "Edit Customer",
+    "value": "EDIT_CUSTOMER"
+  },
+  "DELETE_CUSTOMER": {
+    "label": "Delete Customer",
+    "value": "DELETE_CUSTOMER"
   }
-
-  
 }

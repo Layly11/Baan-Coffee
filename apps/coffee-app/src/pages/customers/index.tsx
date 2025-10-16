@@ -18,6 +18,7 @@ import PermissionActionMaster from '../../constants/masters/PermissionActionMast
 import { checkPermission } from "@/helpers/checkPermission"
 import { DeleteCustomerModal, EditCustomerModal } from "@/components/pageComponents/customers/modal"
 import { checkRouterQueryAndAutoFetchData } from "@/utils/parseUtils"
+import { AuditLogActionType } from "@/types/initTypes"
 const pathname = '/customers'
 
 const CustomersPage = () => {
@@ -41,12 +42,13 @@ const CustomersPage = () => {
   )
 
 
-    const fetchCustomerData = async (page?: any, isClear?: boolean) => {
+    const fetchCustomerData = (auditAction?: AuditLogActionType) => async (page?: any, isClear?: boolean) => {
         setIsFetching(true)
         setIsSearch(false)
         try {
             const config = {
                 params: {
+                    audit_action: auditAction,
                     information: isClear ? '' : information,
                     limit: (pageSize),
                     offset: (pageSize * (page ?? 0))
@@ -70,7 +72,7 @@ const CustomersPage = () => {
     }
 
     useEffect(() => {
-        fetchCustomerData()
+        fetchCustomerData(AuditLogActionType.VIEW_CUSTOMER)()
     }, [])
 
     const handleOnClearSearch = async () => {
@@ -83,7 +85,7 @@ const CustomersPage = () => {
             pathname,
             query: {}
         })
-        fetchCustomerData(0,true)
+        fetchCustomerData()(0,true)
     }
 
     const handleOnClickSearch = async () => {
@@ -95,7 +97,7 @@ const CustomersPage = () => {
                 information
             }
         })
-        await fetchCustomerData(0)
+        await fetchCustomerData(AuditLogActionType.SEARCH_CUSTOMER)(0)
     }
 
     const handleOnChangePage = async (page: number): Promise<void> => {
@@ -104,7 +106,7 @@ const CustomersPage = () => {
             pathname,
             query: { ...router.query, page }
         })
-        await fetchCustomerData(page)
+        await fetchCustomerData()(page)
     }
 
     const handleOpenEdit = (customer: any) => {
@@ -129,7 +131,7 @@ const CustomersPage = () => {
                 showConfirmButton: false,
                 showCloseButton: true
             })
-            fetchCustomerData()
+            fetchCustomerData()()
         } catch (error) {
             console.error(error)
             Alert({ data: error })
@@ -149,7 +151,7 @@ const CustomersPage = () => {
        useEffect(() => {
         checkRouterQueryAndAutoFetchData({
             query: router.query,
-            fetchData: fetchCustomerData
+            fetchData: fetchCustomerData()
         })
     }, [])
 
@@ -209,7 +211,7 @@ const CustomersPage = () => {
                         isOpen={isEditOpen}
                         onClose={handleCloseEdit}
                         customer={selectedCustomer}
-                        onUpdated={fetchCustomerData}
+                        onUpdated={fetchCustomerData()}
                     />
 
                     <DeleteCustomerModal

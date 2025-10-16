@@ -60,7 +60,7 @@
         "resCode": "0408",
         "resDesc": {
             "en": "RefreshToken not found",
-            "th": "ไม่เจอ refreshToken"
+            "th": "Token Expired"
         }
     },
     "ERR_REFRESH_TOKEN_INVALID": {
@@ -108,7 +108,7 @@
         "resCode": "0414",
         "resDesc": {
             "en": "Token is invalid",
-            "th": "Token ผิดพลาด"
+            "th": "Token Expired"
         }
     }
 }

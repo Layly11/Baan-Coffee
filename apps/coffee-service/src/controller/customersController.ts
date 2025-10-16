@@ -6,10 +6,11 @@ import * as jose from 'jose'
 import { sendOtpEmail, sendResetPasswordEmail } from '../utils/emailUtils';
 import { getRedisClient } from '../helpers/redis';
 import { Op, or, } from "sequelize";
+import { AuditLogActionType, AuditLogMenuType, CreateAuditLog } from '../constants/commons/createAuditLog';
 
 export const getCustomerData = () => async (req: Request, res: Response, next: NextFunction) => {
-    const { information, limit, offset } = req.query;
-
+    const { audit_action: auditAction, information, limit, offset } = req.query;
+    const portal = req.user as any
     try {
         const infoStr = typeof information === 'string' ? information : undefined;
 
@@ -22,7 +23,7 @@ export const getCustomerData = () => async (req: Request, res: Response, next: N
                     { phone: { [Op.like]: `%${infoStr}%` } },
                 ],
             }
-            : { isDeleted: false};
+            : { isDeleted: false };
 
         const { count, rows } = await CustomersModel.findAndCountAll({
             where,
@@ -30,6 +31,26 @@ export const getCustomerData = () => async (req: Request, res: Response, next: N
             offset: Number(offset) || 0,
             order: [['createdAt', 'ASC']],
         })
+
+        if (auditAction) {
+            res.locals.audit = CreateAuditLog(
+                {
+                    menu: AuditLogMenuType.CUSTOMER,
+                    action: auditAction,
+                    editorName: portal.username,
+                    editorRole: portal.role.name,
+                    eventDateTime: new Date(),
+                    staffId: portal.id,
+                    staffEmail: portal.email,
+                    channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                    searchCriteria: JSON.stringify({ query: req.query }),
+                    previousValues: undefined,
+                    newValues: undefined,
+                    recordKeyValues: undefined,
+                    isPii: true
+                }
+            )
+        }
 
         res.locals.total = count
         res.locals.customers = rows
@@ -41,81 +62,135 @@ export const getCustomerData = () => async (req: Request, res: Response, next: N
     }
 }
 export const getCustomerOrderData =
-  () => async (req: Request, res: Response, next: NextFunction) => {
-    const { limit, offset } = req.query;
-    const customerId = req.params.id;
+    () => async (req: Request, res: Response, next: NextFunction) => {
+        const { audit_action: auditAction, limit, offset } = req.query;
+        const customerId = req.params.id;
 
-    try {
-      const { count, rows } = await OrderModel.findAndCountAll({
-        where: { customer_id: customerId },
-        include: [
-          {
-            model: CustomersModel,
-            as: "customer",
-            attributes: ["id", "phone"], // เลือกเฉพาะที่ใช้
-          },
-        ],
-        limit: Number(limit) || 10,
-        offset: Number(offset) || 0,
-        order: [["time", "DESC"]],
-      });
+        const portal = req.user as any
+        try {
+            const { count, rows } = await OrderModel.findAndCountAll({
+                where: { customer_id: customerId },
+                include: [
+                    {
+                        model: CustomersModel,
+                        as: "customer",
+                        attributes: ["id", "phone", "name"], // เลือกเฉพาะที่ใช้
+                    },
+                ],
+                limit: Number(limit) || 10,
+                offset: Number(offset) || 0,
+                order: [["time", "DESC"]],
+            });
 
-      const orders = rows.map((o: any) => {
-        const order = o.get({ plain: true });
+            let customerName
+            const orders = rows.map((o: any) => {
+                const order = o.get({ plain: true });
 
-        let shippingAddress = order.shipping_address;
-        if (typeof shippingAddress === "object" && shippingAddress !== null) {
-          shippingAddress = [
-            shippingAddress.street,
-            shippingAddress.city,
-            shippingAddress.zipcode,
-          ]
-            .filter(Boolean)
-            .join(", ");
+                let shippingAddress = order.shipping_address;
+                if (typeof shippingAddress === "object" && shippingAddress !== null) {
+                    shippingAddress = [
+                        shippingAddress.street,
+                        shippingAddress.city,
+                        shippingAddress.zipcode,
+                    ]
+                        .filter(Boolean)
+                        .join(", ");
+                }
+                customerName = order.customer.name
+                return {
+                    ...order,
+                    timeRaw: order.time,
+                    time: dayjs(order.time).format("DD/MM/YYYY HH:mm"),
+                    shipping_address: shippingAddress,
+                    phone: order.customer?.phone,
+                };
+            });
+
+
+            if (auditAction) {
+
+                res.locals.audit = CreateAuditLog(
+                    {
+                        menu: AuditLogMenuType.CUSTOMER,
+                        action: auditAction,
+                        editorName: portal.username,
+                        editorRole: portal.role.name,
+                        targetName: customerName,
+                        eventDateTime: new Date(),
+                        staffId: portal.id,
+                        staffEmail: portal.email,
+                        channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                        searchCriteria: undefined,
+                        previousValues: undefined,
+                        newValues: undefined,
+                        recordKeyValues: undefined,
+                        isPii: true
+                    }
+                )
+            }
+
+
+            res.locals.total = count;
+            res.locals.orders = orders;
+
+            return next();
+        } catch (err) {
+            next(err);
         }
-
-        return {
-          ...order,
-          timeRaw: order.time,
-          time: dayjs(order.time).format("DD/MM/YYYY HH:mm"),
-          shipping_address: shippingAddress,
-          phone: order.customer?.phone,
-        };
-      });
-
-      res.locals.total = count; 
-      res.locals.orders = orders;
-
-      return next();
-    } catch (err) {
-      next(err);
-    }
-  };
+    };
 
 
 export const updateCustomerData = () => async (req: Request, res: Response, next: NextFunction) => {
-    
-    const id = req.params.id
-    const {name, email, phone, verified} = req.body
 
+    const id = req.params.id
+    const { name, email, phone, verified } = req.body
+
+    const portal = req.user as any
     try {
-        
+
         const customer = await CustomersModel.findByPk(id)
         if (!customer) {
             return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_NOT_FOUND))
         }
-        if(name !== '' && name !== null && name !== undefined ) {
-            customer.name= name
+
+        const targetName = customer.name
+        const previousValues: Record<string, any> = {}
+
+        if (name !== '' && name !== null && name !== undefined) {
+            previousValues.name = customer.name
+            customer.name = name
         }
-        if(email !== '' && email !== null && email !== undefined ) {
-            customer.email= email
+        if (email !== '' && email !== null && email !== undefined) {
+            previousValues.email = customer.email
+            customer.email = email
         }
-        if(phone !== '' && phone !== null && phone !== undefined ) {
-            customer.phone= phone
+        if (phone !== '' && phone !== null && phone !== undefined) {
+            previousValues.phone = customer.phone
+            customer.phone = phone
         }
 
         customer.verified = verified
         await customer.save()
+
+
+        res.locals.audit = CreateAuditLog(
+            {
+                menu: AuditLogMenuType.CUSTOMER,
+                action: AuditLogActionType.EDIT_CUSTOMER,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                targetName,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                searchCriteria: undefined,
+                previousValues: JSON.stringify(previousValues),
+                newValues: JSON.stringify(req.body),
+                recordKeyValues: undefined,
+                isPii: true
+            }
+        )
         return next()
 
     } catch (err) {
@@ -128,6 +203,7 @@ export const updateCustomerData = () => async (req: Request, res: Response, next
 
 export const deleteCustomer = () => async (req: Request, res: Response, next: NextFunction) => {
     const id = req.params.id
+    const portal = req.user as any
     try {
         const customer = await CustomersModel.findOne({
             where: {
@@ -136,13 +212,34 @@ export const deleteCustomer = () => async (req: Request, res: Response, next: Ne
             }
         })
 
-         if (!customer) {
+        if (!customer) {
             return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_NOT_FOUND))
+        }
+        const recordKeyValues = {
+            id: customer.id,
+            imageUrl: customer.image_url
         }
 
         await customer.update({ isDeleted: true });
 
-       
+        res.locals.audit = CreateAuditLog(
+            {
+                menu: AuditLogMenuType.CUSTOMER,
+                action: AuditLogActionType.DELETE_CUSTOMER,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                targetName: customer.name,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
+                searchCriteria: undefined,
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: JSON.stringify(recordKeyValues),
+                isPii: true
+            }
+        )
         return next()
 
     } catch (err) {
@@ -181,7 +278,7 @@ export const registerCustomer = () => async (req: Request, res: Response, next: 
 
         }
 
-        const existsPhone = await CustomersModel.findOne({ where: { phone , isDeleted: false} });
+        const existsPhone = await CustomersModel.findOne({ where: { phone, isDeleted: false } });
         if (existsPhone) {
             return next(new ServiceError(CustomerMasterError.ERR_REGISTER_PHONE_EXIST))
 
