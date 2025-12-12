@@ -126,5 +126,21 @@
       "en": "Customer Not Found",
       "th": "ไม่พบ customer"
     }
+  },
+  "ERR_CUSTOMER_EMAIL_EXIST": {
+    "statusCode": 401,
+    "resCode": "4002",
+    "resDesc": {
+      "en": "Email has already Exist",
+      "th": "email นี้ถูกใช้ไปแล้ว"
+    }
+  },
+    "ERR_CUSTOMER_PHONE_EXIST": {
+    "statusCode": 401,
+    "resCode": "4003",
+    "resDesc": {
+      "en": "Phone has already Exist",
+      "th": "Phone นี้ถูกใช้ไปแล้ว"
+    }
   }
 }

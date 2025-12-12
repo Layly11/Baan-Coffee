@@ -160,9 +160,28 @@ export const updateCustomerData = () => async (req: Request, res: Response, next
             previousValues.name = customer.name
             customer.name = name
         }
+        const emailExist = await CustomersModel.findOne({
+            where: {
+                id: {[Op.ne]: id},
+                email
+            }
+        })
+        if (emailExist) {
+            return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_EMAIL_EXIST))
+        }
         if (email !== '' && email !== null && email !== undefined) {
             previousValues.email = customer.email
             customer.email = email
+        }
+          const phoneExist = await CustomersModel.findOne({
+            where: {
+                id: {[Op.ne]: id},
+                phone
+            }
+        })
+
+         if (phoneExist) {
+            return next(new ServiceError(CustomerMasterError.ERR_CUSTOMER_PHONE_EXIST))
         }
         if (phone !== '' && phone !== null && phone !== undefined) {
             previousValues.phone = customer.phone
