@@ -5,6 +5,8 @@ import ProfileMasterError from '../constants/errors/profile.error.json'
 import path from "path";
 import { v4 as uuidv4 } from 'uuid'
 import { deleteFolderPrefix, uploadToAzureBlob } from "../utils/azureBlob";
+import { Op } from 'sequelize';
+
 
 
 export const editProfileImage = () => async (req: Request, res: Response, next: NextFunction) => {
@@ -55,10 +57,32 @@ export const editProfileDetail = () => async (req: Request, res: Response, next:
         if (name !== null && name !== undefined && name !== '') {
             customer.name = name
         }
+        const emailExist =  await CustomersModel.findOne({
+            where: {
+                email,
+                id: {[Op.ne]: id}
+            }
+        })
+
+        if(emailExist) {
+            return next(new ServiceError(ProfileMasterError.ERR_EMAIL_ALREADY_EXISTS));
+        }
+        
         if (email !== null && email !== undefined && email !== '') {
             customer.email = email
         }
-        if (phone !== null && phone !== undefined && phone !== '') {
+
+        const phoneExist = await CustomersModel.findOne({
+            where: {
+                phone,
+                id: {[Op.ne]: id}
+            }
+        })
+        if(phoneExist) {
+            return next(new ServiceError(ProfileMasterError.ERR_PHONE_ALREADY_EXISTS));
+        }
+
+        if (phone !== null && phone !== undefined && phone !== '' ) {
             customer.phone = phone
         }
 
