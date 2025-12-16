@@ -27,7 +27,6 @@ const sendOtpEmail = async (email, otp) => {
     };
     try {
         await mail_1.default.send(mailOptions);
-        console.log("Email sent!");
     }
     catch (err) {
         console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));
@@ -55,7 +54,6 @@ const sendResetPasswordEmail = async (email, otp) => {
     };
     try {
         await mail_1.default.send(mailOptions);
-        console.log("Email sent!");
     }
     catch (err) {
         console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));
@@ -63,7 +61,6 @@ const sendResetPasswordEmail = async (email, otp) => {
 };
 exports.sendResetPasswordEmail = sendResetPasswordEmail;
 const sendResetPasswordAdmin = async (email, resetLink) => {
-    console.log("resetPassword: ", resetLink);
     const mailOptions = {
         from: `yelaysong15@gmail.com`,
         to: email,
@@ -75,7 +72,6 @@ const sendResetPasswordAdmin = async (email, resetLink) => {
     };
     try {
         await mail_1.default.send(mailOptions);
-        console.log("Email sent!");
     }
     catch (err) {
         console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));

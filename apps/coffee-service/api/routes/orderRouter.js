@@ -59,6 +59,15 @@ router.post('/notification', (0, orderController_1.createNotifyOrder)(), (req, r
     res.json(res.locals.response);
     next();
 });
+router.post('/download-invoice/:id', (0, userController_1.authMiddleware)(), (0, userController_1.findUserPermission)(), (0, userController_1.validateUserPermission)(portalPermissionMaster_json_1.ORDER_MANAGEMENT, portalPermissionActionMaster_json_1.EDIT), (0, orderController_1.DownloadInvoice)(), (req, res, next) => {
+    res.locals.response = {
+        res_code: '0000',
+        res_desc: '',
+        data: undefined
+    };
+    res.json(res.locals.response);
+    next();
+});
 router.post("/create/payment", (0, userController_1.authMiddlewareCustomer)(), (0, orderController_1.createPayment)(), (req, res, next) => {
     res.locals.response = {
         res_code: '1111',

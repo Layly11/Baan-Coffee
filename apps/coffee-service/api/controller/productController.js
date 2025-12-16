@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getSizebyProduct = exports.getProductByCategory = exports.getCategoryMobile = exports.getBestSeller = exports.deleteCategory = exports.updateCategory = exports.createCategory = exports.getCategory = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductSize = exports.getProductData = void 0;
+exports.getSizebyProduct = exports.getProductByCategory = exports.getCategoryMobile = exports.getBestSeller = exports.deleteCategory = exports.updateCategory = exports.createCategory = exports.getCategory = exports.deleteProduct = exports.updateProduct = exports.createProduct = exports.getProductSize = exports.getProductData = exports.isValidImageMagicNumber = void 0;
 const models_1 = require("@coffee/models");
 const azureBlob_1 = require("../utils/azureBlob");
 const helpers_1 = require("@coffee/helpers");
@@ -11,9 +11,29 @@ const product_error_json_1 = __importDefault(require("../constants/errors/produc
 const path_1 = __importDefault(require("path"));
 const uuid_1 = require("uuid");
 const sequelize_1 = require("sequelize");
+const createAuditLog_1 = require("../constants/commons/createAuditLog");
+const allowedExtensions = ['.png', '.jpg', '.jpeg'];
+const isValidImageMagicNumber = (buffer, mimetype) => {
+    if (!buffer || buffer.length < 8)
+        return false;
+    const bytes = buffer.subarray(0, 8);
+    const hex = Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join(' ');
+    if (mimetype === 'image/png') {
+        return hex.startsWith('89 50 4e 47 0d 0a 1a 0a');
+    }
+    if (mimetype === 'image/jpg') {
+        return hex.startsWith('ff d8 ff');
+    }
+    if (mimetype === 'image/jpeg') {
+        return hex.startsWith('ff d8 ff');
+    }
+    return false;
+};
+exports.isValidImageMagicNumber = isValidImageMagicNumber;
 const getProductData = () => async (req, res, next) => {
     try {
-        const { categories, limit, offset } = req.query;
+        const { categories, limit, offset, audit_action: auditAction } = req.query;
+        const portal = req.user;
         const categoryArray = Array.isArray(categories)
             ? categories
             : typeof categories === 'string'
@@ -58,6 +78,23 @@ const getProductData = () => async (req, res, next) => {
                 extra_price: s.extra_price
             }))
         }));
+        if (auditAction) {
+            res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+                menu: createAuditLog_1.AuditLogMenuType.PRODUCT_MENU,
+                action: auditAction,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+                searchCriteria: JSON.stringify({ query: req.query }),
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: undefined,
+                isPii: true
+            });
+        }
         res.locals.products = products;
         return next();
     }
@@ -69,7 +106,6 @@ exports.getProductData = getProductData;
 const getProductSize = () => async (req, res, next) => {
     try {
         const sizes = await models_1.SizeModel.findAll();
-        console.log("SizeModel: ", sizes);
         res.locals.sizes = sizes;
         return next();
     }
@@ -82,6 +118,7 @@ const createProduct = () => async (req, res, next) => {
     const transaction = await models_1.sequelize.transaction();
     try {
         const { product_name: productName, categories, price, description, is_active: isActive } = req.body;
+        const portal = req.user;
         let { sizes } = req.body;
         const file = (req.file) || null;
         if (price !== undefined && (price > 200 || price < 1)) {
@@ -95,6 +132,15 @@ const createProduct = () => async (req, res, next) => {
         if (file !== null && file !== undefined && file.size > 5 * 1024 * 1024) {
             await transaction.rollback();
             return next(new helpers_1.ServiceError(product_error_json_1.default.FILE_SIZE_LIMIT));
+        }
+        const fileExtension = path_1.default.extname(file.originalname).toLowerCase();
+        if (!allowedExtensions.includes(fileExtension)) {
+            await transaction.rollback();
+            return next(new helpers_1.ServiceError(product_error_json_1.default.FILE_TYPE_REQUIRE_IMAGE));
+        }
+        if (!(0, exports.isValidImageMagicNumber)(file.buffer, file.mimetype)) {
+            await transaction.rollback();
+            return next(new helpers_1.ServiceError(product_error_json_1.default.FILE_TYPE_REQUIRE_IMAGE));
         }
         if (!productName) {
             return next(new helpers_1.ServiceError(product_error_json_1.default.PRODUCT_NAME_REQUIRE));
@@ -150,6 +196,26 @@ const createProduct = () => async (req, res, next) => {
         }
         res.locals.newProduct = newProduct;
         await transaction.commit();
+        res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+            menu: createAuditLog_1.AuditLogMenuType.PRODUCT_MENU,
+            action: createAuditLog_1.AuditLogActionType.CREATE_PRODUCT,
+            editorName: portal.username,
+            editorRole: portal.role.name,
+            eventDateTime: new Date(),
+            staffId: portal.id,
+            staffEmail: portal.email,
+            channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+            searchCriteria: undefined,
+            previousValues: undefined,
+            newValues: undefined,
+            recordKeyValues: JSON.stringify({
+                file: {
+                    originalname: file.originalname
+                },
+                body: req.body
+            }),
+            isPii: true
+        });
         return next();
     }
     catch (err) {
@@ -161,10 +227,21 @@ const updateProduct = () => async (req, res, next) => {
     try {
         const id = Number(req.params.id);
         const item = await models_1.ProductModel.findByPk(id);
+        const previous_values = {
+            image_url: item?.image_url,
+            name: item?.name,
+            categories_id: item?.category_id,
+            price: item?.price,
+            description: item?.description,
+            status: item?.status
+        };
+        const newValues = {};
         if (!item) {
             return next(new helpers_1.ServiceError(product_error_json_1.default.PRODUCT_NOT_FOUND));
         }
         const { product_name: productName, categories, price, description, is_active: isActive, is_remove_image: isRemoveImage } = req.body;
+        console.log(req.body);
+        const portal = req.user;
         let { sizes } = req.body;
         if (typeof sizes === 'string') {
             sizes = sizes.split(',').map((s) => parseInt(s.trim(), 10));
@@ -190,6 +267,7 @@ const updateProduct = () => async (req, res, next) => {
                 contentType: file.mimetype
             });
             item.image_url = image_url;
+            newValues.image_url = image_url;
         }
         if (isRemoveImage === 'true') {
             if (item.image_url) {
@@ -198,6 +276,7 @@ const updateProduct = () => async (req, res, next) => {
         }
         if (productName !== undefined) {
             item.name = productName;
+            newValues.name = productName;
         }
         if (categories !== undefined) {
             const categoryId = Number(categories);
@@ -205,15 +284,19 @@ const updateProduct = () => async (req, res, next) => {
                 return next(new helpers_1.ServiceError(product_error_json_1.default.INVALID_CATEGORY_ID));
             }
             item.category_id = categoryId;
+            newValues.categories_id = categoryId;
         }
         if (price !== undefined) {
             item.price = price;
+            newValues.price = price;
         }
         if (description !== undefined || description !== null) {
             item.description = description;
+            newValues.description = description;
         }
         if (isActive !== undefined) {
             item.status = isActive;
+            newValues.status = isActive;
         }
         await item.save();
         if (sizes && Array.isArray(sizes)) {
@@ -224,6 +307,21 @@ const updateProduct = () => async (req, res, next) => {
             }));
             await models_1.ProductSizeModel.bulkCreate(sizeData);
         }
+        res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+            menu: createAuditLog_1.AuditLogMenuType.PRODUCT_MENU,
+            action: createAuditLog_1.AuditLogActionType.EDIT_PRODUCT,
+            editorName: portal.username,
+            editorRole: portal.role.name,
+            eventDateTime: new Date(),
+            staffId: portal.id,
+            staffEmail: portal.email,
+            channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+            searchCriteria: undefined,
+            previousValues: JSON.stringify(previous_values),
+            newValues: JSON.stringify(newValues),
+            recordKeyValues: undefined,
+            isPii: true
+        });
         res.locals.item = item;
         return next();
     }
@@ -236,12 +334,32 @@ const deleteProduct = () => async (req, res, next) => {
     try {
         const id = req.params.id;
         const item = await models_1.ProductModel.findByPk(id);
+        const portal = req.user;
         if (!item) {
             return next(new helpers_1.ServiceError(product_error_json_1.default.PRODUCT_NOT_FOUND));
         }
+        const recordKeyValues = {
+            id: item.id,
+            imageUrl: item.image_url
+        };
         await models_1.TopProductModel.destroy({ where: { product_id: id } });
         await models_1.ProductSizeModel.destroy({ where: { product_id: id } });
         await item.destroy();
+        res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+            menu: createAuditLog_1.AuditLogMenuType.PRODUCT_MENU,
+            action: createAuditLog_1.AuditLogActionType.DELETE_PRODUCT,
+            editorName: portal.username,
+            editorRole: portal.role.name,
+            eventDateTime: new Date(),
+            staffId: portal.id,
+            staffEmail: portal.email,
+            channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+            searchCriteria: undefined,
+            previousValues: undefined,
+            newValues: undefined,
+            recordKeyValues: JSON.stringify(recordKeyValues),
+            isPii: true
+        });
         return next();
     }
     catch (err) {
@@ -430,7 +548,6 @@ const getSizebyProduct = () => async (req, res, next) => {
             Quntity: s.size.volume_ml,
             extra_price: s.size.extra_price
         }));
-        console.log("mappedSizeProduct", mappedSizeProduct);
         res.locals.sizes = mappedSizeProduct;
         return next();
     }

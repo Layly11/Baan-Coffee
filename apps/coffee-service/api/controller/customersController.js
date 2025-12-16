@@ -44,8 +44,10 @@ const jose = __importStar(require("jose"));
 const emailUtils_1 = require("../utils/emailUtils");
 const redis_1 = require("../helpers/redis");
 const sequelize_1 = require("sequelize");
+const createAuditLog_1 = require("../constants/commons/createAuditLog");
 const getCustomerData = () => async (req, res, next) => {
-    const { information, limit, offset } = req.query;
+    const { audit_action: auditAction, information, limit, offset } = req.query;
+    const portal = req.user;
     try {
         const infoStr = typeof information === 'string' ? information : undefined;
         const where = infoStr
@@ -64,6 +66,23 @@ const getCustomerData = () => async (req, res, next) => {
             offset: Number(offset) || 0,
             order: [['createdAt', 'ASC']],
         });
+        if (auditAction) {
+            res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+                menu: createAuditLog_1.AuditLogMenuType.CUSTOMER,
+                action: auditAction,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+                searchCriteria: JSON.stringify({ query: req.query }),
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: undefined,
+                isPii: true
+            });
+        }
         res.locals.total = count;
         res.locals.customers = rows;
         return next();
@@ -74,8 +93,9 @@ const getCustomerData = () => async (req, res, next) => {
 };
 exports.getCustomerData = getCustomerData;
 const getCustomerOrderData = () => async (req, res, next) => {
-    const { limit, offset } = req.query;
+    const { audit_action: auditAction, limit, offset } = req.query;
     const customerId = req.params.id;
+    const portal = req.user;
     try {
         const { count, rows } = await models_1.OrderModel.findAndCountAll({
             where: { customer_id: customerId },
@@ -83,13 +103,14 @@ const getCustomerOrderData = () => async (req, res, next) => {
                 {
                     model: models_1.CustomersModel,
                     as: "customer",
-                    attributes: ["id", "phone"],
+                    attributes: ["id", "phone", "name"],
                 },
             ],
             limit: Number(limit) || 10,
             offset: Number(offset) || 0,
             order: [["time", "DESC"]],
         });
+        let customerName;
         const orders = rows.map((o) => {
             const order = o.get({ plain: true });
             let shippingAddress = order.shipping_address;
@@ -102,6 +123,7 @@ const getCustomerOrderData = () => async (req, res, next) => {
                     .filter(Boolean)
                     .join(", ");
             }
+            customerName = order.customer.name;
             return {
                 ...order,
                 timeRaw: order.time,
@@ -110,6 +132,24 @@ const getCustomerOrderData = () => async (req, res, next) => {
                 phone: order.customer?.phone,
             };
         });
+        if (auditAction) {
+            res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+                menu: createAuditLog_1.AuditLogMenuType.CUSTOMER,
+                action: auditAction,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                targetName: customerName,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+                searchCriteria: undefined,
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: undefined,
+                isPii: true
+            });
+        }
         res.locals.total = count;
         res.locals.orders = orders;
         return next();
@@ -122,22 +162,62 @@ exports.getCustomerOrderData = getCustomerOrderData;
 const updateCustomerData = () => async (req, res, next) => {
     const id = req.params.id;
     const { name, email, phone, verified } = req.body;
+    const portal = req.user;
     try {
         const customer = await models_1.CustomersModel.findByPk(id);
         if (!customer) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_EMAIL_NOT_FOUND));
         }
+        const targetName = customer.name;
+        const previousValues = {};
         if (name !== '' && name !== null && name !== undefined) {
+            previousValues.name = customer.name;
             customer.name = name;
         }
+        const emailExist = await models_1.CustomersModel.findOne({
+            where: {
+                id: { [sequelize_1.Op.ne]: id },
+                email
+            }
+        });
+        if (emailExist) {
+            return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_EMAIL_EXIST));
+        }
         if (email !== '' && email !== null && email !== undefined) {
+            previousValues.email = customer.email;
             customer.email = email;
         }
+        const phoneExist = await models_1.CustomersModel.findOne({
+            where: {
+                id: { [sequelize_1.Op.ne]: id },
+                phone
+            }
+        });
+        if (phoneExist) {
+            return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_PHONE_EXIST));
+        }
         if (phone !== '' && phone !== null && phone !== undefined) {
+            previousValues.phone = customer.phone;
             customer.phone = phone;
         }
         customer.verified = verified;
         await customer.save();
+        res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+            menu: createAuditLog_1.AuditLogMenuType.CUSTOMER,
+            action: createAuditLog_1.AuditLogActionType.EDIT_CUSTOMER,
+            editorName: portal.username,
+            editorRole: portal.role.name,
+            targetName,
+            eventDateTime: new Date(),
+            staffId: portal.id,
+            staffEmail: portal.email,
+            channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+            searchCriteria: undefined,
+            previousValues: JSON.stringify(previousValues),
+            newValues: JSON.stringify(req.body),
+            recordKeyValues: undefined,
+            isPii: true
+        });
         return next();
     }
     catch (err) {
@@ -147,6 +227,7 @@ const updateCustomerData = () => async (req, res, next) => {
 exports.updateCustomerData = updateCustomerData;
 const deleteCustomer = () => async (req, res, next) => {
     const id = req.params.id;
+    const portal = req.user;
     try {
         const customer = await models_1.CustomersModel.findOne({
             where: {
@@ -157,7 +238,27 @@ const deleteCustomer = () => async (req, res, next) => {
         if (!customer) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_EMAIL_NOT_FOUND));
         }
+        const recordKeyValues = {
+            id: customer.id,
+            imageUrl: customer.image_url
+        };
         await customer.update({ isDeleted: true });
+        res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+            menu: createAuditLog_1.AuditLogMenuType.CUSTOMER,
+            action: createAuditLog_1.AuditLogActionType.DELETE_CUSTOMER,
+            editorName: portal.username,
+            editorRole: portal.role.name,
+            targetName: customer.name,
+            eventDateTime: new Date(),
+            staffId: portal.id,
+            staffEmail: portal.email,
+            channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+            searchCriteria: undefined,
+            previousValues: undefined,
+            newValues: undefined,
+            recordKeyValues: JSON.stringify(recordKeyValues),
+            isPii: true
+        });
         return next();
     }
     catch (err) {
@@ -217,7 +318,6 @@ const verifyOtpCustomer = () => async (req, res, next) => {
     const redis = (0, redis_1.getRedisClient)();
     try {
         const { email, otp } = req.body;
-        console.log("OTP From Mobile: ", otp);
         if (!email || !otp) {
             return next(new helpers_1.ServiceError(customer_error_json_1.default.ERR_CUSTOMER_OTP_REQUIRED));
         }

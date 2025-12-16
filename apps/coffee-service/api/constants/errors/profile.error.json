@@ -30,5 +30,21 @@
             "en": "Address not found",
             "th": "ไม่เจอ Address"
         }
+    },
+    "ERR_PHONE_ALREADY_EXISTS": {
+        "statusCode": 400,
+        "resCode": "4005",
+        "resDesc": {
+            "en": "Phone is Already Exist",
+            "th": "Phone ถูกใช้ไปแล้ว"
+        }
+    },
+    "ERR_EMAIL_ALREADY_EXISTS": {
+        "statusCode": 400,
+        "resCode": "4006",
+        "resDesc": {
+            "en": "Email is Already Exist",
+            "th": "Email ถูกใช้ไปแล้ว"
+        }
     }
 }

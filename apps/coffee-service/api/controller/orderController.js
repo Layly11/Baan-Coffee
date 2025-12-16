@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.CancelOrderStatus = exports.CancelOrder = exports.getTrackOrder = exports.getOrderHistorty = exports.payForQR = exports.createOrder = exports.getPaymentByRefercnce = exports.paymentResult = exports.createPayment = exports.getNotifyOrder = exports.createNotifyOrder = exports.getInvoiceData = exports.updateOrderStatus = exports.getOrderData = void 0;
+exports.CancelOrderStatus = exports.CancelOrder = exports.getTrackOrder = exports.getOrderHistorty = exports.payForQR = exports.createOrder = exports.getPaymentByRefercnce = exports.paymentResult = exports.createPayment = exports.DownloadInvoice = exports.getNotifyOrder = exports.createNotifyOrder = exports.getInvoiceData = exports.updateOrderStatus = exports.getOrderData = void 0;
 const crypto_1 = __importDefault(require("crypto"));
 const axios_1 = __importDefault(require("axios"));
 const models_1 = require("@coffee/models");
@@ -12,9 +12,11 @@ const helpers_1 = require("@coffee/helpers");
 const order_error_json_1 = __importDefault(require("../constants/errors/order.error.json"));
 const uuid_1 = require("uuid");
 const helpers_2 = require("@coffee/helpers");
+const createAuditLog_1 = require("../constants/commons/createAuditLog");
 const getOrderData = () => async (req, res, next) => {
     try {
-        const { start_date: startDate, end_date: endDate, status, method, customer_name: customerName, limit, offset } = req.query;
+        const { start_date: startDate, end_date: endDate, status, method, customer_name: customerName, limit, offset, audit_action: auditAction } = req.query;
+        const portal = req.user;
         if ((startDate && isNaN(Date.parse(startDate))) || (endDate && isNaN(Date.parse(endDate)))) {
             return next(new helpers_1.ServiceError(order_error_json_1.default.ERR_DATE_INVALID_FORMAT));
         }
@@ -30,7 +32,6 @@ const getOrderData = () => async (req, res, next) => {
             ...(status && { status }),
             ...(method && { payment_method: method }),
         };
-        console.log("OffSet: ", offset);
         const { count, rows } = await models_1.OrderModel.findAndCountAll({
             where,
             include: [
@@ -54,6 +55,23 @@ const getOrderData = () => async (req, res, next) => {
             total_price: o.total_price,
             status: o.status
         }));
+        if (auditAction) {
+            res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+                menu: createAuditLog_1.AuditLogMenuType.ORDER_MANAGEMENT,
+                action: auditAction,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+                searchCriteria: JSON.stringify({ query: req.query }),
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: undefined,
+                isPii: true
+            });
+        }
         res.locals.orders = orders;
         res.locals.total = count;
         return next();
@@ -67,17 +85,28 @@ const updateOrderStatus = () => async (req, res, next) => {
     try {
         const orderId = req.params.id;
         const { new_status: newStatus } = req.body;
-        console.log("Body: ", req.body);
-        const order = await models_1.OrderModel.findOne({ where: { order_id: orderId } });
+        const portal = req.user;
+        const order = await models_1.OrderModel.findOne({
+            where: { order_id: orderId },
+            include: [
+                {
+                    model: models_1.CustomersModel,
+                    as: 'customer',
+                },
+                {
+                    model: models_1.OrderItemModel,
+                    as: 'items'
+                }
+            ],
+        });
         if (!order) {
             return next(new helpers_1.ServiceError(order_error_json_1.default.ORDER_NOT_FOUND));
         }
         if (!["pending", "preparing", "out_for_delivery", "complete", "cancelled"].includes(newStatus)) {
             return next(new helpers_1.ServiceError(order_error_json_1.default.STATUS_NOT_FOUND));
         }
+        const previous_values = order.status;
         await order.update({ status: newStatus });
-        if (newStatus === 'cancelled') {
-        }
         if (["complete", "cancelled"].includes(newStatus.toLowerCase())) {
             try {
                 await axios_1.default.post('https://baan-coffee-production.up.railway.app/order/notification', { orderId, newStatus });
@@ -86,6 +115,22 @@ const updateOrderStatus = () => async (req, res, next) => {
                 next(err);
             }
         }
+        res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+            menu: createAuditLog_1.AuditLogMenuType.ORDER_MANAGEMENT,
+            action: createAuditLog_1.AuditLogActionType.EDIT_ORDER_STATUS,
+            editorName: portal.username,
+            editorRole: portal.role.name,
+            targetName: order.customer?.name,
+            eventDateTime: new Date(),
+            staffId: portal.id,
+            staffEmail: portal.email,
+            channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+            searchCriteria: undefined,
+            previousValues: JSON.stringify({ status: previous_values }),
+            newValues: JSON.stringify({ status: order.status }),
+            recordKeyValues: undefined,
+            isPii: true
+        });
         return next();
     }
     catch (err) {
@@ -96,6 +141,7 @@ exports.updateOrderStatus = updateOrderStatus;
 const getInvoiceData = () => async (req, res, next) => {
     try {
         const orderId = req.params.id;
+        const portal = req.user;
         const order = await models_1.OrderModel.findOne({
             where: { order_id: orderId },
             include: [
@@ -132,7 +178,22 @@ const getInvoiceData = () => async (req, res, next) => {
             shipping_cost: 60.0,
             discount: 0,
         };
-        console.log("Invoice: ", invoice);
+        res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+            menu: createAuditLog_1.AuditLogMenuType.ORDER_MANAGEMENT,
+            action: createAuditLog_1.AuditLogActionType.VIEW_ORDERS_INVOICE,
+            editorName: portal.username,
+            editorRole: portal.role.name,
+            targetName: order.customer?.name,
+            eventDateTime: new Date(),
+            staffId: portal.id,
+            staffEmail: portal.email,
+            channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+            searchCriteria: undefined,
+            previousValues: undefined,
+            newValues: undefined,
+            recordKeyValues: undefined,
+            isPii: true
+        });
         res.locals.invoice = invoice;
         return next();
     }
@@ -216,6 +277,53 @@ const getNotifyOrder = () => async (req, res, next) => {
     }
 };
 exports.getNotifyOrder = getNotifyOrder;
+const DownloadInvoice = () => async (req, res, next) => {
+    try {
+        const orderId = req.params.id;
+        const { audit_action: auditAction } = req.query;
+        console.log('autdit: ', req.params);
+        const portal = req.user;
+        const order = await models_1.OrderModel.findOne({
+            where: { order_id: orderId },
+            include: [
+                {
+                    model: models_1.CustomersModel,
+                    as: 'customer',
+                },
+                {
+                    model: models_1.OrderItemModel,
+                    as: 'items'
+                }
+            ],
+        });
+        if (!order) {
+            return next(new helpers_1.ServiceError(order_error_json_1.default.ORDER_NOT_FOUND));
+        }
+        if (auditAction) {
+            res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+                menu: createAuditLog_1.AuditLogMenuType.ORDER_MANAGEMENT,
+                action: auditAction,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                targetName: order.customer?.name,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+                searchCriteria: undefined,
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: undefined,
+                isPii: true
+            });
+        }
+        return next();
+    }
+    catch (err) {
+        next(err);
+    }
+};
+exports.DownloadInvoice = DownloadInvoice;
 function generateOrderId() {
     const prefix = "ORD";
     const timestamp = Date.now().toString().slice(-8);
@@ -527,6 +635,7 @@ const getOrderHistorty = () => async (req, res, next) => {
                 hour: "numeric",
                 minute: "2-digit",
                 hour12: true,
+                timeZone: 'Asia/Bangkok',
             }),
             imageSource: item.image_url
         })));
@@ -591,7 +700,6 @@ const CancelOrder = () => async (req, res, next) => {
     const t = await models_1.sequelize.transaction();
     try {
         const { order_id } = req.body;
-        console.log("Body: ", req.body);
         const payment = await models_1.PaymentModel.findOne({ where: { order_code: order_id }, transaction: t });
         const order = await models_1.OrderModel.findOne({ where: { order_id }, include: [{ model: models_1.OrderItemModel, as: 'items' }], transaction: t });
         if (!payment) {
@@ -663,6 +771,12 @@ const CancelOrder = () => async (req, res, next) => {
         }
         await order.update({ status: 'cancelled' }, { transaction: t });
         await t.commit();
+        try {
+            await axios_1.default.post('https://baan-coffee-production.up.railway.app/order/notification', { orderId: order_id, newStatus: 'cancelled' });
+        }
+        catch (err) {
+            return next(err);
+        }
         return next();
     }
     catch (err) {
@@ -675,7 +789,6 @@ const CancelOrderStatus = () => async (req, res, next) => {
     const t = await models_1.sequelize.transaction();
     try {
         const { order_id } = req.body;
-        console.log("Body: ", req.body);
         const payment = await models_1.PaymentModel.findOne({ where: { order_code: order_id }, transaction: t });
         const order = await models_1.OrderModel.findOne({ where: { order_id }, include: [{ model: models_1.OrderItemModel, as: 'items' }], transaction: t });
         if (!payment) {

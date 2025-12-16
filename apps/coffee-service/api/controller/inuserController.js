@@ -44,12 +44,14 @@ const jose = __importStar(require("jose"));
 const user_error_json_1 = __importDefault(require("../constants/errors/user.error.json"));
 const redis_1 = require("../helpers/redis");
 const emailUtils_1 = require("../utils/emailUtils");
+const createAuditLog_1 = require("../constants/commons/createAuditLog");
 const getUserData = () => async (req, res, next) => {
-    const { information, role, limit, offset } = req.query;
+    const { audit_action: auditAction, information, role, limit, offset } = req.query;
     try {
         const infoStr = typeof information === 'string' ? information : undefined;
         const roles = Array.isArray(role) ? role : role ? [role] : [];
         const roleIds = roles.map(r => Number(r)).filter(r => !isNaN(r));
+        const portal = req.user;
         const where = infoStr
             ? {
                 ...(roleIds.length > 0 && { role_id: { [sequelize_1.Op.in]: roleIds } }),
@@ -84,6 +86,23 @@ const getUserData = () => async (req, res, next) => {
                 role: user.role.name
             };
         });
+        if (auditAction) {
+            res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+                menu: createAuditLog_1.AuditLogMenuType.USERS,
+                action: auditAction,
+                editorName: portal.username,
+                editorRole: portal.role.name,
+                eventDateTime: new Date(),
+                staffId: portal.id,
+                staffEmail: portal.email,
+                channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+                searchCriteria: JSON.stringify({ query: req.query }),
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: undefined,
+                isPii: true
+            });
+        }
         res.locals.total = count;
         res.locals.users = users;
         return next();
@@ -96,15 +115,31 @@ exports.getUserData = getUserData;
 const updateUserData = () => async (req, res, next) => {
     const id = req.params.id;
     const { username, email, role, status } = req.body;
+    const currentUser = req.user;
     try {
         const user = await models_1.UserModel.findByPk(id);
         if (!user) {
             return next(new helpers_1.ServiceError(user_error_json_1.default.USER_NOT_FOUND));
         }
+        const previousValues = {
+            username: user.username,
+            email: user.email,
+            role: user.role_id,
+            status: user.status
+        };
+        if (currentUser.role_id === 2) {
+            if (role === 1 || role === 2) {
+                return next(new helpers_1.ServiceError(user_error_json_1.default.ERR_ADMIN_PERMISSION));
+            }
+        }
         if (username !== '' && username !== null && username !== undefined) {
             user.username = username;
         }
         if (email !== '' && email !== null && email !== undefined) {
+            const userExist = await models_1.UserModel.findOne({ where: { email } });
+            if (userExist && userExist.id !== user.id) {
+                return next(new helpers_1.ServiceError(user_error_json_1.default.EMAIL_IS_EXISTS));
+            }
             user.email = email;
         }
         if (role !== '' && role !== null && role !== undefined) {
@@ -114,6 +149,22 @@ const updateUserData = () => async (req, res, next) => {
             user.status = status;
         }
         await user.save();
+        res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+            menu: createAuditLog_1.AuditLogMenuType.USERS,
+            action: createAuditLog_1.AuditLogActionType.EDIT_USER,
+            editorName: currentUser.username,
+            editorRole: currentUser.role.name,
+            targetName: previousValues.username,
+            eventDateTime: new Date(),
+            staffId: currentUser.id,
+            staffEmail: currentUser.email,
+            channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+            searchCriteria: undefined,
+            previousValues: JSON.stringify(previousValues),
+            newValues: JSON.stringify(req.body),
+            recordKeyValues: undefined,
+            isPii: true
+        });
         return next();
     }
     catch (err) {
@@ -123,13 +174,60 @@ const updateUserData = () => async (req, res, next) => {
 exports.updateUserData = updateUserData;
 const deleteUserData = () => async (req, res, next) => {
     const id = req.params.id;
+    const currentUser = req.user;
     try {
         const user = await models_1.UserModel.findByPk(id);
         if (!user) {
             return next(new helpers_1.ServiceError(user_error_json_1.default.USER_NOT_FOUND));
         }
-        await user.destroy();
-        return next();
+        const targetName = user.username;
+        if (currentUser.id === user.id) {
+            return next(new helpers_1.ServiceError(user_error_json_1.default.CAN_NOT_DELETE_OWN_ACCOUNT));
+        }
+        if (currentUser.role_id === 1) {
+            await user.destroy();
+            res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+                menu: createAuditLog_1.AuditLogMenuType.USERS,
+                action: createAuditLog_1.AuditLogActionType.DELETE_USER,
+                editorName: currentUser.username,
+                editorRole: currentUser.role.name,
+                targetName,
+                eventDateTime: new Date(),
+                staffId: currentUser.id,
+                staffEmail: currentUser.email,
+                channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+                searchCriteria: undefined,
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: undefined,
+                isPii: true
+            });
+            return next();
+        }
+        if (currentUser.role_id === 2) {
+            if (user.role_id === 1 || user.role_id === 2) {
+                return next(new helpers_1.ServiceError(user_error_json_1.default.CAN_NOT_DELETE_SUPER_ADMIN));
+            }
+            await user.destroy();
+            res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+                menu: createAuditLog_1.AuditLogMenuType.USERS,
+                action: createAuditLog_1.AuditLogActionType.DELETE_USER,
+                editorName: currentUser.username,
+                editorRole: currentUser.role.name,
+                targetName,
+                eventDateTime: new Date(),
+                staffId: currentUser.id,
+                staffEmail: currentUser.email,
+                channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+                searchCriteria: undefined,
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: undefined,
+                isPii: true
+            });
+            return next();
+        }
+        return next(new helpers_1.ServiceError(user_error_json_1.default.NOT_HAVE_PERMISSION_DELETE));
     }
     catch (err) {
         next(err);
@@ -138,6 +236,7 @@ const deleteUserData = () => async (req, res, next) => {
 exports.deleteUserData = deleteUserData;
 const createUserData = () => async (req, res, next) => {
     const { username, email, password, role, status } = req.body;
+    const currentUser = req.user;
     try {
         if (!username) {
             return next(new helpers_1.ServiceError(user_error_json_1.default.USERNAME_NOT_FOUND));
@@ -151,12 +250,43 @@ const createUserData = () => async (req, res, next) => {
         if (!role) {
             return next(new helpers_1.ServiceError(user_error_json_1.default.ROLE_NOT_FOUND));
         }
+        if (currentUser.role_id === 2) {
+            if (role === 1 || role === 2) {
+                return next(new helpers_1.ServiceError(user_error_json_1.default.ERR_ADMIN_PERMISSION));
+            }
+        }
+        const emailExists = await models_1.UserModel.findOne({ where: { email } });
+        if (emailExists) {
+            return next(new helpers_1.ServiceError(user_error_json_1.default.EMAIL_IS_EXISTS));
+        }
         await models_1.UserModel.create({
             username,
             email,
             password,
             role_id: role,
             status
+        });
+        res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+            menu: createAuditLog_1.AuditLogMenuType.USERS,
+            action: createAuditLog_1.AuditLogActionType.CREATE_USER,
+            editorName: currentUser.username,
+            editorRole: currentUser.role.name,
+            targetName: username,
+            eventDateTime: new Date(),
+            staffId: currentUser.id,
+            staffEmail: currentUser.email,
+            channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+            searchCriteria: undefined,
+            previousValues: undefined,
+            newValues: undefined,
+            recordKeyValues: JSON.stringify({
+                username,
+                email,
+                password,
+                role_id: role,
+                status
+            }),
+            isPii: true
         });
         return next();
     }
@@ -168,6 +298,7 @@ exports.createUserData = createUserData;
 const resetPasswordUser = () => async (req, res, next) => {
     const { id } = req.params;
     const redis = (0, redis_1.getRedisClient)();
+    const portal = req.user;
     try {
         const user = await models_1.UserModel.findOne({
             where: {
@@ -178,6 +309,7 @@ const resetPasswordUser = () => async (req, res, next) => {
         if (!user) {
             return next(new helpers_1.ServiceError(user_error_json_1.default.USER_NOT_FOUND));
         }
+        const targetName = user.username;
         const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET);
         const token = await new jose.SignJWT({ userId: user.id })
             .setProtectedHeader({ alg: "HS256" })
@@ -186,6 +318,22 @@ const resetPasswordUser = () => async (req, res, next) => {
         await redis.set(`reset_token:${token}`, user.id, { EX: 15 * 60 });
         const resetLink = `https://baan-coffee-coffee-app.vercel.app/reset-password?token=${token}`;
         await (0, emailUtils_1.sendResetPasswordAdmin)(user.email, resetLink);
+        res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+            menu: createAuditLog_1.AuditLogMenuType.USERS,
+            action: createAuditLog_1.AuditLogActionType.RESET_PASSWORD_USER,
+            editorName: portal.username,
+            editorRole: portal.role.name,
+            targetName,
+            eventDateTime: new Date(),
+            staffId: portal.id,
+            staffEmail: portal.email,
+            channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+            searchCriteria: JSON.stringify({ query: req.query }),
+            previousValues: undefined,
+            newValues: undefined,
+            recordKeyValues: undefined,
+            isPii: true
+        });
         return next();
     }
     catch (err) {

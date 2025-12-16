@@ -13,6 +13,7 @@ const cartRouter_1 = __importDefault(require("./routes/cartRouter"));
 const orderRouter_1 = __importDefault(require("./routes/orderRouter"));
 const customerRouter_1 = __importDefault(require("./routes/customerRouter"));
 const userRouter_1 = __importDefault(require("./routes/userRouter"));
+const auditLogRouter_1 = __importDefault(require("./routes/auditLogRouter"));
 function createRouters({ redis }) {
     const router = (0, express_1.Router)();
     router.use('/authen', authRouter_1.default);
@@ -23,6 +24,7 @@ function createRouters({ redis }) {
     router.use('/cart', cartRouter_1.default);
     router.use('/order', orderRouter_1.default);
     router.use('/user', userRouter_1.default);
+    router.use('/audit-log', auditLogRouter_1.default);
     return router;
 }
 //# sourceMappingURL=routers.js.map

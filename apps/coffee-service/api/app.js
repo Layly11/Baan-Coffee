@@ -10,6 +10,7 @@ const routers_1 = __importDefault(require("./routers"));
 const logController_1 = require("./controller/logController");
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cors_1 = __importDefault(require("cors"));
+const auditLogController_1 = require("./controller/auditLogController");
 const APP = ({ redis }) => {
     const app = (0, express_1.default)();
     app.use((0, cors_1.default)({
@@ -33,6 +34,8 @@ const APP = ({ redis }) => {
         next();
     });
     app.use((0, routers_1.default)({ redis }));
+    app.use((0, auditLogController_1.createSuccessAuditLog)());
+    app.use((0, auditLogController_1.createFailureAuditLog)());
     app.use((0, logController_1.createResponseLog)());
     app.use((0, logController_1.createErrorLog)());
     return app;

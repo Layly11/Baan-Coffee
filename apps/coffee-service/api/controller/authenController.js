@@ -47,6 +47,7 @@ const userRole_json_1 = __importDefault(require("../constants/masters/userRole.j
 const redis_1 = require("../helpers/redis");
 const validator_2 = require("../utils/validator");
 const emailUtils_1 = require("../utils/emailUtils");
+const createAuditLog_1 = require("../constants/commons/createAuditLog");
 const register = () => async (req, res, next) => {
     const { username, email, password } = req.body;
     if (!username || !email || !password) {
@@ -82,21 +83,90 @@ const register = () => async (req, res, next) => {
     }
 };
 exports.register = register;
+async function handleFailedAttempt(redis, attemptsKey, lockKey) {
+    const maxAttempts = 5;
+    const windowSec = 60;
+    const lockSec = 900;
+    const attempts = await redis.incr(attemptsKey);
+    if (attempts === 1) {
+        await redis.expire(attemptsKey, windowSec);
+    }
+    if (attempts > maxAttempts) {
+        await redis.set(lockKey, "1", { EX: lockSec });
+        await redis.del(attemptsKey);
+    }
+}
 const login = () => async (req, res, next) => {
     const { email, password } = req.body;
     if (!email || !password) {
         return next(new helpers_1.ServiceError(authen_error_json_1.default.ERR_USER_LOGIN_REQUIRED));
     }
     try {
-        const user = await models_1.UserModel.findOne({ where: { email, status: true } });
         const redis = (0, redis_1.getRedisClient)();
+        const ip = req.ip;
+        const attemptsKey = `login:attempts:${ip}:${email}`;
+        const lockKey = `login:lock:${ip}:${email}`;
+        const isLocked = await redis.ttl(lockKey);
+        if (isLocked > 0) {
+            return next(new helpers_1.ServiceError({
+                "statusCode": 400,
+                "resCode": "0415",
+                "resDesc": {
+                    "en": `Too many login attempts. Please try again in ${isLocked} seconds.`,
+                    "th": `พยายามเข้าสู่ระบบเกินกำหนด กรุณาลองใหม่อีกครั้งใน ${isLocked} วินาที`
+                }
+            }));
+        }
+        const user = await models_1.UserModel.findOne({
+            where: { email, status: true },
+            include: [
+                {
+                    model: models_1.UserRoleModel,
+                    as: 'role',
+                    attributes: ['name']
+                }
+            ]
+        });
         if (!user) {
+            res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+                menu: createAuditLog_1.AuditLogMenuType.AUTHEN,
+                action: createAuditLog_1.AuditLogActionType.LOGIN_FAILURE,
+                editorName: '',
+                editorRole: '',
+                eventDateTime: new Date(),
+                staffId: '',
+                staffEmail: '',
+                channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+                searchCriteria: undefined,
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: undefined,
+                isPii: false
+            });
+            await handleFailedAttempt(redis, attemptsKey, lockKey);
             return next(new helpers_1.ServiceError(authen_error_json_1.default.ERR_LOGIN_USER_INVALID));
         }
         const isMatch = await user.matchPassword(password);
         if (!isMatch) {
+            res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+                menu: createAuditLog_1.AuditLogMenuType.AUTHEN,
+                action: createAuditLog_1.AuditLogActionType.LOGIN_FAILURE,
+                editorName: user.username,
+                editorRole: user.role.name,
+                eventDateTime: new Date(),
+                staffId: user.id,
+                staffEmail: user.email,
+                channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+                searchCriteria: undefined,
+                previousValues: undefined,
+                newValues: undefined,
+                recordKeyValues: undefined,
+                isPii: false
+            });
+            await handleFailedAttempt(redis, attemptsKey, lockKey);
             return next(new helpers_1.ServiceError(authen_error_json_1.default.ERR_LOGIN_USER_INVALID));
         }
+        await redis.del(attemptsKey);
         user.last_login = user.recent_login;
         user.recent_login = new Date();
         await user.save();
@@ -123,6 +193,22 @@ const login = () => async (req, res, next) => {
             .sign(jwtRefreshSecret);
         await redis.sAdd(`refreshTokens:${user.id}`, refreshToken);
         await redis.expire(`refreshTokens:${user.id}`, 60 * 60 * 24 * 7);
+        console.log("action: ", createAuditLog_1.AuditLogActionType.LOGIN);
+        res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
+            menu: createAuditLog_1.AuditLogMenuType.AUTHEN,
+            action: createAuditLog_1.AuditLogActionType.LOGIN,
+            editorName: user.username,
+            editorRole: user.role.name,
+            eventDateTime: new Date(),
+            staffId: user.id,
+            staffEmail: user.email,
+            channel: req.headers['x-original-forwarded-for']?.split(',')[0].split(':')[0] || req.ip,
+            searchCriteria: undefined,
+            previousValues: undefined,
+            newValues: undefined,
+            recordKeyValues: undefined,
+            isPii: false
+        });
         res.locals.token = {
             accessToken,
             refreshToken
@@ -180,6 +266,9 @@ const refreshToken = () => async (req, res, next) => {
         next();
     }
     catch (error) {
+        if (error.code === 'ERR_JWT_EXPIRED') {
+            return next(new helpers_1.ServiceError(authen_error_json_1.default.TOKEN_EXPIRED));
+        }
         next(error);
     }
 };
@@ -259,7 +348,6 @@ const resetPassword = () => async (req, res, next) => {
             return next(new helpers_1.ServiceError(authen_error_json_1.default.ERR_USER_NOT_FOUND_ON_RESET_PASSWORD));
         }
         const jwtSecret = new TextEncoder().encode(process.env.JWT_SECRET);
-        console.log("userId: ", userId);
         await jose.jwtVerify(token, jwtSecret);
         const user = await models_1.UserModel.findOne({
             where: { id: userId, status: true }

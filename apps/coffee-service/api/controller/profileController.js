@@ -8,6 +8,7 @@ const helpers_1 = require("@coffee/helpers");
 const models_1 = require("@coffee/models");
 const profile_error_json_1 = __importDefault(require("../constants/errors/profile.error.json"));
 const azureBlob_1 = require("../utils/azureBlob");
+const sequelize_1 = require("sequelize");
 const editProfileImage = () => async (req, res, next) => {
     try {
         const userId = Number(req.body.userId);
@@ -47,8 +48,26 @@ const editProfileDetail = () => async (req, res, next) => {
         if (name !== null && name !== undefined && name !== '') {
             customer.name = name;
         }
+        const emailExist = await models_1.CustomersModel.findOne({
+            where: {
+                email,
+                id: { [sequelize_1.Op.ne]: id }
+            }
+        });
+        if (emailExist) {
+            return next(new helpers_1.ServiceError(profile_error_json_1.default.ERR_EMAIL_ALREADY_EXISTS));
+        }
         if (email !== null && email !== undefined && email !== '') {
             customer.email = email;
+        }
+        const phoneExist = await models_1.CustomersModel.findOne({
+            where: {
+                phone,
+                id: { [sequelize_1.Op.ne]: id }
+            }
+        });
+        if (phoneExist) {
+            return next(new helpers_1.ServiceError(profile_error_json_1.default.ERR_PHONE_ALREADY_EXISTS));
         }
         if (phone !== null && phone !== undefined && phone !== '') {
             customer.phone = phone;
@@ -94,7 +113,6 @@ const fetchAddressCustomer = () => async (req, res, next) => {
             where: { customer_id: customerId },
             order: [["createdAt", "ASC"]],
         });
-        console.log('Address: ', addresses);
         res.locals.address = addresses;
         return next();
     }
