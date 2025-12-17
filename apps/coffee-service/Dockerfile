@@ -20,7 +20,7 @@ RUN npm install -g npm@latest
 RUN npm install
 COPY --from=builder /app/out/full/ .
 COPY turbo.json turbo.json
-RUN npx turbo run build --filter=...coffee-service
+RUN npx turbo run build --filter=coffee-service...
 RUN npm install mysql2
 
 FROM node:22.17.1-alpine AS runner
