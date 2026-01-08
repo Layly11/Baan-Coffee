@@ -17,6 +17,8 @@ export class TempOrderProductsModel extends Model<
   public customer_id!: number;
   public products!: string;
   public expire_at!: Date;
+  //order_id
+  //amount
   declare createdAt: CreationOptional<Date>;
   declare updatedAt: CreationOptional<Date>;
 }
