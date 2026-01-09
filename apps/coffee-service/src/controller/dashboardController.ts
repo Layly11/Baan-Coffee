@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { DailySummaryModel, InventoryStatusModel, OrderModel, ProductModel, ShiftTodayModel, TopProductModel } from '@coffee/models'
 import { momentAsiaBangkok, ServiceError } from "@coffee/helpers";
-import { Op } from 'sequelize'
+import { Op, Sequelize } from 'sequelize'
 import { dayjs } from "@coffee/helpers";
 import DashBoardErrorMaster from '../constants/errors/dashboard.error.json'
 import { AuditLogActionType, AuditLogMenuType, CreateAuditLog } from "../constants/commons/createAuditLog";
@@ -61,7 +61,7 @@ export const getDashBoardData = () => async (req: Request, res: Response, next: 
                 if (!best) return current
                 return (current.total_sold || 0) > (best.total_sold || 0) ? current : best
             }, null)
-            
+
             return {
                 id: summary.id,
                 date: dayjs(summary.date).format('DD/MM/YYYY'),
@@ -151,21 +151,28 @@ export const getDashBoardOverview = () => async (req: Request, res: Response, ne
         const allOrderCancelled = orders.filter((value) => value.status === 'cancelled')
 
         const topProduct = await TopProductModel.findAll({
+            attributes: [
+                'product_id',
+                [Sequelize.fn('SUM', Sequelize.col('total_sold')), 'total_sold']
+            ],
             include: [
                 {
                     model: ProductModel,
                     as: 'product',
-                    attributes: ['name', 'price', 'image_url']
-                },
+                    attributes: ['name']
+                }
             ],
-            order: [['total_sold', 'DESC']],
+            group: ['product_id', 'product.id'],
+            order: [[Sequelize.literal('total_sold'), 'DESC']],
             limit: 3
         })
 
+
         const topProductMapping = topProduct.map((value: any) => ({
             name: value.product.name,
-            value: value.total_sold
+            value: Number(value.get('total_sold'))
         }))
+
 
 
         res.locals.overview = {
