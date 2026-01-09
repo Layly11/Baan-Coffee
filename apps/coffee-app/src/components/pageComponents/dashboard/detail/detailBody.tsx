@@ -82,7 +82,11 @@ const DetailBody = ({
 
                                 <RenderField
                                     label='Since'
-                                    value={`${dayjs(dashboardInfo.first_order_time, 'HH:mm').format('HH:mm')} - ${dayjs(dashboardInfo.last_order_time, 'HH:mm').format('HH:mm')}`}
+                                    value={`${dayjs.utc(dashboardInfo.first_order_time, 'HH:mm')
+                                        .tz('Asia/Bangkok')
+                                        .format('HH:mm')} - ${dayjs.utc(dashboardInfo.last_order_time, 'HH:mm')
+                                        .tz('Asia/Bangkok')
+                                        .format('HH:mm')}`}
                                     isFetching={isFetching}
                                     style={{
                                         flexDirectionContainer: 'row',
