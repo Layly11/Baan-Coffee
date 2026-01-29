@@ -4,7 +4,28 @@ import sgMail from '@sendgrid/mail'
 
 sgMail.setApiKey(process.env.API_KEY_SEND_GRID!);
 
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.SMTP_EMAIL || 'yelaysong15@gmail.com',
+    pass: process.env.SMTP_PASSWORD
+  }
+});
 
+const sendViaNodeMailer = async (to: string, subject: string, html: string) => {
+  const mailOptions = {
+    from: 'yelaysong15@gmail.com',
+    to,
+    subject,
+    html
+  };
+  try {
+    await transporter.sendMail(mailOptions);
+    console.log(`Email sent to ${to} via NodeMailer`);
+  } catch (error) {
+    console.error("NodeMailer Error:", error);
+  }
+}
 
 export const sendOtpEmail = async (email: string, otp: string) => {
 
@@ -30,7 +51,8 @@ export const sendOtpEmail = async (email: string, otp: string) => {
   try {
     await sgMail.send(mailOptions);
   } catch (err: any) {
-    console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));
+    console.warn("SendGrid Failed, switching to NodeMailer...", err.response?.body || err.message);
+    await sendViaNodeMailer(email, mailOptions.subject, mailOptions.html);
   }
 };
 
@@ -59,11 +81,14 @@ export const sendResetPasswordEmail = async (email: string, otp: string) => {
   try {
     await sgMail.send(mailOptions);
   } catch (err: any) {
-    console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));
+    console.warn("SendGrid Failed, switching to NodeMailer...", err.response?.body || err.message);
+    await sendViaNodeMailer(email, mailOptions.subject, mailOptions.html);
   }
 };
 
 export const sendResetPasswordAdmin = async (email: any, resetLink: any) => {
+  // If we are falling back, or user requested, we might want to ensure the link is local?
+  // Use logic to replace if needed, but for now take resetLink as is unless changed in controller.
   const mailOptions = {
     from: `yelaysong15@gmail.com`,
     to: email,
@@ -77,6 +102,7 @@ export const sendResetPasswordAdmin = async (email: any, resetLink: any) => {
   try {
     await sgMail.send(mailOptions);
   } catch (err: any) {
-    console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));
+    console.warn("SendGrid Failed, switching to NodeMailer...", err.response?.body || err.message);
+    await sendViaNodeMailer(email, mailOptions.subject, mailOptions.html);
   }
 }
