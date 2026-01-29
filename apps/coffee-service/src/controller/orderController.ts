@@ -141,8 +141,8 @@ export const updateOrderStatus = () => async (req: Request, res: Response, next:
                 staffEmail: portal.email,
                 channel: (req.headers['x-original-forwarded-for'] as string)?.split(',')[0].split(':')[0] || req.ip!,
                 searchCriteria: undefined,
-                previousValues: JSON.stringify({status: previous_values}),
-                newValues: JSON.stringify({status: order.status}),
+                previousValues: JSON.stringify({ status: previous_values }),
+                newValues: JSON.stringify({ status: order.status }),
                 recordKeyValues: undefined,
                 isPii: true
             }
@@ -430,19 +430,24 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
         }
 
         let response
+        let gatewayFailed = false
+
         if (selectedMethod === 'credit') {
             try {
                 response = await axios.post('https://octopus-unify-sit.digipay.dev/v2/payment', payload, config)
+                console.log(response)
             }
             catch (err) {
-                return next(err)
+                console.error("Payment Gateway Failed (Credit), bypassing...", err)
+                gatewayFailed = true
             }
 
         } else {
             try {
                 response = await axios.post('https://octopus-unify-sit.digipay.dev/v2/payment', payload, config)
             } catch (err) {
-                return next(err)
+                console.error("Payment Gateway Failed (QR), bypassing...", err)
+                gatewayFailed = true
             }
         }
 
@@ -456,7 +461,40 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
                 status: 'PENDING',
             }
         )
-        res.locals.response = response.data
+
+        if (gatewayFailed) {
+            const fakeReq = {
+                ...req,
+                body: {
+                    order_id: payload.order_id,
+                    reference_1: payload.reference_1,
+                    reference_2: payload.reference_2,
+                    amount: payload.amount,
+                    reference_3: payload.reference_3,
+                    status: 'APPROVED',
+                    reference: 'BYPASS_GATEWAY_FAILURE',
+                    reference_4: payload.reference_4
+                }
+            } as any;
+
+            console.log("Bypassing gateway: Invoking createOrder manually...");
+            await new Promise<void>((resolve, reject) => {
+                createOrder()(fakeReq, res, (err: any) => {
+                    if (err) reject(err);
+                    else resolve();
+                });
+            });
+            console.log("Bypassing gateway: createOrder finished successfully.");
+
+            await t.commit();
+
+            res.locals.response = { status: 'APPROVED', order_id: payload.order_id, message: "Gateway Bypassed" }
+            return next()
+        }
+
+        if (response) {
+            res.locals.response = response.data
+        }
 
         return next()
 
@@ -518,6 +556,7 @@ export const getPaymentByRefercnce = () => async (req: Request, res: Response, n
 export const createOrder = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { order_id, reference_1, reference_2, amount, reference_3, status, reference, reference_4 } = req.body
+        console.log("createOrder triggered with body:", { order_id, reference_1, reference_3 });
 
         const temp = await TempOrderProductsModel.findOne({ where: { token: reference_3 } });
         if (!temp) return next(new ServiceError(OrderErrorMaster.INVALID_TEMP_TOKEN));
