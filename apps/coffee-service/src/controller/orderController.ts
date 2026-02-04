@@ -123,7 +123,7 @@ export const updateOrderStatus = () => async (req: Request, res: Response, next:
 
         if (["complete", "cancelled"].includes(newStatus.toLowerCase())) {
             try {
-                await axios.post('https://baan-coffee-production.up.railway.app/order/notification', { orderId, newStatus })
+                await axios.post('http://localhost:9302/order/notification', { orderId, newStatus })
             } catch (err) {
                 next(err)
             }
@@ -434,7 +434,7 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
 
         if (selectedMethod === 'credit') {
             try {
-                response = await axios.post('https://octopus-unify-sit.digipay.dev/v2/payment', payload, config)
+                response = await axios.post('https://octopus-unify-sit.digipay.dev/v2/payment1', payload, config)
                 console.log(response)
             }
             catch (err) {
@@ -444,7 +444,7 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
 
         } else {
             try {
-                response = await axios.post('https://octopus-unify-sit.digipay.dev/v2/payment', payload, config)
+                response = await axios.post('https://octopus-unify-sit.digipay.dev/v2/payment1', payload, config)
             } catch (err) {
                 console.error("Payment Gateway Failed (QR), bypassing...", err)
                 gatewayFailed = true
@@ -860,30 +860,32 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
             return next(new ServiceError(OrderErrorMaster.ORDER_NOT_FOUND))
         }
 
-        const config = {
-            headers: {
-                'X-API-ID': process.env.X_API_ID,
-                'X-API-KEY': process.env.X_API_KEY,
-                'X-Partner-ID': process.env.X_PARTNER_ID
-            }
-        }
+        // const config = {
+        //     headers: {
+        //         'X-API-ID': process.env.X_API_ID,
+        //         'X-API-KEY': process.env.X_API_KEY,
+        //         'X-Partner-ID': process.env.X_PARTNER_ID
+        //     }
+        // }
 
-        const paymentInquiry = await axios.get(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}`, config)
+        // const paymentInquiry = await axios.get(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}`, config)
 
-        if (paymentInquiry.data.transaction.status === 'APPROVED') {
-            await axios.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/void`, {
-                reason: "Return an item"
-            }, config)
+        // if (paymentInquiry.data.transaction.status === 'APPROVED') {
+        //     await axios.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/void`, {
+        //         reason: "Return an item"
+        //     }, config)
 
-            await payment.update({ status: 'VOIDED' }, { transaction: t })
+        //     await payment.update({ status: 'VOIDED' }, { transaction: t })
 
-        } else if (paymentInquiry.data.transaction.status === 'SETTLED' || paymentInquiry.data.transaction.status === 'PRE-SETTLED') {
-            await axios.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/refund`, {
-                reason: "Return an item",
-                refund_id: uuidv4()
-            }, config)
-            await payment.update({ status: 'REFUNDED' }, { transaction: t })
-        }
+        // } else if (paymentInquiry.data.transaction.status === 'SETTLED' || paymentInquiry.data.transaction.status === 'PRE-SETTLED') {
+        //     await axios.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/refund`, {
+        //         reason: "Return an item",
+        //         refund_id: uuidv4()
+        //     }, config)
+        //     await payment.update({ status: 'REFUNDED' }, { transaction: t })
+        // }
+
+        await payment.update({ status: 'REFUNDED' }, { transaction: t })
 
         if (order.summary_id) {
             const summary = await DailySummaryModel.findByPk(order.summary_id, { transaction: t })
@@ -935,7 +937,7 @@ export const CancelOrder = () => async (req: Request, res: Response, next: NextF
         await t.commit();
 
         try {
-            await axios.post('https://baan-coffee-production.up.railway.app/order/notification', { orderId: order_id, newStatus: 'cancelled' })
+            await axios.post('http://localhost:9302/order/notification', { orderId: order_id, newStatus: 'cancelled' })
         } catch (err) {
             return next(err)
         }
@@ -966,31 +968,32 @@ export const CancelOrderStatus = () => async (req: Request, res: Response, next:
             return next(new ServiceError(OrderErrorMaster.ORDER_NOT_FOUND))
         }
 
-        const config = {
-            headers: {
-                'X-API-ID': process.env.X_API_ID,
-                'X-API-KEY': process.env.X_API_KEY,
-                'X-Partner-ID': process.env.X_PARTNER_ID
-            }
-        }
+        // const config = {
+        //     headers: {
+        //         'X-API-ID': process.env.X_API_ID,
+        //         'X-API-KEY': process.env.X_API_KEY,
+        //         'X-Partner-ID': process.env.X_PARTNER_ID
+        //     }
+        // }
 
-        const paymentInquiry = await axios.get(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}`, config)
+        // const paymentInquiry = await axios.get(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}`, config)
 
-        if (paymentInquiry.data.transaction.status === 'APPROVED') {
-            await axios.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/void`, {
-                reason: "Return an item"
-            }, config)
+        // if (paymentInquiry.data.transaction.status === 'APPROVED') {
+        //     await axios.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/void`, {
+        //         reason: "Return an item"
+        //     }, config)
 
-            await payment.update({ status: 'VOIDED' }, { transaction: t })
+        //     await payment.update({ status: 'VOIDED' }, { transaction: t })
 
-        } else if (paymentInquiry.data.transaction.status === 'SETTLED' || paymentInquiry.data.transaction.status === 'PRE-SETTLED') {
-            await axios.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/refund`, {
-                reason: "Return an item",
-                refund_id: uuidv4()
-            }, config)
-            await payment.update({ status: 'REFUNDED' }, { transaction: t })
-        }
+        // } else if (paymentInquiry.data.transaction.status === 'SETTLED' || paymentInquiry.data.transaction.status === 'PRE-SETTLED') {
+        //     await axios.post(`https://octopus-unify-sit.digipay.dev/v2/transaction/${payment.reference}/refund`, {
+        //         reason: "Return an item",
+        //         refund_id: uuidv4()
+        //     }, config)
+        //     await payment.update({ status: 'REFUNDED' }, { transaction: t })
+        // }
 
+        await payment.update({ status: 'REFUNDED' }, { transaction: t })
         if (order.summary_id) {
             const summary = await DailySummaryModel.findByPk(order.summary_id, { transaction: t })
 
