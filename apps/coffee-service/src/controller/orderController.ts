@@ -399,13 +399,25 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
             expire_at: expireAt
         });
 
+        let notifyBaseUrl = 'http://localhost:9302';
+        try {
+            const ngrokInfo = await axios.get('http://127.0.0.1:4040/api/tunnels', { timeout: 500 });
+            const secureTunnel = ngrokInfo.data.tunnels.find((t: any) => t.proto === 'https');
+            if (secureTunnel) {
+                notifyBaseUrl = secureTunnel.public_url;
+                console.log('✅ Auto-detected Ngrok URL:', notifyBaseUrl);
+            }
+        } catch (err) {
+            console.warn('⚠️ Ngrok detection failed (or not running), falling back to localhost.');
+        }
+
         const biller_reference_1 = uuidv4().replace(/\D/g, "").slice(0, 12);
         const payload = {
             mid: selectedMethod === 'credit' ? process.env.MERCHANT_MID : process.env.MERCHANT_MID_QR,
             order_id: generateOrderId(),
             amount: amount,
-            url_redirect: 'https://9acf-2001-44c8-4165-dedb-7da9-364-7f90-654b.ngrok-free.app/order/payment/result',
-            url_notify: 'https://9acf-2001-44c8-4165-dedb-7da9-364-7f90-654b.ngrok-free.app/order/payment/result',
+            url_redirect: `${notifyBaseUrl}/order/payment/result`,
+            url_notify: `${notifyBaseUrl}/order/payment/result`,
             description: descriptionProduct,
             reference_1: String(customerId),
             reference_2: selectedMethod,
