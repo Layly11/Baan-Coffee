@@ -41,48 +41,52 @@ export const editProfileImage = () => async (req: Request, res: Response, next: 
 export const editProfileDetail = () => async (req: Request, res: Response, next: NextFunction) => {
     try {
         const { id, name, email, phone } = req.body
+        const userId = Number(id); // แปลง id เป็นตัวเลขเพื่อให้ Op.ne ทำงานได้ถูกต้องแน่นอน
 
         const customer = await CustomersModel.findOne({
             where: {
-                id: id,
+                id: userId,
                 isDeleted: false
             }
         })
-
 
         if (!customer) {
             return next(new ServiceError(ProfileMasterError.ERR_CUSTOMER_NOT_FOUND));
         }
 
-        if (name !== null && name !== undefined && name !== '') {
+        // อัปเดต Name ถ้ามีการส่งมา
+        if (name && name !== '') {
             customer.name = name
         }
-        const emailExist =  await CustomersModel.findOne({
-            where: {
-                email,
-                id: {[Op.ne]: id}
-            }
-        })
 
-        if(emailExist) {
-            return next(new ServiceError(ProfileMasterError.ERR_EMAIL_ALREADY_EXISTS));
-        }
-        
-        if (email !== null && email !== undefined && email !== '') {
+        // เช็ค Email เฉพาะเมื่อมีค่าส่งมา และ ไม่ตรงกับค่าเดิม
+        if (email && email !== '' && email !== customer.email) {
+            const emailExist = await CustomersModel.findOne({
+                where: {
+                    email,
+                    id: { [Op.ne]: userId }, // หาคนอื่นที่มี email นี้
+                    isDeleted: false
+                }
+            })
+
+            if (emailExist) {
+                return next(new ServiceError(ProfileMasterError.ERR_EMAIL_ALREADY_EXISTS));
+            }
             customer.email = email
         }
 
-        const phoneExist = await CustomersModel.findOne({
-            where: {
-                phone,
-                id: {[Op.ne]: id}
+        // เช็ค Phone เฉพาะเมื่อมีค่าส่งมา และ ไม่ตรงกับค่าเดิม
+        if (phone && phone !== '' && phone !== customer.phone) {
+            const phoneExist = await CustomersModel.findOne({
+                where: {
+                    phone,
+                    id: { [Op.ne]: userId }, // หาคนอื่นที่มี phone นี้
+                    isDeleted: false
+                }
+            })
+            if (phoneExist) {
+                return next(new ServiceError(ProfileMasterError.ERR_PHONE_ALREADY_EXISTS));
             }
-        })
-        if(phoneExist) {
-            return next(new ServiceError(ProfileMasterError.ERR_PHONE_ALREADY_EXISTS));
-        }
-
-        if (phone !== null && phone !== undefined && phone !== '' ) {
             customer.phone = phone
         }
 
@@ -94,7 +98,6 @@ export const editProfileDetail = () => async (req: Request, res: Response, next:
         next(err)
     }
 }
-
 
 export const deleteAccount = () => async (req: Request, res: Response, next: NextFunction) => {
     const t = await sequelize.transaction();
