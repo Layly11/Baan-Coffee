@@ -316,7 +316,7 @@ const resetPasswordUser = () => async (req, res, next) => {
             .setExpirationTime("15m")
             .sign(jwtSecret);
         await redis.set(`reset_token:${token}`, user.id, { EX: 15 * 60 });
-        const resetLink = `https://baan-coffee-coffee-app.vercel.app/reset-password?token=${token}`;
+        const resetLink = `http://localhost:9301/reset-password?token=${token}`;
         await (0, emailUtils_1.sendResetPasswordAdmin)(user.email, resetLink);
         res.locals.audit = (0, createAuditLog_1.CreateAuditLog)({
             menu: createAuditLog_1.AuditLogMenuType.USERS,

@@ -4,8 +4,31 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sendResetPasswordAdmin = exports.sendResetPasswordEmail = exports.sendOtpEmail = void 0;
+const nodemailer_1 = __importDefault(require("nodemailer"));
 const mail_1 = __importDefault(require("@sendgrid/mail"));
 mail_1.default.setApiKey(process.env.API_KEY_SEND_GRID);
+const transporter = nodemailer_1.default.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.SMTP_EMAIL || 'yelaysong15@gmail.com',
+        pass: process.env.SMTP_PASSWORD
+    }
+});
+const sendViaNodeMailer = async (to, subject, html) => {
+    const mailOptions = {
+        from: 'yelaysong15@gmail.com',
+        to,
+        subject,
+        html
+    };
+    try {
+        await transporter.sendMail(mailOptions);
+        console.log(`Email sent to ${to} via NodeMailer`);
+    }
+    catch (error) {
+        console.error("NodeMailer Error:", error);
+    }
+};
 const sendOtpEmail = async (email, otp) => {
     const mailOptions = {
         from: 'yelaysong15@gmail.com',
@@ -29,7 +52,8 @@ const sendOtpEmail = async (email, otp) => {
         await mail_1.default.send(mailOptions);
     }
     catch (err) {
-        console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));
+        console.warn("SendGrid Failed, switching to NodeMailer...", err.response?.body || err.message);
+        await sendViaNodeMailer(email, mailOptions.subject, mailOptions.html);
     }
 };
 exports.sendOtpEmail = sendOtpEmail;
@@ -56,7 +80,8 @@ const sendResetPasswordEmail = async (email, otp) => {
         await mail_1.default.send(mailOptions);
     }
     catch (err) {
-        console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));
+        console.warn("SendGrid Failed, switching to NodeMailer...", err.response?.body || err.message);
+        await sendViaNodeMailer(email, mailOptions.subject, mailOptions.html);
     }
 };
 exports.sendResetPasswordEmail = sendResetPasswordEmail;
@@ -74,7 +99,8 @@ const sendResetPasswordAdmin = async (email, resetLink) => {
         await mail_1.default.send(mailOptions);
     }
     catch (err) {
-        console.error("SendGrid Error:", JSON.stringify(err.response?.body || err, null, 2));
+        console.warn("SendGrid Failed, switching to NodeMailer...", err.response?.body || err.message);
+        await sendViaNodeMailer(email, mailOptions.subject, mailOptions.html);
     }
 };
 exports.sendResetPasswordAdmin = sendResetPasswordAdmin;

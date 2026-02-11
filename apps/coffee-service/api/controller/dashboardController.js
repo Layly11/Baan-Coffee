@@ -130,19 +130,24 @@ const getDashBoardOverview = () => async (req, res, next) => {
         const allOrderComplete = orders.filter((value) => value.status === 'complete');
         const allOrderCancelled = orders.filter((value) => value.status === 'cancelled');
         const topProduct = await models_1.TopProductModel.findAll({
+            attributes: [
+                'product_id',
+                [sequelize_1.Sequelize.fn('SUM', sequelize_1.Sequelize.col('total_sold')), 'total_sold']
+            ],
             include: [
                 {
                     model: models_1.ProductModel,
                     as: 'product',
-                    attributes: ['name', 'price', 'image_url']
-                },
+                    attributes: ['name']
+                }
             ],
-            order: [['total_sold', 'DESC']],
+            group: ['product_id', 'product.id'],
+            order: [[sequelize_1.Sequelize.literal('total_sold'), 'DESC']],
             limit: 3
         });
         const topProductMapping = topProduct.map((value) => ({
             name: value.product.name,
-            value: value.total_sold
+            value: Number(value.get('total_sold'))
         }));
         res.locals.overview = {
             todayOrders: {
