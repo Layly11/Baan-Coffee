@@ -775,17 +775,16 @@ export const getOrderHistorty = () => async (req: Request, res: Response, next: 
                 size: item.size,
                 description: item.description || "",
                 price: Number(item.price).toFixed(2),
-                time: new Date(o.createdAt).toLocaleTimeString("en-US", {
-                    hour: "numeric",
+                time: new Date(o.createdAt).toLocaleTimeString("th-TH", {
+                    hour: "2-digit",
                     minute: "2-digit",
-                    hour12: true,
+                    hour12: false,
                     timeZone: 'Asia/Bangkok',
                 }),
                 imageSource: item.image_url
 
             }))
         );
-
         orderHistory.sort((a, b) => b.id - a.id);
 
         res.locals.orderHistory = orderHistory
