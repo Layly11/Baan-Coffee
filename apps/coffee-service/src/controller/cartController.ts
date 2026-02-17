@@ -18,7 +18,9 @@ export const getCartItems = () => async (req: Request, res: Response, next: Next
                 include: [
                     {
                         model: ProductModel,
-                        as: 'product'
+                        as: 'product',
+                        where: { is_deleted: false },
+                        required: true // Ensure we only get cart items with valid products
                     },
                     {
                         model: SizeModel,
@@ -28,7 +30,7 @@ export const getCartItems = () => async (req: Request, res: Response, next: Next
             }
         )
 
-        
+
 
         const mappedCartItems = cartItems.map((c: any) => (
             {
@@ -61,6 +63,12 @@ export const addToCart = () => async (req: Request, res: Response, next: NextFun
         }
 
         const { product_id, size_id, quantity, extra_price } = req.body
+
+        // Check if product exists and is not deleted
+        const product = await ProductModel.findByPk(product_id);
+        if (!product || product.is_deleted) {
+            return next(new ServiceError(CartMasterError.PRODUCT_NOT_FOUND));
+        }
 
         if (!product_id) {
             return next(new ServiceError(CartMasterError.ERR_PRODUCT_ID_REQUIRED))
@@ -136,7 +144,7 @@ export const updateQuantity = () => async (req: Request, res: Response, next: Ne
         cartItem.quantity = newQuantity
         cartItem.extra_price = extra_price
         await cartItem.save()
-        
+
         res.locals.quantity = cartItem.quantity
         return next()
     } catch (err) {

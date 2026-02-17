@@ -20,6 +20,7 @@ export class ProductModel extends Model<
     declare price: number;
     declare category_id: ForeignKey<CategoriesModel['id']>;
     declare status: boolean;
+    declare is_deleted: CreationOptional<boolean>;
     declare image_url: CreationOptional<string | null>;
     declare description: CreationOptional<string | null>;
 
@@ -51,11 +52,15 @@ ProductModel.init(
             type: DataTypes.BOOLEAN,
             defaultValue: true
         },
+        is_deleted: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false
+        },
         image_url: {
             type: DataTypes.STRING,
             allowNull: true
         },
-        description : {
+        description: {
             type: DataTypes.STRING,
             allowNull: true
         },

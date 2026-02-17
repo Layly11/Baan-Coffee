@@ -1,5 +1,5 @@
 {
-    "ERR_PRODUCT_ID_REQUIRED": {
+  "ERR_PRODUCT_ID_REQUIRED": {
     "statusCode": 401,
     "resCode": "0401",
     "resDesc": {
@@ -7,7 +7,7 @@
       "th": "ต้องการ Product ID"
     }
   },
-    "ERR_CUSTOMER_ID_REQUIRED": {
+  "ERR_CUSTOMER_ID_REQUIRED": {
     "statusCode": 401,
     "resCode": "0402",
     "resDesc": {
@@ -15,7 +15,7 @@
       "th": "ต้องการ Customer ID"
     }
   },
-   "ERR_SIZE_ID_REQUIRED": {
+  "ERR_SIZE_ID_REQUIRED": {
     "statusCode": 401,
     "resCode": "0403",
     "resDesc": {
@@ -23,7 +23,7 @@
       "th": "ต้องการ Customer Size"
     }
   },
-   "ERR_QUANTITY_REQUIRED": {
+  "ERR_QUANTITY_REQUIRED": {
     "statusCode": 401,
     "resCode": "0404",
     "resDesc": {
@@ -31,7 +31,7 @@
       "th": "ต้องการ Quantity"
     }
   },
-     "ERR_EXTRA_PRICE_REQUIRED": {
+  "ERR_EXTRA_PRICE_REQUIRED": {
     "statusCode": 401,
     "resCode": "0405",
     "resDesc": {
@@ -39,7 +39,7 @@
       "th": "ต้องการ Extra Price"
     }
   },
-    "ERR_CART_ITEMS_FULL": {
+  "ERR_CART_ITEMS_FULL": {
     "statusCode": 401,
     "resCode": "0406",
     "resDesc": {
@@ -47,7 +47,7 @@
       "th": "จำนวนของในตระกร้าไม่เกิน 50"
     }
   },
-   "ERR_LIMIT_QUANTITY_FULL": {
+  "ERR_LIMIT_QUANTITY_FULL": {
     "statusCode": 401,
     "resCode": "0407",
     "resDesc": {
@@ -55,14 +55,20 @@
       "th": "เลือกจำนวนสูงสุดได้ไม่เกิน10"
     }
   },
-    "ERR_CART_ITEM_NOT_FOUND": {
+  "ERR_CART_ITEM_NOT_FOUND": {
     "statusCode": 401,
     "resCode": "0408",
     "resDesc": {
       "en": "CartItem not found",
       "th": "ไม่เจอ CartItem"
     }
+  },
+  "PRODUCT_NOT_FOUND": {
+    "statusCode": 404,
+    "resCode": "0409",
+    "resDesc": {
+      "en": "Product not found or unavailable",
+      "th": "ไม่พบสินค้าหรือสินค้าถูกลบ"
+    }
   }
-
-  
 }

@@ -379,6 +379,23 @@ export const createPayment = () => async (req: Request, res: Response, next: Nex
     const { amount, selectedMethod, product, addressId } = req.body
     const t = await sequelize.transaction();
 
+    // Validate products
+    if (product && Array.isArray(product)) {
+        const productIds = product.map((p: any) => p.id);
+        const validProductsCount = await ProductModel.count({
+            where: {
+                id: { [Op.in]: productIds },
+                is_deleted: false,
+                status: true
+            }
+        });
+
+        if (validProductsCount !== productIds.length) {
+            await t.rollback();
+            return next(new ServiceError(OrderErrorMaster.PRODUCT_NOT_AVAILABLE));
+        }
+    }
+
     const descriptionProduct = product.map((p: any) => `${p.name} qty: ${p.amount}`).join(', ')
     try {
 

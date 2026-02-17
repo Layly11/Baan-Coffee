@@ -44,6 +44,7 @@ export const getProductData = () => async (req: Request, res: Response, next: Ne
 
 
         const data = await ProductModel.findAll({
+            where: { is_deleted: false },
             include: [
                 {
                     model: CategoriesModel,
@@ -293,7 +294,7 @@ export const updateProduct = () => async (req: Request, res: Response, next: Nex
 
         const newValues: Record<string, any> = {}
 
-        if (!item) {
+        if (!item || item.is_deleted) {
             return next(new ServiceError(ProductMasterError.PRODUCT_NOT_FOUND))
         }
         const {
@@ -429,7 +430,7 @@ export const deleteProduct = () => async (req: Request, res: Response, next: Nex
 
         const portal = req.user as any
 
-        if (!item) {
+        if (!item || item.is_deleted) {
             return next(new ServiceError(ProductMasterError.PRODUCT_NOT_FOUND))
         }
         const recordKeyValues = {
@@ -451,7 +452,9 @@ export const deleteProduct = () => async (req: Request, res: Response, next: Nex
         //     }
         // }
 
-        await item.destroy()
+        item.is_deleted = true
+        item.status = false
+        await item.save()
 
 
         res.locals.audit = CreateAuditLog(
@@ -582,7 +585,7 @@ export const getBestSeller = () => async (req: Request, res: Response, next: Nex
                     model: ProductModel,
                     as: 'product',
                     attributes: ['id', 'name', 'price', 'image_url', 'description'],
-                    where: { status: 1 }
+                    where: { status: 1, is_deleted: false }
                 },
             ],
             group: ['product.id'],
@@ -620,7 +623,7 @@ export const getCategoryMobile = () => async (req: Request, res: Response, next:
                     model: ProductModel,
                     as: 'products',
                     required: true,
-                    where: { status: 1 }
+                    where: { status: 1, is_deleted: false }
                 }
             ]
         })
@@ -646,7 +649,7 @@ export const getProductByCategory = () => async (req: Request, res: Response, ne
                 {
                     model: ProductModel,
                     as: 'products',
-                    where: { status: 1 }
+                    where: { status: 1, is_deleted: false }
 
                 }
             ]

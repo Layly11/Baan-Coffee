@@ -7,7 +7,7 @@
       "th": "ไม่เจอ Payment"
     }
   },
-    "ERR_PRODUCR_IS_NOT_ARRAY": {
+  "ERR_PRODUCR_IS_NOT_ARRAY": {
     "statusCode": 400,
     "resCode": "0402",
     "resDesc": {
@@ -15,7 +15,7 @@
       "th": "Product ไม่ใช่ Array"
     }
   },
-    "INVALID_JSON_PRODUCT": {
+  "INVALID_JSON_PRODUCT": {
     "statusCode": 400,
     "resCode": "0403",
     "resDesc": {
@@ -23,7 +23,7 @@
       "th": "Product Json ผิด"
     }
   },
-    "INVALID_TEMP_TOKEN": {
+  "INVALID_TEMP_TOKEN": {
     "statusCode": 400,
     "resCode": "0404",
     "resDesc": {
@@ -31,7 +31,7 @@
       "th": "Temp token ผิดพลาด"
     }
   },
-    "ADDRESS_NOT_FOUND": {
+  "ADDRESS_NOT_FOUND": {
     "statusCode": 400,
     "resCode": "0405",
     "resDesc": {
@@ -39,7 +39,7 @@
       "th": "ไม่เจอ Address"
     }
   },
-      "ORDER_NOT_FOUND": {
+  "ORDER_NOT_FOUND": {
     "statusCode": 400,
     "resCode": "0406",
     "resDesc": {
@@ -47,7 +47,7 @@
       "th": "ไม่เจอ Order"
     }
   },
-    "ERR_DATE_INVALID_FORMAT": {
+  "ERR_DATE_INVALID_FORMAT": {
     "statusCode": 400,
     "resCode": "4001",
     "resDesc": {
@@ -70,6 +70,13 @@
       "en": "Customer not found",
       "th": "ไม่เจอ Customer"
     }
+  },
+  "PRODUCT_NOT_AVAILABLE": {
+    "statusCode": 400,
+    "resCode": "0410",
+    "resDesc": {
+      "en": "Some products are not available",
+      "th": "สินค้าบางรายการไม่มีในระบบหรือถูกลบแล้ว"
+    }
   }
-
 }
